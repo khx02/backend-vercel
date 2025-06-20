@@ -9,5 +9,5 @@ router = APIRouter()
 
 
 @router.post("/", response_model=UserGet)
-async def create_user(user: UserCreate, db: AsyncDatabase = Depends(get_db)):
-    return await create_user_service(db, user)
+async def create_user(user_create: UserCreate, db: AsyncDatabase = Depends(get_db)):
+    return await create_user_service(db, user_create)
