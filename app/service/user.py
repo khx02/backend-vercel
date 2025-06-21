@@ -4,6 +4,8 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.security import hash_password
 
+USERS_COLLECTION = "users"
+
 
 async def create_user_service(db: AsyncDatabase, user_create: UserCreate) -> UserGet:
 
@@ -12,4 +14,19 @@ async def create_user_service(db: AsyncDatabase, user_create: UserCreate) -> Use
     user_hashed = UserHashed(email=user_create.email, hashed_password=hashed_password)
 
     user_in_db_dict = await db_create_user(db, user_hashed)
-    return UserGet(id=user_in_db_dict["_id"], email=user_in_db_dict["email"])
+    return UserGet(
+        id=user_in_db_dict["_id"],
+        email=user_in_db_dict["email"],
+        hashed_password=user_in_db_dict["hashed_password"],
+    )
+
+
+async def get_user_service(db: AsyncDatabase, email: str) -> UserGet | None:
+    user_in_db = await db[USERS_COLLECTION].find_one({"email": email})
+    if user_in_db:
+        return UserGet(
+            id=str(user_in_db["_id"]),
+            email=user_in_db["email"],
+            hashed_password=user_in_db["hashed_password"],
+        )
+    return None

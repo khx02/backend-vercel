@@ -14,3 +14,4 @@ class UserHashed(BaseModel):
 class UserGet(BaseModel):
     id: str
     email: EmailStr
+    hashed_password: str
