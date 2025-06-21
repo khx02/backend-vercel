@@ -1,7 +1,5 @@
 from typing import Dict, Any
 from passlib.context import CryptContext
-import os
-from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
 import jwt
 
@@ -31,7 +29,6 @@ def create_access_token(
         )
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    print(f"Encoded JWT: {encoded_jwt}")  # TODO: Remove debugging line
     return encoded_jwt
 
 

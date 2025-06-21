@@ -3,8 +3,7 @@ from app.db.user import create_user as db_create_user
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.security import hash_password
-
-USERS_COLLECTION = "users"
+from app.core.constants import USERS_COLLECTION
 
 
 async def create_user_service(db: AsyncDatabase, user_create: UserCreate) -> UserGet:

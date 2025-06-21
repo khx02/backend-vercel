@@ -8,7 +8,7 @@ from app.service.user import create_user_service
 router = APIRouter()
 
 
-@router.post("/", response_model=UserGet)
+@router.post("/register", response_model=UserGet)
 async def create_user(
     user_create: UserCreate, db: AsyncDatabase = Depends(get_db)
 ) -> UserGet:

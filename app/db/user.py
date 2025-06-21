@@ -2,7 +2,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 from app.schemas.user import UserHashed
 from typing import Dict, Any
 
-USERS_COLLECTION = "users"
+from app.core.constants import USERS_COLLECTION
 
 
 async def create_user(db: AsyncDatabase, user_hashed: UserHashed) -> Dict[str, Any]:
