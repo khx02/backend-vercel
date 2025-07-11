@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends
 from pymongo.asynchronous.database import AsyncDatabase
 from app.db.client import get_db
 
-from app.schemas.user import UserCreate, UserGet
+from app.schemas.user import UserCreateReq, UserModel
 from app.service.user import create_user_service
 
 router = APIRouter()
 
 
-@router.post("/register", response_model=UserGet)
+@router.post("/register", response_model=UserModel)
 async def create_user(
-    user_create: UserCreate, db: AsyncDatabase = Depends(get_db)
-) -> UserGet:
+    user_create: UserCreateReq, db: AsyncDatabase = Depends(get_db)
+) -> UserModel:
     return await create_user_service(db, user_create)
