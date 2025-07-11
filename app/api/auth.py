@@ -6,12 +6,12 @@ from datetime import datetime, timedelta, timezone
 
 import jwt
 
-from app.schemas.token import TokenData, Token
-from app.schemas.user import UserGet
+from app.schemas.token import TokenData, TokenRes
+from app.schemas.user import UserModel, UserRes
 from app.db.client import get_db
 from app.service.user import get_user_service
-from app.core.constants import ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, ALGORITHM
-from app.core.security import verify_password, create_access_token
+from app.core.constants import SECRET_KEY, ALGORITHM
+from app.core.security import create_token_pair, verify_password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
@@ -21,7 +21,7 @@ router = APIRouter()
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: Annotated[AsyncDatabase, Depends(get_db)],
-) -> UserGet:
+) -> UserModel:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -42,7 +42,7 @@ async def get_current_user(
 
 
 # OAuth2 uses username and password for authentication, for our purposes, assume the email is the username
-async def authenticate_user(db: AsyncDatabase, email: str, password: str) -> UserGet:
+async def authenticate_user(db: AsyncDatabase, email: str, password: str) -> UserModel:
     user = await get_user_service(db, email=email)
     if user is None or not verify_password(password, user.hashed_password):
         raise HTTPException(
@@ -53,11 +53,11 @@ async def authenticate_user(db: AsyncDatabase, email: str, password: str) -> Use
     return user
 
 
-@router.post("/token", response_model=Token)
+@router.post("/token", response_model=TokenRes)
 async def login_for_token_access(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: AsyncDatabase = Depends(get_db),
-) -> Token:
+) -> TokenRes:
     user = await authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -65,8 +65,9 @@ async def login_for_token_access(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
+
+    token_pair = create_token_pair(data={"sub": user.email})
+    return TokenRes(
+        token=token_pair,
+        user=UserRes(email=user.email),
     )
-    return Token(access_token=access_token, token_type="bearer")

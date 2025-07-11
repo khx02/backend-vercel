@@ -1,9 +1,10 @@
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 import jwt
 
-from app.core.constants import ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, ALGORITHM
+from app.core.constants import ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, ALGORITHM, REFRESH_TOKEN_EXPIRE_HOURS
+from app.schemas.token import TokenPair
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -17,7 +18,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def create_access_token(
+def create_token(
     data: Dict[str, Any], expires_delta: timedelta | None = None
 ) -> str:
     to_encode = data.copy()
@@ -37,3 +38,21 @@ def decode_access_token(token: str) -> Dict[str, str]:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except jwt.PyJWTError as e:
         raise ValueError("Invalid token") from e
+
+def create_token_pair(
+    data: Dict[str, Any]
+) -> TokenPair:
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_token(data, access_token_expires)
+
+    refresh_token_expires = timedelta(hours=REFRESH_TOKEN_EXPIRE_HOURS)
+    refresh_token = create_token(data, refresh_token_expires)
+
+    return TokenPair(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        # Converted to Unix time
+        access_expires_at=access_token_expires.total_seconds(),
+        refresh_expires_at=refresh_token_expires.total_seconds(),
+        token_type='Bearer',
+    )
