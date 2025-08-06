@@ -38,4 +38,13 @@ async def join_team(
     current_user: UserModel = Depends(get_current_user),
     db: AsyncDatabase = Depends(get_db),
 ) -> None:
-    await join_team_service(db, team_join, current_user.id)
+    try:
+        print("starting to join team service try")
+        await join_team_service(db, team_join, current_user.id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to join team",
+        )

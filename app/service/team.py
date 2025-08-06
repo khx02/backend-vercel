@@ -3,6 +3,8 @@ from app.db.team import (
     create_team as db_create_team,
     join_team as db_join_team,
     get_team_by_name as db_get_team_by_name,
+    get_team_by_id as db_get_team_by_id,
+    get_team_members as db_get_team_members,
 )
 from pymongo.asynchronous.database import AsyncDatabase
 
@@ -25,9 +27,17 @@ async def create_team_service(
     )
 
 
-# TODO: Handle case where team does not exist or user is already in the team
-# Case where user is already on team is handled by MongoDB addToSet, but might be good to handle explicitly
 async def join_team_service(
     db: AsyncDatabase, team_join: TeamJoinReq, user_id: str
 ) -> None:
+    existing_team = await db_get_team_by_id(db, team_join.team_id)
+    if not existing_team:
+        raise ValueError(f"Team with ID '{team_join.team_id}' does not exist")
+
+    user_already_in_team = user_id in await db_get_team_members(db, team_join.team_id)
+    if user_already_in_team:
+        raise ValueError(
+            f"User with ID '{user_id}' is already in team '{team_join.team_id}'"
+        )
+
     await db_join_team(db, team_join, user_id)

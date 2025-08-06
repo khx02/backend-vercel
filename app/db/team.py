@@ -1,6 +1,6 @@
 from pymongo.asynchronous.database import AsyncDatabase
 from app.schemas.team import TeamCreateReq, TeamJoinReq
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from bson import ObjectId
 
@@ -29,8 +29,32 @@ async def join_team(db: AsyncDatabase, team_join: TeamJoinReq, user_id: str) -> 
 
 
 async def get_team_by_name(db: AsyncDatabase, team_name: str) -> Dict[str, Any] | None:
-    team_dict = await db[TEAMS_COLLECTION].find_one({"name": team_name})
-    if team_dict:
-        team_dict["_id"] = str(team_dict["_id"])
-        return team_dict
-    return None
+    try:
+        team_dict = await db[TEAMS_COLLECTION].find_one({"name": team_name})
+        if team_dict:
+            team_dict["_id"] = str(team_dict["_id"])
+            return team_dict
+        return None
+    except Exception as e:
+        return None
+
+
+async def get_team_by_id(db: AsyncDatabase, team_id: str) -> Dict[str, Any] | None:
+    try:
+        team_dict = await db[TEAMS_COLLECTION].find_one({"_id": ObjectId(team_id)})
+        if team_dict:
+            team_dict["_id"] = str(team_dict["_id"])
+            return team_dict
+        return None
+    except Exception as e:
+        return None
+
+
+async def get_team_members(db: AsyncDatabase, team_id: str) -> List[str] | None:
+    try:
+        team_dict = await db[TEAMS_COLLECTION].find_one({"_id": ObjectId(team_id)})
+        if team_dict:
+            return [str(member_id) for member_id in team_dict.get("member_ids", [])]
+        return None
+    except Exception as e:
+        return None
