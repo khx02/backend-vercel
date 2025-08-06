@@ -11,7 +11,6 @@ class TokenPair(BaseModel):
     token_type: str
 
 
-# Response when client requests a new/renewal of a token
 class TokenRes(BaseModel):
     token: TokenPair
     user: UserRes

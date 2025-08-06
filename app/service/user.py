@@ -6,7 +6,10 @@ from app.core.security import hash_password
 from app.core.constants import USERS_COLLECTION
 
 
-async def create_user_service(db: AsyncDatabase, user_create: UserCreateReq) -> UserModel:
+# TODO: Handle duplicate email registration
+async def create_user_service(
+    db: AsyncDatabase, user_create: UserCreateReq
+) -> UserModel:
 
     hashed_password = hash_password(user_create.password)
 
