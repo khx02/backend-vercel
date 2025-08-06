@@ -26,3 +26,11 @@ async def join_team(db: AsyncDatabase, team_join: TeamJoinReq, user_id: str) -> 
     await db[TEAMS_COLLECTION].update_one(
         {"_id": ObjectId(team_join.team_id)}, {"$addToSet": {"member_ids": user_id}}
     )
+
+
+async def get_team_by_name(db: AsyncDatabase, team_name: str) -> Dict[str, Any] | None:
+    team_dict = await db[TEAMS_COLLECTION].find_one({"name": team_name})
+    if team_dict:
+        team_dict["_id"] = str(team_dict["_id"])
+        return team_dict
+    return None

@@ -1,12 +1,20 @@
 from app.schemas.team import TeamCreateReq, TeamModel, TeamJoinReq
-from app.db.team import create_team as db_create_team, join_team as db_join_team
+from app.db.team import (
+    create_team as db_create_team,
+    join_team as db_join_team,
+    get_team_by_name as db_get_team_by_name,
+)
 from pymongo.asynchronous.database import AsyncDatabase
 
 
-# TODO: Handle duplicate team name registration
 async def create_team_service(
     db: AsyncDatabase, team_create: TeamCreateReq, creator_id: str
 ) -> TeamModel:
+
+    existing_team = await db_get_team_by_name(db, team_create.name)
+    if existing_team:
+        raise ValueError(f"Team with name '{team_create.name}' already exists")
+
     team_in_db_dict = await db_create_team(db, team_create, creator_id)
 
     return TeamModel(
