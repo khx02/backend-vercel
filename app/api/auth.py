@@ -2,7 +2,6 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status, APIRouter
 from pymongo.asynchronous.database import AsyncDatabase
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from datetime import datetime, timedelta, timezone
 
 import jwt
 
@@ -27,8 +26,6 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    print(token)
-    print("TRYING TO GET USER")
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
@@ -36,7 +33,6 @@ async def get_current_user(
             raise credentials_exception
         token_data = TokenData(email=email)
     except jwt.InvalidTokenError:
-        print("CRED EXCEPTION")
         raise credentials_exception
     user = await get_user_service(db, email=token_data.email)
     if user is None:
