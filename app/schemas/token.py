@@ -10,10 +10,13 @@ class TokenPair(BaseModel):
     refresh_expires_at: float
     token_type: str
 
+
 # Response when client requests a new/renewal of a token
 class TokenRes(BaseModel):
     token: TokenPair
     user: UserRes
+    access_token: str
+    token_type: str = "bearer"
 
 
 class TokenData(BaseModel):
