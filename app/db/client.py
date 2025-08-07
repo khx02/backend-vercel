@@ -1,4 +1,3 @@
-from fastapi.security import OAuth2PasswordBearer
 from pymongo import AsyncMongoClient
 from pymongo.asynchronous.database import AsyncDatabase
 import certifi

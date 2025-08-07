@@ -2,7 +2,6 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status, APIRouter
 from pymongo.asynchronous.database import AsyncDatabase
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from datetime import datetime, timedelta, timezone
 
 import jwt
 
@@ -70,4 +69,5 @@ async def login_for_token_access(
     return TokenRes(
         token=token_pair,
         user=UserRes(email=user.email),
+        access_token=token_pair.access_token,
     )
