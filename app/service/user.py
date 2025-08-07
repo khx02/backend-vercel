@@ -1,15 +1,21 @@
 from app.schemas.user import UserCreateReq, UserModel, UserHashed
-from app.db.user import create_user as db_create_user
+from app.db.user import (
+    create_user as db_create_user,
+    get_user_by_email as db_get_user_by_email,
+)
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.security import hash_password
 from app.core.constants import USERS_COLLECTION
 
 
-# TODO: Handle duplicate email registration
 async def create_user_service(
     db: AsyncDatabase, user_create: UserCreateReq
 ) -> UserModel:
+
+    existing_user = await db_get_user_by_email(db, user_create.email)
+    if existing_user:
+        raise ValueError(f"User with email '{user_create.email}' already exists")
 
     hashed_password = hash_password(user_create.password)
 
@@ -21,14 +27,3 @@ async def create_user_service(
         email=user_in_db_dict["email"],
         hashed_password=user_in_db_dict["hashed_password"],
     )
-
-
-async def get_user_service(db: AsyncDatabase, email: str) -> UserModel | None:
-    user_in_db = await db[USERS_COLLECTION].find_one({"email": email})
-    if user_in_db:
-        return UserModel(
-            id=str(user_in_db["_id"]),
-            email=user_in_db["email"],
-            hashed_password=user_in_db["hashed_password"],
-        )
-    return None

@@ -8,7 +8,7 @@ import jwt
 from app.schemas.token import TokenData, TokenRes
 from app.schemas.user import UserModel, UserRes
 from app.db.client import get_db
-from app.service.user import get_user_service
+from app.db.user import get_user_by_email as db_get_user_by_email
 from app.core.constants import SECRET_KEY, ALGORITHM
 from app.core.security import create_token_pair, verify_password
 
@@ -34,7 +34,7 @@ async def get_current_user(
         token_data = TokenData(email=email)
     except jwt.InvalidTokenError:
         raise credentials_exception
-    user = await get_user_service(db, email=token_data.email)
+    user = await db_get_user_by_email(db, token_data.email)
     if user is None:
         raise credentials_exception
     return user
@@ -42,7 +42,7 @@ async def get_current_user(
 
 # OAuth2 uses username and password for authentication, for our purposes, assume the email is the username
 async def authenticate_user(db: AsyncDatabase, email: str, password: str) -> UserModel:
-    user = await get_user_service(db, email=email)
+    user = await db_get_user_by_email(db, email)
     if user is None or not verify_password(password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -69,5 +69,4 @@ async def login_for_token_access(
     return TokenRes(
         token=token_pair,
         user=UserRes(email=user.email),
-        access_token=token_pair.access_token,
     )
