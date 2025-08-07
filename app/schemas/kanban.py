@@ -1,0 +1,17 @@
+from pydantic import BaseModel
+from typing import List
+
+
+class KanbanItem(BaseModel):
+    id: str
+    name: str
+    start_at: float
+    end_at: float
+    column: int
+    owner: str
+
+
+class KanbanBoard(BaseModel):
+    id: str
+    name: str
+    kanban_elements: List[KanbanItem]
