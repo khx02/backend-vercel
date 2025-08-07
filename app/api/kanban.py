@@ -8,8 +8,13 @@ from app.schemas.kanban import (
     KanbanCreateReq,
     AddKanbanItemReq,
     KanbanItem,
+    RemoveKanbanItemReq,
 )
-from app.service.kanban import create_kanban_service, add_kanban_item_service
+from app.service.kanban import (
+    create_kanban_service,
+    add_kanban_item_service,
+    delete_kanban_item_service,
+)
 
 router = APIRouter()
 
@@ -27,7 +32,7 @@ async def create_kanban(
         )
 
 
-@router.post("/add_kanban_item")
+@router.post("/add_kanban_item", response_model=KanbanItem)
 async def add_kanban_item(
     add_kanban_item: AddKanbanItemReq, db: AsyncDatabase = Depends(get_db)
 ) -> KanbanItem:
@@ -37,4 +42,17 @@ async def add_kanban_item(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to add item to kanban board",
+        )
+
+
+@router.delete("/remove_kanban_item")
+async def remove_kanban_item(
+    remove_kanban_item: RemoveKanbanItemReq, db: AsyncDatabase = Depends(get_db)
+) -> None:
+    try:
+        await delete_kanban_item_service(db, remove_kanban_item)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to remove item from kanban board",
         )

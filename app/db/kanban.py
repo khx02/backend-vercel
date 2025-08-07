@@ -25,6 +25,16 @@ async def create_kanban(
 async def add_kanban_item(
     db: AsyncDatabase, kanban_id: str, kanban_item: Dict[str, Any]
 ) -> None:
+    item_object_id = ObjectId()
+
+    kanban_item["_id"] = item_object_id
+
     await db[KANBANS_COLLECTION].update_one(
         {"_id": ObjectId(kanban_id)}, {"$addToSet": {"items": kanban_item}}
+    )
+
+
+async def remove_kanban_item(db: AsyncDatabase, kanban_id: str, item_id: str) -> None:
+    await db[KANBANS_COLLECTION].update_one(
+        {"_id": ObjectId(kanban_id)}, {"$pull": {"items": {"_id": ObjectId(item_id)}}}
     )

@@ -29,3 +29,8 @@ class AddKanbanItemReq(BaseModel):
     column: int
     owner: str
     kanban_id: str
+
+
+class RemoveKanbanItemReq(BaseModel):
+    kanban_id: str
+    item_id: str
