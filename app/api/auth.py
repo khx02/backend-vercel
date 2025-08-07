@@ -34,22 +34,30 @@ async def get_current_user(
         token_data = TokenData(email=email)
     except jwt.InvalidTokenError:
         raise credentials_exception
-    user = await db_get_user_by_email(db, token_data.email)
-    if user is None:
+    user_dict = await db_get_user_by_email(db, token_data.email)
+    if user_dict is None:
         raise credentials_exception
-    return user
+    return UserModel(
+        id=user_dict["_id"],
+        email=user_dict["email"],
+        hashed_password=user_dict["hashed_password"],
+    )
 
 
 # OAuth2 uses username and password for authentication, for our purposes, assume the email is the username
 async def authenticate_user(db: AsyncDatabase, email: str, password: str) -> UserModel:
-    user = await db_get_user_by_email(db, email)
-    if user is None or not verify_password(password, user.hashed_password):
+    user_dict = await db_get_user_by_email(db, email)
+    if user_dict is None or not verify_password(password, user_dict["hashed_password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return user
+    return UserModel(
+        id=user_dict["_id"],
+        email=user_dict["email"],
+        hashed_password=user_dict["hashed_password"],
+    )
 
 
 @router.post("/token", response_model=TokenRes)
@@ -69,4 +77,5 @@ async def login_for_token_access(
     return TokenRes(
         token=token_pair,
         user=UserRes(email=user.email),
+        access_token=token_pair.access_token,
     )
