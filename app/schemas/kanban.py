@@ -11,7 +11,12 @@ class KanbanItem(BaseModel):
     owner: str
 
 
-class KanbanBoard(BaseModel):
+class KanbanModel(BaseModel):
     id: str
     name: str
-    kanban_elements: List[KanbanItem]
+    kanban_elements: List[KanbanItem] = []
+
+
+class KanbanCreateReq(BaseModel):
+    name: str
+    team_id: str

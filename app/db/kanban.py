@@ -1,3 +1,4 @@
+"""
 from pymongo.asynchronous.database import AsyncDatabase
 from app.schemas.team import TeamCreateReq, TeamJoinReq
 from typing import Dict, Any, List
@@ -59,11 +60,25 @@ async def get_team_members(db: AsyncDatabase, team_id: str) -> List[str] | None:
     except Exception as e:
         return None
 
+"""
 
-async def add_kanban_to_team(db: AsyncDatabase, team_id: str, kanban_id: str) -> None:
-    try:
-        await db[TEAMS_COLLECTION].update_one(
-            {"_id": ObjectId(team_id)}, {"$addToSet": {"kanban_ids": kanban_id}}
-        )
-    except Exception as e:
-        raise ValueError(f"Failed to add kanban to team: {str(e)}")
+from pymongo.asynchronous.database import AsyncDatabase
+from app.schemas.kanban import KanbanCreateReq
+
+from typing import Dict, Any
+
+from app.core.constants import KANBANS_COLLECTION
+
+
+async def create_kanban(
+    db: AsyncDatabase, kanban_create: KanbanCreateReq
+) -> Dict[str, Any] | None:
+
+    kanban_dict = {
+        "name": kanban_create.name,
+    }
+
+    result = await db[KANBANS_COLLECTION].insert_one(kanban_dict)
+
+    kanban_dict["_id"] = str(result.inserted_id)
+    return kanban_dict
