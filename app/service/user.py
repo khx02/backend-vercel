@@ -27,3 +27,14 @@ async def create_user_service(
         email=user_in_db_dict["email"],
         hashed_password=user_in_db_dict["hashed_password"],
     )
+
+
+async def get_user_token_service(db: AsyncDatabase, email: str) -> UserModel:
+    user_in_db = await db[USERS_COLLECTION].find_one({"email": email})
+    if user_in_db:
+        return UserModel(
+            id=str(user_in_db["_id"]),
+            email=user_in_db["email"],
+            hashed_password=user_in_db["hashed_password"],
+        )
+    return None
