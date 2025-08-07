@@ -20,3 +20,8 @@ class KanbanModel(BaseModel):
 class KanbanCreateReq(BaseModel):
     name: str
     team_id: str
+
+
+class AddKanbanItemReq(BaseModel):
+    kanban_item: KanbanItem
+    kanban_id: str
