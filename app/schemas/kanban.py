@@ -23,5 +23,9 @@ class KanbanCreateReq(BaseModel):
 
 
 class AddKanbanItemReq(BaseModel):
-    kanban_item: KanbanItem
+    name: str
+    start_at: float
+    end_at: float
+    column: int
+    owner: str
     kanban_id: str

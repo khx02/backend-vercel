@@ -3,7 +3,12 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from app.db.client import get_db
 
-from app.schemas.kanban import KanbanModel, KanbanCreateReq, AddKanbanItemReq
+from app.schemas.kanban import (
+    KanbanModel,
+    KanbanCreateReq,
+    AddKanbanItemReq,
+    KanbanItem,
+)
 from app.service.kanban import create_kanban_service, add_kanban_item_service
 
 router = APIRouter()
@@ -25,9 +30,9 @@ async def create_kanban(
 @router.post("/add_kanban_item")
 async def add_kanban_item(
     add_kanban_item: AddKanbanItemReq, db: AsyncDatabase = Depends(get_db)
-) -> None:
+) -> KanbanItem:
     try:
-        await add_kanban_item_service(db, add_kanban_item)
+        return await add_kanban_item_service(db, add_kanban_item)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
