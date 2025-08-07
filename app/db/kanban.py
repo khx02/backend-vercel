@@ -33,6 +33,10 @@ async def add_kanban_item(
         {"_id": ObjectId(kanban_id)}, {"$addToSet": {"items": kanban_item}}
     )
 
+    kanban_item["_id"] = str(item_object_id)  # Convert back to string for return
+
+    return kanban_item
+
 
 async def remove_kanban_item(db: AsyncDatabase, kanban_id: str, item_id: str) -> None:
     await db[KANBANS_COLLECTION].update_one(
