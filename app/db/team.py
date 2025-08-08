@@ -58,3 +58,12 @@ async def get_team_members(db: AsyncDatabase, team_id: str) -> List[str] | None:
         return None
     except Exception as e:
         return None
+
+
+async def add_kanban_to_team(db: AsyncDatabase, team_id: str, kanban_id: str) -> None:
+    try:
+        await db[TEAMS_COLLECTION].update_one(
+            {"_id": ObjectId(team_id)}, {"$addToSet": {"kanban_ids": kanban_id}}
+        )
+    except Exception as e:
+        raise ValueError(f"Failed to add kanban to team: {str(e)}")

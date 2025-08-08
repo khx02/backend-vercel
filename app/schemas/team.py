@@ -7,6 +7,7 @@ class TeamModel(BaseModel):
     name: str
     member_ids: List[str]
     exec_member_ids: List[str]
+    kanban_ids: List[str] = []
 
 
 class TeamCreateReq(BaseModel):
