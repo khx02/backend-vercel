@@ -19,3 +19,7 @@ class UserModel(BaseModel):
 
 class UserRes(BaseModel):
     email: EmailStr
+
+class ChangePasswordReq(BaseModel):
+    old_password: str
+    new_password: str
