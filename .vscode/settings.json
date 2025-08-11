@@ -1,0 +1,25 @@
+{
+  "python.pythonPath": "./.venv/bin/python",
+  "python.defaultInterpreterPath": "./.venv/bin/python",
+  "python.analysis.extraPaths": [
+    "./app"
+  ],
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.useLibraryCodeForTypes": true,
+  "python.analysis.indexing": true,
+  "python.analysis.packageIndexDepths": [
+    {
+      "name": "fastapi",
+      "depth": 3
+    },
+    {
+      "name": "pymongo",
+      "depth": 3
+    },
+    {
+      "name": "pydantic",
+      "depth": 3
+    }
+  ],
+  "python.analysis.typeCheckingMode": "basic"
+}

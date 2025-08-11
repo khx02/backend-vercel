@@ -12,7 +12,7 @@ class TokenPair(BaseModel):
 
 
 class TokenRes(BaseModel):
-    token: TokenPair
+    # token: TokenPair
     user: UserRes
     token_type: str = "bearer"
     access_token: str
