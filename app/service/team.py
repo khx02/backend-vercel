@@ -1,10 +1,11 @@
-from app.schemas.team import TeamCreateReq, TeamModel, TeamJoinReq
+from app.schemas.team import TeamCreateReq, TeamModel
 from app.db.team import (
     create_team as db_create_team,
     join_team as db_join_team,
     get_team_by_name as db_get_team_by_name,
     get_team_by_id as db_get_team_by_id,
     get_team_members as db_get_team_members,
+    leave_team as db_leave_team,
 )
 from pymongo.asynchronous.database import AsyncDatabase
 
@@ -27,17 +28,25 @@ async def create_team_service(
     )
 
 
-async def join_team_service(
-    db: AsyncDatabase, team_join: TeamJoinReq, user_id: str
-) -> None:
-    existing_team = await db_get_team_by_id(db, team_join.team_id)
+async def join_team_service(db: AsyncDatabase, team_id: str, user_id: str) -> None:
+    existing_team = await db_get_team_by_id(db, team_id)
     if not existing_team:
-        raise ValueError(f"Team with ID '{team_join.team_id}' does not exist")
+        raise ValueError(f"Team with ID '{team_id}' does not exist")
 
-    user_already_in_team = user_id in await db_get_team_members(db, team_join.team_id)
+    user_already_in_team = user_id in await db_get_team_members(db, team_id)
     if user_already_in_team:
-        raise ValueError(
-            f"User with ID '{user_id}' is already in team '{team_join.team_id}'"
-        )
+        raise ValueError(f"User with ID '{user_id}' is already in team '{team_id}'")
 
-    await db_join_team(db, team_join, user_id)
+    await db_join_team(db, team_id, user_id)
+
+
+async def leave_team_service(db: AsyncDatabase, team_id: str, user_id: str) -> None:
+    existing_team = await db_get_team_by_id(db, team_id)
+    if not existing_team:
+        raise ValueError(f"Team with ID '{team_id}' does not exist")
+
+    user_in_team = user_id in await db_get_team_members(db, team_id)
+    if not user_in_team:
+        raise ValueError(f"User with ID '{user_id}' is not in team '{team_id}'")
+
+    await db_leave_team(db, team_id, user_id)

@@ -12,7 +12,3 @@ class TeamModel(BaseModel):
 
 class TeamCreateReq(BaseModel):
     name: str
-
-
-class TeamJoinReq(BaseModel):
-    team_id: str
