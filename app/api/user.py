@@ -21,6 +21,7 @@ async def create_user(
         return TokenRes(
             token=token_pair,
             user=UserRes(email=user.email),
+            access_token=token_pair.access_token,
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -31,7 +32,7 @@ async def change_password(
     change_password: ChangePasswordReq,
     current_user: UserModel = Depends(get_current_user),
     db: AsyncDatabase = Depends(get_db),
-) -> UserModel:
+) -> UserModel | None:
     try:
         return await change_password_service(db, change_password, current_user.email)
     except ValueError as e:
