@@ -69,5 +69,4 @@ async def login_for_token_access(
     return TokenRes(
         token=token_pair,
         user=UserRes(email=user.email),
-        access_token=token_pair.access_token,
     )
