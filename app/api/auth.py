@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 import jwt
 
-from app.schemas.token import TokenData, TokenRes
+from app.schemas.token import RefreshTokenReq, TokenData, TokenRes, ValidateTokenRes
 from app.schemas.user import UserModel, UserRes
 from app.db.client import get_db
 from app.service.user import get_user_token_service
@@ -69,4 +69,42 @@ async def login_for_token_access(
     return TokenRes(
         token=token_pair,
         user=UserRes(email=user.email),
+        access_token=token_pair.access_token,
+    )
+
+@router.post("/validate_token", response_model=ValidateTokenRes)
+async def validate_token(
+    current_user: UserModel = Depends(get_current_user),
+) -> ValidateTokenRes:
+    """Validate if current token is valid and return user info"""
+    return ValidateTokenRes(
+        is_valid=True,
+    )
+
+@router.post("refresh_token", response_model=TokenRes)
+async def refresh_token(
+    req: RefreshTokenReq,
+    db: AsyncDatabase = Depends(get_db),
+) -> TokenRes:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate refresh token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = jwt.decode(req.token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+    except jwt.InvalidTokenError:
+        raise credentials_exception
+
+    user = await get_user_token_service(db, email)
+    if user is None:
+        raise credentials_exception
+
+    token_pair = create_token_pair(data={"sub": user.email})
+    return TokenRes(
+        token=token_pair,
+        user=UserRes(email=user.email),
+        access_token=token_pair.access_token,
     )
