@@ -21,3 +21,12 @@ async def get_user_by_email(db: AsyncDatabase, email: str) -> Dict[str, Any] | N
         return None
     except Exception as e:
         return None
+
+
+async def update_password(
+    db: AsyncDatabase, current_user_email: str, new_hashed_password: str
+) -> None:
+    await db[USERS_COLLECTION].update_one(
+        {"email": current_user_email},
+        {"$set": {"hashed_password": new_hashed_password}},
+    )
