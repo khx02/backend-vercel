@@ -81,7 +81,7 @@ async def validate_token(
         is_valid=True,
     )
 
-@router.post("refresh_token", response_model=TokenRes)
+@router.post("/refresh_token", response_model=TokenRes)
 async def refresh_token(
     req: RefreshTokenReq,
     db: AsyncDatabase = Depends(get_db),
