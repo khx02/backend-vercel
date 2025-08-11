@@ -1,5 +1,5 @@
 from pymongo.asynchronous.database import AsyncDatabase
-from app.schemas.team import TeamCreateReq, TeamJoinReq
+from app.schemas.team import TeamCreateReq
 from typing import Dict, Any, List
 
 from bson import ObjectId
@@ -22,10 +22,13 @@ async def create_team(
     return team_dict
 
 
-async def join_team(db: AsyncDatabase, team_join: TeamJoinReq, user_id: str) -> None:
-    await db[TEAMS_COLLECTION].update_one(
-        {"_id": ObjectId(team_join.team_id)}, {"$addToSet": {"member_ids": user_id}}
-    )
+async def join_team(db: AsyncDatabase, team_id: str, user_id: str) -> None:
+    try:
+        await db[TEAMS_COLLECTION].update_one(
+            {"_id": ObjectId(team_id)}, {"$addToSet": {"member_ids": user_id}}
+        )
+    except Exception as e:
+        raise ValueError(f"Failed to add user to team: {str(e)}")
 
 
 async def get_team_by_name(db: AsyncDatabase, team_name: str) -> Dict[str, Any] | None:
@@ -67,3 +70,35 @@ async def add_kanban_to_team(db: AsyncDatabase, team_id: str, kanban_id: str) ->
         )
     except Exception as e:
         raise ValueError(f"Failed to add kanban to team: {str(e)}")
+
+
+async def promote_team_member(db: AsyncDatabase, team_id: str, member_id: str) -> None:
+    try:
+        await db[TEAMS_COLLECTION].update_one(
+            {"_id": ObjectId(team_id)},
+            {"$addToSet": {"exec_member_ids": member_id}},
+        )
+    except Exception as e:
+        raise ValueError(f"Failed to promote team member: {str(e)}")
+
+
+async def leave_team(db: AsyncDatabase, team_id: str, user_id: str) -> None:
+    try:
+        await db[TEAMS_COLLECTION].update_one(
+            {"_id": ObjectId(team_id)},
+            {"$pull": {"member_ids": user_id, "exec_member_ids": user_id}},
+        )
+    except Exception as e:
+        raise ValueError(f"Failed to remove user from team: {str(e)}")
+
+
+async def kick_team_member(
+    db: AsyncDatabase, team_id: str, kick_member_id: str, caller_id: str
+) -> None:
+    try:
+        await db[TEAMS_COLLECTION].update_one(
+            {"_id": ObjectId(team_id)},
+            {"$pull": {"member_ids": kick_member_id}},
+        )
+    except Exception as e:
+        raise ValueError(f"Failed to remove user from team: {str(e)}")

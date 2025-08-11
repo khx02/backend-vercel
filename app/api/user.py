@@ -4,8 +4,9 @@ from app.schemas.token import TokenRes
 from pymongo.asynchronous.database import AsyncDatabase
 from app.db.client import get_db
 
-from app.schemas.user import UserCreateReq, UserModel, UserRes
-from app.service.user import create_user_service
+from app.schemas.user import ChangePasswordReq, UserCreateReq, UserModel, UserRes
+from app.service.user import create_user_service, change_password_service
+from app.api.auth import get_current_user
 
 router = APIRouter()
 
@@ -23,3 +24,20 @@ async def create_user(
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/change_password", response_model=UserModel)
+async def change_password(
+    change_password: ChangePasswordReq,
+    current_user: UserModel = Depends(get_current_user),
+    db: AsyncDatabase = Depends(get_db),
+) -> UserModel:
+    try:
+        return await change_password_service(db, change_password, current_user.email)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to change password",
+        )
