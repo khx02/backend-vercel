@@ -65,6 +65,11 @@ async def kick_team_member_service(
             f"Member with ID '{kick_member_id}' is not in team '{team_id}'"
         )
 
+    if kick_member_id in existing_team["exec_member_ids"]:
+        raise ValueError(
+            f"Member with ID '{kick_member_id}' is an executive and cannot be kicked"
+        )
+
     if caller_id not in existing_team["exec_member_ids"]:
         raise ValueError(
             f"User with ID '{caller_id}' does not have permission to kick members from team '{team_id}'"
