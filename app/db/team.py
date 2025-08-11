@@ -75,7 +75,20 @@ async def add_kanban_to_team(db: AsyncDatabase, team_id: str, kanban_id: str) ->
 async def leave_team(db: AsyncDatabase, team_id: str, user_id: str) -> None:
     try:
         await db[TEAMS_COLLECTION].update_one(
-            {"_id": ObjectId(team_id)}, {"$pull": {"member_ids": user_id}}
+            {"_id": ObjectId(team_id)},
+            {"$pull": {"member_ids": user_id, "exec_member_ids": user_id}},
+        )
+    except Exception as e:
+        raise ValueError(f"Failed to remove user from team: {str(e)}")
+
+
+async def kick_team_member(
+    db: AsyncDatabase, team_id: str, kick_member_id: str, caller_id: str
+) -> None:
+    try:
+        await db[TEAMS_COLLECTION].update_one(
+            {"_id": ObjectId(team_id)},
+            {"$pull": {"member_ids": kick_member_id}},
         )
     except Exception as e:
         raise ValueError(f"Failed to remove user from team: {str(e)}")

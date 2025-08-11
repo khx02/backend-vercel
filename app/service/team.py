@@ -1,4 +1,4 @@
-from app.schemas.team import TeamCreateReq, TeamModel
+from app.schemas.team import TeamCreateReq, TeamModel, KickTeamMemberReq
 from app.db.team import (
     create_team as db_create_team,
     join_team as db_join_team,
@@ -6,6 +6,7 @@ from app.db.team import (
     get_team_by_id as db_get_team_by_id,
     get_team_members as db_get_team_members,
     leave_team as db_leave_team,
+    kick_team_member as db_kick_team_member,
 )
 from pymongo.asynchronous.database import AsyncDatabase
 
@@ -50,3 +51,23 @@ async def leave_team_service(db: AsyncDatabase, team_id: str, user_id: str) -> N
         raise ValueError(f"User with ID '{user_id}' is not in team '{team_id}'")
 
     await db_leave_team(db, team_id, user_id)
+
+
+async def kick_team_member_service(
+    db: AsyncDatabase, team_id: str, kick_member_id: str, caller_id: str
+) -> None:
+    existing_team = await db_get_team_by_id(db, team_id)
+    if not existing_team:
+        raise ValueError(f"Team with ID '{team_id}' does not exist")
+
+    if kick_member_id not in existing_team["member_ids"]:
+        raise ValueError(
+            f"Member with ID '{kick_member_id}' is not in team '{team_id}'"
+        )
+
+    if caller_id not in existing_team["exec_member_ids"]:
+        raise ValueError(
+            f"User with ID '{caller_id}' does not have permission to kick members from team '{team_id}'"
+        )
+
+    await db_kick_team_member(db, team_id, kick_member_id, caller_id)

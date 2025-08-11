@@ -12,3 +12,7 @@ class TeamModel(BaseModel):
 
 class TeamCreateReq(BaseModel):
     name: str
+
+
+class KickTeamMemberReq(BaseModel):
+    member_id: str
