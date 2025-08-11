@@ -26,7 +26,7 @@ def create_token(
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(
-            seconds=ACCESS_TOKEN_EXPIRE_MINUTES
+            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
         )
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -42,7 +42,7 @@ def decode_access_token(token: str) -> Dict[str, str]:
 def create_token_pair(
     data: Dict[str, Any]
 ) -> TokenPair:
-    access_token_expires = timedelta(seconds=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_token(data, access_token_expires)
 
     refresh_token_expires = timedelta(hours=REFRESH_TOKEN_EXPIRE_HOURS)
