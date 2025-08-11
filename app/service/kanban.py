@@ -31,7 +31,7 @@ async def create_kanban_service(
 
 # TODO: Move ObjectID generation to DB layer
 async def add_kanban_item_service(
-    db: AsyncDatabase, add_kanban_item: AddKanbanItemReq
+    db: AsyncDatabase, kanban_id: str, add_kanban_item: AddKanbanItemReq
 ) -> KanbanItem:
     kanban_item_dict = {
         "name": add_kanban_item.name,
@@ -41,9 +41,7 @@ async def add_kanban_item_service(
         "owner": add_kanban_item.owner,
     }
 
-    kanban_item_in_db_dict = await db_add_kanban_item(
-        db, add_kanban_item.kanban_id, kanban_item_dict
-    )
+    kanban_item_in_db_dict = await db_add_kanban_item(db, kanban_id, kanban_item_dict)
 
     return KanbanItem(
         id=kanban_item_in_db_dict["_id"],
@@ -57,9 +55,8 @@ async def add_kanban_item_service(
 
 async def delete_kanban_item_service(
     db: AsyncDatabase,
+    kanban_id: str,
     remove_kanban_item: RemoveKanbanItemReq,
 ) -> None:
 
-    await db_remove_kanban_item(
-        db, remove_kanban_item.kanban_id, remove_kanban_item.item_id
-    )
+    await db_remove_kanban_item(db, kanban_id, remove_kanban_item.item_id)

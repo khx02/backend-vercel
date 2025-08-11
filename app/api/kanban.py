@@ -32,12 +32,14 @@ async def create_kanban(
         )
 
 
-@router.post("/add_kanban_item", response_model=KanbanItem)
+@router.post("/add_kanban_item/{kanban_id}", response_model=KanbanItem)
 async def add_kanban_item(
-    add_kanban_item: AddKanbanItemReq, db: AsyncDatabase = Depends(get_db)
+    kanban_id: str,
+    add_kanban_item: AddKanbanItemReq,
+    db: AsyncDatabase = Depends(get_db),
 ) -> KanbanItem:
     try:
-        return await add_kanban_item_service(db, add_kanban_item)
+        return await add_kanban_item_service(db, kanban_id, add_kanban_item)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -45,12 +47,14 @@ async def add_kanban_item(
         )
 
 
-@router.delete("/remove_kanban_item")
+@router.delete("/remove_kanban_item/{kanban_id}")
 async def remove_kanban_item(
-    remove_kanban_item: RemoveKanbanItemReq, db: AsyncDatabase = Depends(get_db)
+    kanban_id: str,
+    remove_kanban_item: RemoveKanbanItemReq,
+    db: AsyncDatabase = Depends(get_db),
 ) -> None:
     try:
-        await delete_kanban_item_service(db, remove_kanban_item)
+        await delete_kanban_item_service(db, kanban_id, remove_kanban_item)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
