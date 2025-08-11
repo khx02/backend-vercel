@@ -7,6 +7,7 @@ from app.db.team import (
     get_team_members as db_get_team_members,
     leave_team as db_leave_team,
     kick_team_member as db_kick_team_member,
+    promote_team_member as db_promote_team_member,
 )
 from pymongo.asynchronous.database import AsyncDatabase
 
@@ -39,6 +40,26 @@ async def join_team_service(db: AsyncDatabase, team_id: str, user_id: str) -> No
         raise ValueError(f"User with ID '{user_id}' is already in team '{team_id}'")
 
     await db_join_team(db, team_id, user_id)
+
+
+async def promote_team_member_service(
+    db: AsyncDatabase, team_id: str, promote_member_id: str, caller_id: str
+) -> None:
+    existing_team = await db_get_team_by_id(db, team_id)
+    if not existing_team:
+        raise ValueError(f"Team with ID '{team_id}' does not exist")
+
+    if promote_member_id not in existing_team["member_ids"]:
+        raise ValueError(
+            f"Member with ID '{promote_member_id}' is not in team '{team_id}'"
+        )
+
+    if caller_id not in existing_team["exec_member_ids"]:
+        raise ValueError(
+            f"User with ID '{caller_id}' does not have permission to promote members in team '{team_id}'"
+        )
+
+    await db_promote_team_member(db, team_id, promote_member_id)
 
 
 async def leave_team_service(db: AsyncDatabase, team_id: str, user_id: str) -> None:

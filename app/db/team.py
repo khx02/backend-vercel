@@ -72,6 +72,16 @@ async def add_kanban_to_team(db: AsyncDatabase, team_id: str, kanban_id: str) ->
         raise ValueError(f"Failed to add kanban to team: {str(e)}")
 
 
+async def promote_team_member(db: AsyncDatabase, team_id: str, member_id: str) -> None:
+    try:
+        await db[TEAMS_COLLECTION].update_one(
+            {"_id": ObjectId(team_id)},
+            {"$addToSet": {"exec_member_ids": member_id}},
+        )
+    except Exception as e:
+        raise ValueError(f"Failed to promote team member: {str(e)}")
+
+
 async def leave_team(db: AsyncDatabase, team_id: str, user_id: str) -> None:
     try:
         await db[TEAMS_COLLECTION].update_one(
