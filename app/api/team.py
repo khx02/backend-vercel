@@ -54,7 +54,6 @@ async def join_team(
         )
 
 
-# TODO: If last team executive member leaves, remove all members from the team
 @router.post("/leave_team/{team_id}")
 async def leave_team(
     team_id: str,

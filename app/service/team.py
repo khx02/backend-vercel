@@ -50,6 +50,14 @@ async def leave_team_service(db: AsyncDatabase, team_id: str, user_id: str) -> N
     if not user_in_team:
         raise ValueError(f"User with ID '{user_id}' is not in team '{team_id}'")
 
+    if (
+        user_id in existing_team["exec_member_ids"]
+        and len(existing_team["exec_member_ids"]) == 1
+    ):
+        raise ValueError(
+            f"User with ID '{user_id}' is the last executive member and cannot leave the team '{team_id}'"
+        )
+
     await db_leave_team(db, team_id, user_id)
 
 
