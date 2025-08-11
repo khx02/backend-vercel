@@ -14,5 +14,9 @@ class TeamCreateReq(BaseModel):
     name: str
 
 
-class TeamJoinReq(BaseModel):
-    team_id: str
+class KickTeamMemberReq(BaseModel):
+    member_id: str
+
+
+class PromoteTeamMemberReq(BaseModel):
+    member_id: str
