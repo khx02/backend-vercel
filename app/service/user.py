@@ -30,9 +30,8 @@ async def create_user_service(
     )
 
 
-# TODO: Move the database logic to the DB layer
-async def get_token_service(db: AsyncDatabase, email: str) -> UserModel | None:
-    user_in_db = await db[USERS_COLLECTION].find_one({"email": email})
+async def get_user_service(db: AsyncDatabase, email: str) -> UserModel | None:
+    user_in_db = await db_get_user_by_email(db, email)
     if user_in_db:
         return UserModel(
             id=str(user_in_db["_id"]),
@@ -46,7 +45,7 @@ async def change_password_service(
     db: AsyncDatabase, change_password: ChangePasswordReq, current_user_email: str
 ) -> UserModel | None:
 
-    user_in_db = await get_token_service(db, current_user_email)
+    user_in_db = await get_user_service(db, current_user_email)
     if not user_in_db:  # This should not happen as the user should be authenticated
         raise ValueError("User not found")
 
