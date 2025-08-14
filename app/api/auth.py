@@ -31,6 +31,7 @@ async def get_current_user(
         email = payload.get("sub")
         if email is None:
             raise credentials_exception
+        print(email)
         token_data = TokenData(email=email)
     except jwt.InvalidTokenError:
         raise credentials_exception
@@ -88,21 +89,23 @@ async def refresh_token(
     req: RefreshTokenReq,
     db: AsyncDatabase = Depends(get_db),
 ) -> TokenRes:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate refresh token",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
     try:
         payload = jwt.decode(req.token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
     except jwt.InvalidTokenError:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     user = await get_user_service(db, email)
     if user is None:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     token_pair = create_token_pair(data={"sub": user.email})
     return TokenRes(
