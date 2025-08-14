@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.api.auth import (
@@ -9,14 +10,14 @@ from app.api.auth import (
     validate_token,
     refresh_token,
 )
-from app.schemas.token import TokenPair
+from app.schemas.token import TokenPair, RefreshTokenReq
 from app.schemas.user import UserModel
 
 
 @pytest.mark.asyncio
 @patch("app.api.auth.get_user_service")
 @patch("app.api.auth.jwt.decode")
-async def test_get_current_user(mock_decode, mock_get_user_service):
+async def test_get_current_user_success(mock_decode, mock_get_user_service):
     mock_db = AsyncMock()
 
     mock_token = "fake-jwt-token"
@@ -35,9 +36,25 @@ async def test_get_current_user(mock_decode, mock_get_user_service):
 
 
 @pytest.mark.asyncio
+@patch("app.api.auth.jwt.decode")
+async def test_get_current_user_failure(mock_decode):
+    mock_db = AsyncMock()
+
+    mock_token = "fake-jwt-token"
+    mock_decode.return_value = {}
+
+    with pytest.raises(HTTPException) as exc_info:
+        await get_current_user(mock_token, mock_db)
+
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.detail == "Could not validate credentials"
+    assert exc_info.value.headers == {"WWW-Authenticate": "Bearer"}
+
+
+@pytest.mark.asyncio
 @patch("app.api.auth.get_user_service")
 @patch("app.api.auth.verify_password")
-async def test_authenticate_user(mock_verify_password, mock_get_user_service):
+async def test_authenticate_user_success(mock_verify_password, mock_get_user_service):
     mock_db = AsyncMock()
     mock_email = "addi@addi.com"
     mock_password = "meow's"
@@ -50,6 +67,22 @@ async def test_authenticate_user(mock_verify_password, mock_get_user_service):
     assert result.id == "1"
     assert result.email == mock_email
     assert result.hashed_password == "hashed-meow's"
+
+
+@pytest.mark.asyncio
+@patch("app.api.auth.get_user_service")
+async def test_authenticate_user_failure(mock_get_user_service):
+    mock_db = AsyncMock()
+    mock_email = "not-addi@not-addi.com"
+    mock_password = "not-meow's"
+
+    mock_get_user_service.return_value = None
+
+    with pytest.raises(HTTPException) as exc_info:
+        await authenticate_user(mock_db, mock_email, mock_password)
+
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.detail == "Incorrect username or password"
 
 
 @pytest.mark.asyncio
@@ -74,7 +107,30 @@ async def test_login_for_token_access(mock_authenticate_user):
 
 
 @pytest.mark.asyncio
-async def test_validate_token():
+@patch("app.api.auth.authenticate_user")
+async def test_login_for_token_access_failure(mock_authenticate_user):
+    form_data = MagicMock(spec=OAuth2PasswordRequestForm)
+    form_data.username = "not-addi@not-addi.com"
+    form_data.password = "not-meow's"
+
+    mock_db = AsyncMock()
+
+    mock_authenticate_user.side_effect = HTTPException(
+        status_code=401,
+        detail="Incorrect username or password",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await login_for_token_access(form_data, mock_db)
+
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.detail == "Incorrect username or password"
+    assert exc_info.value.headers == {"WWW-Authenticate": "Bearer"}
+
+
+@pytest.mark.asyncio
+async def test_validate_token_success():
     mock_user = UserModel(
         id="1", email="addi@addi.com", hashed_password="hashed-meow's"
     )
@@ -88,7 +144,7 @@ async def test_validate_token():
 @patch("app.api.auth.create_token_pair")
 @patch("app.api.auth.get_user_service")
 @patch("app.api.auth.jwt.decode")
-async def test_refresh_token(
+async def test_refresh_token_success(
     mock_decode, mock_get_user_service, mock_create_token_pair
 ):
     mock_db = AsyncMock()
@@ -106,8 +162,27 @@ async def test_refresh_token(
         token_type="bearer",
     )
 
-    result = await refresh_token(mock_db)
+    refresh_token_request = RefreshTokenReq(token="old-refresh-token")
+
+    result = await refresh_token(refresh_token_request, mock_db)
 
     assert isinstance(result.token, TokenPair)
     assert result.user.email == mock_email
     assert result.access_token is not None
+
+
+@pytest.mark.asyncio
+@patch("app.api.auth.jwt.decode")
+async def test_refresh_token_failure(mock_decode):
+    mock_db = AsyncMock()
+
+    refresh_token_request = RefreshTokenReq(token="old-refresh-token")
+
+    mock_decode.return_value = {}
+
+    with pytest.raises(HTTPException) as exc_info:
+        await refresh_token(refresh_token_request, mock_db)
+
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.detail == "Could not validate refresh token"
+    assert exc_info.value.headers == {"WWW-Authenticate": "Bearer"}
