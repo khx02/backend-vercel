@@ -53,10 +53,6 @@ async def change_password_service(
         raise ValueError("Old password is incorrect")
 
     new_hashed_password = hash_password(change_password.new_password)
-    await db[USERS_COLLECTION].update_one(
-        {"email": current_user_email},
-        {"$set": {"hashed_password": new_hashed_password}},
-    )
 
     await db_update_password(db, current_user_email, new_hashed_password)
 

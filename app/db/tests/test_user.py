@@ -114,4 +114,4 @@ async def test_update_password_failure():
         {"email": "addi@addi.com"},
         {"$set": {"hashed_password": "new-hashed-password"}},
     )
-    assert isinstance(exc_info.value, Exception)
+    assert str(exc_info.value) == "Database error"
