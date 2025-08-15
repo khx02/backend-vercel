@@ -77,7 +77,7 @@ async def get_current_user(
     return user
 
 async def authenticate_user(db: AsyncDatabase, email: str, password: str) -> UserModel:
-    user = await get_token_service(db, email)
+    user = await get_user_service(db, email)
     if user is None or not verify_password(password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -105,11 +105,13 @@ async def login_for_token_access(
         access_token=token_pair.access_token,
     )
 
+
 @router.post("/validate_token", response_model=ValidateTokenRes)
 async def validate_token(
     current_user: UserModel = Depends(get_current_user),
 ) -> ValidateTokenRes:
     return ValidateTokenRes(is_valid=True)
+
 
 @router.post("/refresh_token", response_model=TokenRes)
 async def refresh_token(
@@ -125,7 +127,6 @@ async def refresh_token(
         pass
     except Exception:
         pass
-
     token_to_use = refresh_cookie or req.token
     if not token_to_use:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token")
