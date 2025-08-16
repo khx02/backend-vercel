@@ -28,7 +28,7 @@ jobs:
           run: |
             python -m pip install --upgrade pip
             pip install -r requirements.txt
-            pip install -U pytest pytest-asyncio
+            pip install -U pytest pytest-asyncio pytest-cov
 
         # Running Pytest!
         - name: Test with pytest
@@ -37,4 +37,4 @@ jobs:
             SECRET_KEY: ${{ secrets.SECRET_KEY }}
             ALGORITHM: ${{ secrets.ALGORITHM }}
           run: |
-            python -m pytest
+            python -m pytest --cov=app --cov-fail-under=90

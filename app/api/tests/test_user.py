@@ -64,8 +64,12 @@ async def test_change_password_success(mock_change_password_service):
 
     user_id = "1"
     email = "addi@addi.com"
-    old_password = "old-password"
-    new_password = "new-password"
+    mock_current_user = UserModel(
+        id=user_id, email=email, hashed_password="hashed-old-alex's"
+    )
+
+    old_password = "old-alex's"
+    new_password = "new-alex's"
     change_password_req = ChangePasswordReq(
         old_password=old_password, new_password=new_password
     )
@@ -75,7 +79,7 @@ async def test_change_password_success(mock_change_password_service):
         id=user_id, email=email, hashed_password="hashed-new-alex's"
     )
 
-    result = await change_password(change_password_req, mock_db)
+    result = await change_password(change_password_req, mock_current_user, mock_db)
 
     assert result.id == user_id
     assert result.email == email
@@ -85,15 +89,21 @@ async def test_change_password_success(mock_change_password_service):
 @pytest.mark.asyncio
 @patch("app.api.user.change_password_service")
 async def test_change_password_failure(mock_change_password_service):
+    user_id = "1"
+    email = "addi@addi.com"
+    mock_current_user = UserModel(
+        id=user_id, email=email, hashed_password="hashed-old-alex's"
+    )
+
     change_password_req = ChangePasswordReq(
-        old_password="old-password", new_password="new-password"
+        old_password="old-alex's", new_password="new-alex's"
     )
 
     mock_db = AsyncMock()
     mock_change_password_service.side_effect = ValueError("Invalid password")
 
     with pytest.raises(HTTPException) as exc_info:
-        await change_password(change_password_req, mock_db)
+        await change_password(change_password_req, mock_current_user, mock_db)
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "Invalid password"
