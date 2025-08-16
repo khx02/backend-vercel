@@ -32,5 +32,9 @@ jobs:
 
         # Running Pytest!
         - name: Test with pytest
+          env:
+            MONGODB_URL: ${{ secrets.MONGODB_URL }}
+            SECRET_KEY: ${{ secrets.SECRET_KEY }}
+            ALGORITHM: ${{ secrets.ALGORITHM }}
           run: |
             python -m pytest
