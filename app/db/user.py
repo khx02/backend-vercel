@@ -5,11 +5,16 @@ from typing import Dict, Any
 from app.core.constants import USERS_COLLECTION
 
 
-async def create_user(db: AsyncDatabase, user_hashed: UserHashed) -> Dict[str, Any]:
-    user_hashed_dict = user_hashed.model_dump()
-    result = await db[USERS_COLLECTION].insert_one(user_hashed_dict)
-    user_hashed_dict["_id"] = str(result.inserted_id)
-    return user_hashed_dict
+async def create_user(
+    db: AsyncDatabase, user_hashed: UserHashed
+) -> Dict[str, Any] | None:
+    try:
+        user_hashed_dict = user_hashed.model_dump()
+        result = await db[USERS_COLLECTION].insert_one(user_hashed_dict)
+        user_hashed_dict["_id"] = str(result.inserted_id)
+        return user_hashed_dict
+    except Exception as e:
+        return None
 
 
 async def get_user_by_email(db: AsyncDatabase, email: str) -> Dict[str, Any] | None:
