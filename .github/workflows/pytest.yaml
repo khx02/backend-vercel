@@ -1,0 +1,40 @@
+# The name of the workflow
+name: Pytest
+
+# Specifies the trigger for our workflow
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+    test:
+        
+      # Creates environment/vm using the latest version of Ubuntu
+      runs-on: ubuntu-latest
+
+      steps:
+        # An action that checks out our repository into the environment
+        - uses: actions/checkout@v4
+
+        # Sets up Python in our environment
+        - name: Set Up Python
+          uses: actions/setup-python@v5
+          with:
+            python-version: '3.12'
+        
+        - name: Install dependencies
+          run: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+            pip install -U pytest pytest-asyncio
+
+        # Running Pytest!
+        - name: Test with pytest
+          env:
+            MONGODB_URL: ${{ secrets.MONGODB_URL }}
+            SECRET_KEY: ${{ secrets.SECRET_KEY }}
+            ALGORITHM: ${{ secrets.ALGORITHM }}
+          run: |
+            python -m pytest
