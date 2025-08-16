@@ -24,7 +24,7 @@ async def test_get_current_user_success(mock_decode, mock_get_user_service):
     mock_decode.return_value = {"sub": "addi@addi.com"}
 
     mock_user = UserModel(
-        id="1", email="addi@addi.com", hashed_password="hashed-meow's"
+        id="1", email="addi@addi.com", hashed_password="hashed-alex's"
     )
     mock_get_user_service.return_value = mock_user
 
@@ -32,7 +32,7 @@ async def test_get_current_user_success(mock_decode, mock_get_user_service):
 
     assert result.id == "1"
     assert result.email == "addi@addi.com"
-    assert result.hashed_password == "hashed-meow's"
+    assert result.hashed_password == "hashed-alex's"
 
 
 @pytest.mark.asyncio
@@ -57,16 +57,16 @@ async def test_get_current_user_failure(mock_decode):
 async def test_authenticate_user_success(mock_verify_password, mock_get_user_service):
     mock_db = AsyncMock()
     mock_email = "addi@addi.com"
-    mock_password = "meow's"
+    mock_password = "alex's"
 
-    mock_user = UserModel(id="1", email=mock_email, hashed_password="hashed-meow's")
+    mock_user = UserModel(id="1", email=mock_email, hashed_password="hashed-alex's")
     mock_get_user_service.return_value = mock_user
     mock_verify_password.return_value = True
 
     result = await authenticate_user(mock_db, mock_email, mock_password)
     assert result.id == "1"
     assert result.email == mock_email
-    assert result.hashed_password == "hashed-meow's"
+    assert result.hashed_password == "hashed-alex's"
 
 
 @pytest.mark.asyncio
@@ -74,7 +74,7 @@ async def test_authenticate_user_success(mock_verify_password, mock_get_user_ser
 async def test_authenticate_user_failure(mock_get_user_service):
     mock_db = AsyncMock()
     mock_email = "not-addi@not-addi.com"
-    mock_password = "not-meow's"
+    mock_password = "not-alex's"
 
     mock_get_user_service.return_value = None
 
@@ -90,12 +90,12 @@ async def test_authenticate_user_failure(mock_get_user_service):
 async def test_login_for_token_access(mock_authenticate_user):
     form_data = MagicMock(spec=OAuth2PasswordRequestForm)
     form_data.username = "addi@addi.com"
-    form_data.password = "meow's"
+    form_data.password = "alex's"
 
     mock_db = AsyncMock()
 
     mock_user = UserModel(
-        id="1", email="addi@addi.com", hashed_password="hashed-meow's"
+        id="1", email="addi@addi.com", hashed_password="hashed-alex's"
     )
 
     mock_authenticate_user.return_value = mock_user
@@ -111,7 +111,7 @@ async def test_login_for_token_access(mock_authenticate_user):
 async def test_login_for_token_access_failure(mock_authenticate_user):
     form_data = MagicMock(spec=OAuth2PasswordRequestForm)
     form_data.username = "not-addi@not-addi.com"
-    form_data.password = "not-meow's"
+    form_data.password = "not-alex's"
 
     mock_db = AsyncMock()
 
@@ -132,7 +132,7 @@ async def test_login_for_token_access_failure(mock_authenticate_user):
 @pytest.mark.asyncio
 async def test_validate_token_success():
     mock_user = UserModel(
-        id="1", email="addi@addi.com", hashed_password="hashed-meow's"
+        id="1", email="addi@addi.com", hashed_password="hashed-alex's"
     )
 
     result = await validate_token(mock_user)
@@ -151,7 +151,7 @@ async def test_refresh_token_success(
     mock_email = "addi@addi.com"
 
     mock_decode.return_value = {"sub": mock_email}
-    mock_user = UserModel(id="1", email=mock_email, hashed_password="hashed-meow's")
+    mock_user = UserModel(id="1", email=mock_email, hashed_password="hashed-alex's")
     mock_get_user_service.return_value = mock_user
 
     mock_create_token_pair.return_value = TokenPair(

@@ -16,7 +16,7 @@ async def create_user(
     user_create: UserCreateReq, db: AsyncDatabase = Depends(get_db)
 ) -> TokenRes:
     try:
-        user =  await create_user_service(db, user_create)
+        user = await create_user_service(db, user_create)
         token_pair = create_token_pair(data={"sub": user.email})
         return TokenRes(
             token=token_pair,
