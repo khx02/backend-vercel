@@ -1,47 +1,81 @@
-from typing import Annotated
-from fastapi import Depends, HTTPException, status, APIRouter
+# app/api/auth.py
+from typing import Annotated, Optional
+from fastapi import Cookie, Depends, HTTPException, status, APIRouter, Response
 from pymongo.asynchronous.database import AsyncDatabase
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-
 import jwt
 
-from app.schemas.token import RefreshTokenReq, TokenData, TokenRes, ValidateTokenRes
+from app.schemas.token import TokenRes
 from app.schemas.user import UserModel, UserRes
 from app.db.client import get_db
 from app.service.user import get_user_service
 from app.core.constants import SECRET_KEY, ALGORITHM
 from app.core.security import create_token_pair, verify_password
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
-
+TOKEN_URL = "/auth/token"
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL)
 router = APIRouter()
 
+# ---------- helpers ----------
+def set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
+    # NOTE: For local dev, secure=False is fine. In prod use secure=True and SameSite="none".
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        samesite="lax",
+        secure=False,
+        max_age= 60 * 15,  # 60 sec * 15
+        path="/",
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        samesite="lax",
+        secure=False,
+        max_age=60 * 60 * 24 * 14,  # 14 days
+        path="/",
+    )
 
+def clear_auth_cookies(response: Response) -> None:
+    response.delete_cookie(
+        "access_token", 
+        path="/",
+        httponly=True,
+        samesite="lax",
+        secure=False
+    )
+    response.delete_cookie(
+        "refresh_token", 
+        path="/",
+        httponly=True,
+        samesite="lax",
+        secure=False
+    )
+
+# ---------- shared deps ----------
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: Annotated[AsyncDatabase, Depends(get_db)],
 ) -> UserModel:
-    credentials_exception = HTTPException(
+    cred_exc = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub", None)
-        if email is None:
-            raise credentials_exception
-        print(email)
-        token_data = TokenData(email=email)
+        email = payload.get("sub")
+        if not email:
+            raise cred_exc
     except jwt.InvalidTokenError:
-        raise credentials_exception
-    user = await get_user_service(db, token_data.email)
-    if user is None:
-        raise credentials_exception
+        raise cred_exc
+    user = await get_user_service(db, email)
+    if not user:
+        raise cred_exc
     return user
 
-
-# OAuth2 uses username and password for authentication, for our purposes, assume the email is the username
 async def authenticate_user(db: AsyncDatabase, email: str, password: str) -> UserModel:
     user = await get_user_service(db, email)
     if user is None or not verify_password(password, user.hashed_password):
@@ -52,62 +86,82 @@ async def authenticate_user(db: AsyncDatabase, email: str, password: str) -> Use
         )
     return user
 
-
-@router.post("/token", response_model=TokenRes)
+# ---------- endpoints ----------
+@router.post("/set-token", response_model=TokenRes)
 async def login_for_token_access(
+    response: Response,                                   # <-- add response
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: AsyncDatabase = Depends(get_db),
 ) -> TokenRes:
     user = await authenticate_user(db, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
     token_pair = create_token_pair(data={"sub": user.email})
+
+    # set cookies for browser session
+    set_auth_cookies(response, token_pair.access_token, token_pair.refresh_token)
+
+    # still return body (handy for non-browser clients / testing)
     return TokenRes(
-        token=token_pair,
         user=UserRes(email=user.email),
         access_token=token_pair.access_token,
     )
-
-
-@router.post("/validate_token", response_model=ValidateTokenRes)
-async def validate_token(
-    current_user: UserModel = Depends(get_current_user),
-) -> ValidateTokenRes:
-    """Validate if current token is valid and return user info"""
-    return ValidateTokenRes(
-        is_valid=True,
-    )
-
 
 @router.post("/refresh_token", response_model=TokenRes)
 async def refresh_token(
-    req: RefreshTokenReq,
+    response: Response,  
+    refresh_token_cookie: Optional[str] = Cookie(alias="refresh_token"),
     db: AsyncDatabase = Depends(get_db),
 ) -> TokenRes:
 
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate refresh token",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    if not refresh_token_cookie:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token")
 
     try:
-        payload = jwt.decode(req.token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(refresh_token_cookie, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
     except jwt.InvalidTokenError:
-        raise credentials_exception
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+
     user = await get_user_service(db, email)
     if user is None:
-        raise credentials_exception
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
     token_pair = create_token_pair(data={"sub": user.email})
+
+    # rotate cookies
+    set_auth_cookies(response, token_pair.access_token, token_pair.refresh_token)
+
     return TokenRes(
-        token=token_pair,
         user=UserRes(email=user.email),
         access_token=token_pair.access_token,
     )
+
+# Cookie-based dependency for /me
+async def get_current_user_from_cookie(
+    access_token: Annotated[Optional[str], Cookie(alias="access_token")] = None,
+    db: AsyncDatabase = Depends(get_db)
+) -> UserModel:
+    if not access_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    try:
+        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+    user = await get_user_service(db, email)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    return user
+
+@router.get("/me", response_model=UserRes)
+async def read_me(current_user: UserModel = Depends(get_current_user_from_cookie)) -> UserRes:
+    return UserRes(email=current_user.email)
+
+@router.post("/logout")
+async def logout(response: Response):
+    clear_auth_cookies(response)
+    return {"ok": True}
