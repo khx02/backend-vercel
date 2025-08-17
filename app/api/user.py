@@ -8,8 +8,6 @@ from app.api.auth import get_current_user
 
 router = APIRouter()
 
-# NOTE from hx: actually why do we need to return the UserModel
-
 @router.post("/register", response_model=UserModel)
 async def create_user(
     user_create: UserCreateReq, db: AsyncDatabase = Depends(get_db)

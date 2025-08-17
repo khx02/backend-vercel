@@ -9,9 +9,8 @@ from app.schemas.user import UserModel
 
 
 @pytest.mark.asyncio
-@patch("app.api.user.create_token_pair")
 @patch("app.api.user.create_user_service")
-async def test_create_user_success(mock_create_user_service, mock_create_token_pair):
+async def test_create_user_success(mock_create_user_service):
 
     user_create = UserCreateReq(email="addi@addi.com", password="alex's")
 
@@ -20,21 +19,13 @@ async def test_create_user_success(mock_create_user_service, mock_create_token_p
         id="1", email="addi@addi.com", hashed_password="hashed-alex's"
     )
 
-    mock_create_token_pair.return_value = TokenPair(
-        access_token="new-access-token",
-        refresh_token="new-refresh-token",
-        access_expires_at=3600,
-        refresh_expires_at=7200,
-        token_type="bearer",
-    )
-
     mock_create_user_service.return_value = mock_user_data
 
     result = await create_user(user_create, mock_db)
 
-    assert isinstance(result.token, TokenPair)
-    assert result.user.email == "addi@addi.com"
-    assert result.access_token == "new-access-token"
+    assert result.id == "1"
+    assert result.email == "addi@addi.com"
+    assert result.hashed_password == "hashed-alex's"
 
 
 @pytest.mark.asyncio
@@ -44,18 +35,13 @@ async def test_create_user_failure(mock_create_user_service):
     user_create = UserCreateReq(email="not-addi@not-addi.com", password="not-alex's")
 
     mock_db = AsyncMock()
-    mock_create_user_service.side_effect = HTTPException(
-        status_code=400,
-        detail="User already exists",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    mock_create_user_service.side_effect = ValueError("User already exists")
 
     with pytest.raises(HTTPException) as exc_info:
         await create_user(user_create, mock_db)
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "User already exists"
-    assert exc_info.value.headers == {"WWW-Authenticate": "Bearer"}
 
 
 @pytest.mark.asyncio
