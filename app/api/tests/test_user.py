@@ -93,3 +93,28 @@ async def test_change_password_failure(mock_change_password_service):
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "Invalid password"
+
+
+@pytest.mark.asyncio
+@patch("app.api.user.change_password_service")
+async def test_change_password_server_error(mock_change_password_service):
+    """Test change password with unexpected server error."""
+    user_id = "1"
+    email = "addi@addi.com"
+    mock_current_user = UserModel(
+        id=user_id, email=email, hashed_password="hashed-old-alex's"
+    )
+
+    change_password_req = ChangePasswordReq(
+        old_password="old-alex's", new_password="new-alex's"
+    )
+
+    mock_db = AsyncMock()
+    # Simulate unexpected exception (not ValueError)
+    mock_change_password_service.side_effect = RuntimeError("Database error")
+
+    with pytest.raises(HTTPException) as exc_info:
+        await change_password(change_password_req, mock_current_user, mock_db)
+
+    assert exc_info.value.status_code == 500
+    assert exc_info.value.detail == "Failed to change password"

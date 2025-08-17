@@ -2,12 +2,16 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import HTTPException, Response
 from fastapi.security import OAuth2PasswordRequestForm
+import jwt
 
 from app.api.auth import (
     login_for_token_access,
     get_current_user,
     authenticate_user,
     refresh_token,
+    get_current_user_from_cookie,
+    set_auth_cookies,
+    clear_auth_cookies,
 )
 from app.schemas.token import TokenPair, RefreshTokenReq
 from app.schemas.user import UserModel
@@ -211,3 +215,147 @@ async def test_refresh_token_missing_token():
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "No refresh token"
+
+
+def test_set_auth_cookies():
+    """Test setting authentication cookies."""
+    mock_response = MagicMock(spec=Response)
+    access_token = "test-access-token"
+    refresh_token = "test-refresh-token"
+    
+    set_auth_cookies(mock_response, access_token, refresh_token)
+    
+    # Verify set_cookie was called twice (access and refresh)
+    assert mock_response.set_cookie.call_count == 2
+    
+    # Check the first call (access token)
+    first_call = mock_response.set_cookie.call_args_list[0]
+    assert first_call[1]["key"] == "access_token"
+    assert first_call[1]["value"] == access_token
+    assert first_call[1]["httponly"] is True
+    assert first_call[1]["max_age"] == 60 * 15  # 15 minutes
+    
+    # Check the second call (refresh token)
+    second_call = mock_response.set_cookie.call_args_list[1]
+    assert second_call[1]["key"] == "refresh_token"
+    assert second_call[1]["value"] == refresh_token
+    assert second_call[1]["httponly"] is True
+    assert second_call[1]["max_age"] == 60 * 60 * 24 * 14  # 14 days
+
+
+def test_clear_auth_cookies():
+    """Test clearing authentication cookies."""
+    mock_response = MagicMock(spec=Response)
+    
+    clear_auth_cookies(mock_response)
+    
+    # Verify delete_cookie was called twice
+    assert mock_response.delete_cookie.call_count == 2
+    
+    # Check the calls
+    calls = mock_response.delete_cookie.call_args_list
+    cookie_names = [call[0][0] for call in calls]  # First positional argument
+    assert "access_token" in cookie_names
+    assert "refresh_token" in cookie_names
+
+
+@pytest.mark.asyncio
+@patch("app.api.auth.get_user_service")
+@patch("app.api.auth.jwt.decode")
+async def test_get_current_user_from_cookie_success(mock_decode, mock_get_user_service):
+    """Test successful user retrieval from cookie."""
+    mock_db = AsyncMock()
+    access_token = "valid-access-token"
+    
+    mock_decode.return_value = {"sub": "test@example.com"}
+    mock_user = UserModel(
+        id="1", email="test@example.com", hashed_password="hashed"
+    )
+    mock_get_user_service.return_value = mock_user
+    
+    result = await get_current_user_from_cookie(access_token, mock_db)
+    
+    assert result.email == "test@example.com"
+    assert result.id == "1"
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_from_cookie_no_token():
+    """Test user retrieval with no access token."""
+    mock_db = AsyncMock()
+    
+    with pytest.raises(HTTPException) as exc_info:
+        await get_current_user_from_cookie(None, mock_db)
+    
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.detail == "Not authenticated"
+
+
+@pytest.mark.asyncio
+@patch("app.api.auth.jwt.decode")
+async def test_get_current_user_from_cookie_invalid_token(mock_decode):
+    """Test user retrieval with invalid token."""
+    mock_db = AsyncMock()
+    access_token = "invalid-token"
+    
+    mock_decode.side_effect = jwt.InvalidTokenError("Invalid token")
+    
+    with pytest.raises(HTTPException) as exc_info:
+        await get_current_user_from_cookie(access_token, mock_db)
+    
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.detail == "Invalid token"
+
+
+@pytest.mark.asyncio
+@patch("app.api.auth.get_user_service")
+@patch("app.api.auth.jwt.decode")
+async def test_get_current_user_from_cookie_no_email(mock_decode, mock_get_user_service):
+    """Test user retrieval when token has no email."""
+    mock_db = AsyncMock()
+    access_token = "token-without-email"
+    
+    mock_decode.return_value = {}  # No 'sub' field
+    
+    with pytest.raises(HTTPException) as exc_info:
+        await get_current_user_from_cookie(access_token, mock_db)
+    
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.detail == "Invalid token"
+
+
+@pytest.mark.asyncio
+@patch("app.api.auth.get_user_service")
+@patch("app.api.auth.jwt.decode")
+async def test_get_current_user_from_cookie_user_not_found(mock_decode, mock_get_user_service):
+    """Test user retrieval when user doesn't exist in database."""
+    mock_db = AsyncMock()
+    access_token = "valid-token"
+    
+    mock_decode.return_value = {"sub": "nonexistent@example.com"}
+    mock_get_user_service.return_value = None
+    
+    with pytest.raises(HTTPException) as exc_info:
+        await get_current_user_from_cookie(access_token, mock_db)
+    
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.detail == "User not found"
+
+
+@pytest.mark.asyncio
+@patch("app.api.auth.get_user_service")
+async def test_refresh_token_user_not_found(mock_get_user_service):
+    """Test refresh token when user is not found."""
+    mock_response = MagicMock(spec=Response)
+    mock_db = AsyncMock()
+    
+    mock_get_user_service.return_value = None
+    
+    with patch("app.api.auth.jwt.decode") as mock_decode:
+        mock_decode.return_value = {"sub": "nonexistent@example.com"}
+        
+        with pytest.raises(HTTPException) as exc_info:
+            await refresh_token(mock_response, "valid-refresh-token", mock_db)
+    
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.detail == "User not found"
