@@ -5,10 +5,10 @@ from pymongo.asynchronous.database import AsyncDatabase
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import jwt
 
-from app.schemas.token import RefreshTokenReq, TokenData, TokenRes, ValidateTokenRes
+from app.schemas.token import TokenRes
 from app.schemas.user import UserModel, UserRes
 from app.db.client import get_db
-from app.service.user import get_token_service  # <-- keep this (used below)
+from app.service.user import get_user_service
 from app.core.constants import SECRET_KEY, ALGORITHM
 from app.core.security import create_token_pair, verify_password
 
@@ -25,7 +25,7 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
         httponly=True,
         samesite="lax",
         secure=False,
-        max_age=60 * 15,  # match your access token TTL if you want
+        max_age= 60 * 15,  # 60 sec * 15
         path="/",
     )
     response.set_cookie(
@@ -71,7 +71,7 @@ async def get_current_user(
             raise cred_exc
     except jwt.InvalidTokenError:
         raise cred_exc
-    user = await get_token_service(db, email)
+    user = await get_user_service(db, email)
     if not user:
         raise cred_exc
     return user
@@ -87,7 +87,7 @@ async def authenticate_user(db: AsyncDatabase, email: str, password: str) -> Use
     return user
 
 # ---------- endpoints ----------
-@router.post("/token", response_model=TokenRes)
+@router.post("/set-token", response_model=TokenRes)
 async def login_for_token_access(
     response: Response,                                   # <-- add response
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -105,42 +105,25 @@ async def login_for_token_access(
         access_token=token_pair.access_token,
     )
 
-
-@router.post("/validate_token", response_model=ValidateTokenRes)
-async def validate_token(
-    current_user: UserModel = Depends(get_current_user),
-) -> ValidateTokenRes:
-    return ValidateTokenRes(is_valid=True)
-
-
 @router.post("/refresh_token", response_model=TokenRes)
 async def refresh_token(
     response: Response,  
-    req: RefreshTokenReq,
+    refresh_token_cookie: Optional[str] = Cookie(alias="refresh_token"),
     db: AsyncDatabase = Depends(get_db),
 ) -> TokenRes:
-    # allow either body.token or cookie "refresh_token" (minimal change, body stays supported)
-    refresh_cookie: Optional[str] = None
-    try:
-        # If you prefer cookie-first, uncomment the Cookie dep and use that.
-        # refresh_cookie = refresh_token_cookie
-        pass
-    except Exception:
-        pass
-    token_to_use = refresh_cookie or req.token
-    if not token_to_use:
+
+    if not refresh_token_cookie:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token")
 
     try:
-        payload = jwt.decode(token_to_use, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(refresh_token_cookie, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
         if not email:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
 
-    # FIX: use the correct service (was get_user_token_service)
-    user = await get_token_service(db, email)
+    user = await get_user_service(db, email)
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
@@ -169,7 +152,7 @@ async def get_current_user_from_cookie(
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
-    user = await get_token_service(db, email)
+    user = await get_user_service(db, email)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     return user

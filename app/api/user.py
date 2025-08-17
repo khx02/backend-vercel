@@ -1,31 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.core.security import create_token_pair
-from app.schemas.token import TokenRes
 from pymongo.asynchronous.database import AsyncDatabase
 from app.db.client import get_db
 
-from app.schemas.user import ChangePasswordReq, UserCreateReq, UserModel, UserRes
+from app.schemas.user import ChangePasswordReq, UserCreateReq, UserModel
 from app.service.user import create_user_service, change_password_service
 from app.api.auth import get_current_user
 
 router = APIRouter()
 
+# NOTE from hx: actually why do we need to return the UserModel
 
 @router.post("/register", response_model=UserModel)
 async def create_user(
     user_create: UserCreateReq, db: AsyncDatabase = Depends(get_db)
-) -> TokenRes:
+) -> UserModel | None:
     try:
-        user = await create_user_service(db, user_create)
-        token_pair = create_token_pair(data={"sub": user.email})
-        return TokenRes(
-            token=token_pair,
-            user=UserRes(email=user.email),
-            access_token=token_pair.access_token,
-        )
+        user =  await create_user_service(db, user_create)
+        return user
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
 
 @router.post("/change_password", response_model=UserModel)
 async def change_password(

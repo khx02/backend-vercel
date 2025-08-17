@@ -4,6 +4,7 @@
 env/
 venv/
 .vscode
+.github
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
