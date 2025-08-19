@@ -4,13 +4,14 @@ from fastapi import (
     Cookie,
     Depends,
     HTTPException,
-    Security,
     status,
     APIRouter,
     Response,
+    Request,
+    Security,
 )
 from pymongo.asynchronous.database import AsyncDatabase
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, utils
 import jwt
 
 from app.schemas.token import TokenRes
@@ -21,7 +22,7 @@ from app.core.constants import SECRET_KEY, ALGORITHM
 from app.core.security import create_token_pair, verify_password
 
 TOKEN_URL = "/auth/set-token"
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL, auto_error=False)
 router = APIRouter()
 
 
@@ -59,13 +60,17 @@ def clear_auth_cookies(response: Response) -> None:
 
 # ---------- shared deps ----------
 # This basically runs both the token and the cookie one, prioritising the cookie one
-async def get_current_user() -> UserModel:
+async def get_current_user(
+    db: AsyncDatabase = Depends(get_db),
+    cookie: Annotated[Optional[str], Cookie(alias="access_token")] = None,
+    access_token: Annotated[Optional[str], Depends(oauth2_scheme)] = None,
+) -> UserModel:
     try:
-        cookie_user = await get_current_user_from_cookie()
+        cookie_user = await get_current_user_from_cookie(cookie, db)
         return cookie_user
     except Exception as cookie_e:
         try:
-            token_user = await get_current_user_from_token()
+            token_user = await get_current_user_from_token(access_token, db)
             return token_user
         except Exception as token_e:
             raise HTTPException(
@@ -76,15 +81,15 @@ async def get_current_user() -> UserModel:
 
 # Cookie-based dependency for /me
 async def get_current_user_from_cookie(
-    access_token: Annotated[Optional[str], Cookie(alias="access_token")] = None,
+    cookie: Annotated[Optional[str], Cookie(alias="access_token")] = None,
     db: AsyncDatabase = Depends(get_db),
 ) -> UserModel:
-    if not access_token:
+    if not cookie:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
         )
     try:
-        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(cookie, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
         if not email:
             raise HTTPException(
@@ -105,7 +110,7 @@ async def get_current_user_from_cookie(
 
 # Dev only function as tokens should never be returned to production users
 async def get_current_user_from_token(
-    token: Annotated[str, Depends(oauth2_scheme)],
+    access_token: Optional[str],
     db: Annotated[AsyncDatabase, Depends(get_db)],
 ) -> UserModel:
     cred_exc = HTTPException(
@@ -114,7 +119,7 @@ async def get_current_user_from_token(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
         if not email:
             raise cred_exc
@@ -200,8 +205,7 @@ async def refresh_token(
 
 @router.get("/me", response_model=UserRes)
 async def read_me(
-    current_user: UserModel = Security(get_current_user),
-    _: str = Depends(oauth2_scheme),
+    current_user: UserModel = Depends(get_current_user),
 ) -> UserRes:
     return UserRes(email=current_user.email)
 
