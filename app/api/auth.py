@@ -1,6 +1,14 @@
 # app/api/auth.py
 from typing import Annotated, Optional
-from fastapi import Cookie, Depends, HTTPException, status, APIRouter, Response
+from fastapi import (
+    Cookie,
+    Depends,
+    HTTPException,
+    Security,
+    status,
+    APIRouter,
+    Response,
+)
 from pymongo.asynchronous.database import AsyncDatabase
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import jwt
@@ -192,7 +200,8 @@ async def refresh_token(
 
 @router.get("/me", response_model=UserRes)
 async def read_me(
-    current_user: UserModel = Depends(get_current_user_from_cookie),
+    current_user: UserModel = Security(get_current_user),
+    _: str = Depends(oauth2_scheme),
 ) -> UserRes:
     return UserRes(email=current_user.email)
 
