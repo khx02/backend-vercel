@@ -19,6 +19,15 @@ class Project(BaseModel):
     todo_ids: List[str]
 
 
+class CreateProjectRequest(BaseModel):
+    name: str
+    description: str
+
+
+class CreateProjectResponse(BaseModel):
+    project: Project
+
+
 # Will pass project_id through path
 class GetProjectRequest(BaseModel):
     pass
@@ -29,11 +38,11 @@ class GetProjectResponse(BaseModel):
 
 
 # Will pass project_id through path
-class GetTodoItemsForProjectRequest(BaseModel):
+class GetTodoItemsRequest(BaseModel):
     pass
 
 
-class GetTodoItemsForProjectResponse(BaseModel):
+class GetTodoItemsResponse(BaseModel):
     todos: List[Todo]
 
 

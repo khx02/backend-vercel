@@ -5,10 +5,16 @@ import pytest
 from fastapi import HTTPException, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.api.auth import (authenticate_user, clear_auth_cookies,
-                          get_current_user, get_current_user_from_cookie,
-                          get_current_user_from_token, login_for_token_access,
-                          refresh_token, set_auth_cookies)
+from app.api.auth import (
+    authenticate_user,
+    clear_auth_cookies,
+    get_current_user,
+    get_current_user_from_cookie,
+    get_current_user_from_token,
+    login_for_token_access,
+    refresh_token,
+    set_auth_cookies,
+)
 from app.schemas.token import TokenPair
 from app.schemas.user import UserModel
 

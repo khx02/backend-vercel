@@ -3,10 +3,19 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi import HTTPException, status
 
-from app.api.team import (create_team, join_team, kick_team_member, leave_team,
-                          promote_team_member)
-from app.schemas.team import (KickTeamMemberReq, PromoteTeamMemberReq,
-                              TeamCreateReq, TeamModel)
+from app.api.team import (
+    create_team,
+    join_team,
+    kick_team_member,
+    leave_team,
+    promote_team_member,
+)
+from app.schemas.team import (
+    KickTeamMemberReq,
+    PromoteTeamMemberReq,
+    TeamCreateReq,
+    TeamModel,
+)
 from app.schemas.user import UserModel
 
 

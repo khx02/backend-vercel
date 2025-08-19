@@ -4,8 +4,13 @@ from app.db.kanban import add_kanban_item as db_add_kanban_item
 from app.db.kanban import create_kanban as db_create_kanban
 from app.db.kanban import remove_kanban_item as db_remove_kanban_item
 from app.db.team import add_kanban_to_team as db_add_kanban_to_team
-from app.schemas.kanban import (AddKanbanItemReq, KanbanCreateReq, KanbanItem,
-                                KanbanModel, RemoveKanbanItemReq)
+from app.schemas.kanban import (
+    AddKanbanItemReq,
+    KanbanCreateReq,
+    KanbanItem,
+    KanbanModel,
+    RemoveKanbanItemReq,
+)
 
 
 async def create_kanban_service(

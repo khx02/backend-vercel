@@ -5,8 +5,7 @@ from app.core.security import hash_password, verify_password
 from app.db.user import create_user as db_create_user
 from app.db.user import get_user_by_email as db_get_user_by_email
 from app.db.user import update_password as db_update_password
-from app.schemas.user import (ChangePasswordReq, UserCreateReq, UserHashed,
-                              UserModel)
+from app.schemas.user import ChangePasswordReq, UserCreateReq, UserHashed, UserModel
 
 
 async def create_user_service(

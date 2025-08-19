@@ -4,8 +4,13 @@ import pytest
 from fastapi import HTTPException, status
 
 from app.api.kanban import add_kanban_item, create_kanban, remove_kanban_item
-from app.schemas.kanban import (AddKanbanItemReq, KanbanCreateReq, KanbanItem,
-                                KanbanModel, RemoveKanbanItemReq)
+from app.schemas.kanban import (
+    AddKanbanItemReq,
+    KanbanCreateReq,
+    KanbanItem,
+    KanbanModel,
+    RemoveKanbanItemReq,
+)
 
 
 @pytest.mark.asyncio

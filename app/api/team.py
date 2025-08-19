@@ -3,12 +3,20 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from app.api.auth import get_current_user
 from app.db.client import get_db
-from app.schemas.team import (KickTeamMemberReq, PromoteTeamMemberReq,
-                              TeamCreateReq, TeamModel)
+from app.schemas.team import (
+    KickTeamMemberReq,
+    PromoteTeamMemberReq,
+    TeamCreateReq,
+    TeamModel,
+)
 from app.schemas.user import UserModel
-from app.service.team import (create_team_service, join_team_service,
-                              kick_team_member_service, leave_team_service,
-                              promote_team_member_service)
+from app.service.team import (
+    create_team_service,
+    join_team_service,
+    kick_team_member_service,
+    leave_team_service,
+    promote_team_member_service,
+)
 
 router = APIRouter()
 

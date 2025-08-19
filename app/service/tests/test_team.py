@@ -3,9 +3,13 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from app.schemas.team import TeamCreateReq, TeamModel
-from app.service.team import (create_team_service, join_team_service,
-                              kick_team_member_service, leave_team_service,
-                              promote_team_member_service)
+from app.service.team import (
+    create_team_service,
+    join_team_service,
+    kick_team_member_service,
+    leave_team_service,
+    promote_team_member_service,
+)
 
 
 @pytest.mark.asyncio

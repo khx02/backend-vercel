@@ -2,10 +2,17 @@
 from typing import Annotated, Optional
 
 import jwt
-from fastapi import (APIRouter, Cookie, Depends, HTTPException, Request,
-                     Response, Security, status)
-from fastapi.security import (OAuth2PasswordBearer, OAuth2PasswordRequestForm,
-                              utils)
+from fastapi import (
+    APIRouter,
+    Cookie,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+    Security,
+    status,
+)
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, utils
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.constants import ALGORITHM, SECRET_KEY
