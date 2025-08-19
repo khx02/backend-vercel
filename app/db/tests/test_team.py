@@ -103,6 +103,7 @@ async def test_get_team_by_name_success():
 
     result = await get_team_by_name(mock_db, team_name)
 
+    assert isinstance(result, dict)
     assert result["_id"] == str(team_id)
     assert result["name"] == team_name
     assert result["member_ids"] == ["addi-id"]
@@ -141,6 +142,7 @@ async def test_get_team_by_id_success():
 
     result = await get_team_by_id(mock_db, team_id)
 
+    assert isinstance(result, dict)
     assert result["_id"] == team_id
     assert result["name"] == "addi-team"
     assert result["member_ids"] == ["addi-id"]

@@ -19,6 +19,8 @@ async def create_kanban_service(
 ) -> KanbanModel:
 
     kanban_in_db_dict = await db_create_kanban(db, kanban_create)
+    if not kanban_in_db_dict:
+        raise ValueError("Failed to create kanban")
 
     # Attach the kanban ID to the team which created it
     await db_add_kanban_to_team(db, kanban_create.team_id, kanban_in_db_dict["_id"])

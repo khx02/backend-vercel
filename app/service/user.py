@@ -23,6 +23,9 @@ async def create_user_service(
     user_hashed = UserHashed(email=user_create.email, hashed_password=hashed_password)
 
     user_in_db_dict = await db_create_user(db, user_hashed)
+    if not user_in_db_dict:
+        raise ValueError("Failed to create user")
+
     return UserModel(
         id=user_in_db_dict["_id"],
         email=user_in_db_dict["email"],
