@@ -1,19 +1,11 @@
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
 from fastapi import HTTPException, status
 
-from app.schemas.kanban import (
-    KanbanModel,
-    KanbanCreateReq,
-    AddKanbanItemReq,
-    KanbanItem,
-    RemoveKanbanItemReq,
-)
-from app.api.kanban import (
-    create_kanban,
-    add_kanban_item,
-    remove_kanban_item,
-)
+from app.api.kanban import add_kanban_item, create_kanban, remove_kanban_item
+from app.schemas.kanban import (AddKanbanItemReq, KanbanCreateReq, KanbanItem,
+                                KanbanModel, RemoveKanbanItemReq)
 
 
 @pytest.mark.asyncio

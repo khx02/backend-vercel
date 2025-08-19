@@ -1,10 +1,10 @@
-from pymongo.asynchronous.database import AsyncDatabase
-from app.schemas.team import TeamCreateReq
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 from bson import ObjectId
+from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.constants import TEAMS_COLLECTION
+from app.schemas.team import TeamCreateReq
 
 
 async def create_team(

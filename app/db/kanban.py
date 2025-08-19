@@ -1,10 +1,10 @@
-from pymongo.asynchronous.database import AsyncDatabase
-from app.schemas.kanban import KanbanCreateReq
-from typing import Dict, Any
+from typing import Any, Dict
 
 from bson import ObjectId
+from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.constants import KANBANS_COLLECTION
+from app.schemas.kanban import KanbanCreateReq
 
 
 async def create_kanban(

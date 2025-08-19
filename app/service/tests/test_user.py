@@ -1,12 +1,10 @@
 from unittest.mock import AsyncMock, patch
+
 import pytest
 
-from app.service.user import (
-    change_password_service,
-    create_user_service,
-    get_user_service,
-)
-from app.schemas.user import UserCreateReq, ChangePasswordReq, UserModel
+from app.schemas.user import ChangePasswordReq, UserCreateReq, UserModel
+from app.service.user import (change_password_service, create_user_service,
+                              get_user_service)
 
 
 @pytest.mark.asyncio

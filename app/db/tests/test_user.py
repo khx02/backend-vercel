@@ -1,4 +1,5 @@
 from unittest.mock import AsyncMock
+
 import pytest
 
 from app.db.user import create_user, get_user_by_email, update_password

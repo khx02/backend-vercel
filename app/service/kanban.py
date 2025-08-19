@@ -1,17 +1,11 @@
-from app.schemas.kanban import (
-    KanbanModel,
-    KanbanCreateReq,
-    AddKanbanItemReq,
-    KanbanItem,
-    RemoveKanbanItemReq,
-)
-from app.db.kanban import (
-    create_kanban as db_create_kanban,
-    add_kanban_item as db_add_kanban_item,
-    remove_kanban_item as db_remove_kanban_item,
-)
-from app.db.team import add_kanban_to_team as db_add_kanban_to_team
 from pymongo.asynchronous.database import AsyncDatabase
+
+from app.db.kanban import add_kanban_item as db_add_kanban_item
+from app.db.kanban import create_kanban as db_create_kanban
+from app.db.kanban import remove_kanban_item as db_remove_kanban_item
+from app.db.team import add_kanban_to_team as db_add_kanban_to_team
+from app.schemas.kanban import (AddKanbanItemReq, KanbanCreateReq, KanbanItem,
+                                KanbanModel, RemoveKanbanItemReq)
 
 
 async def create_kanban_service(

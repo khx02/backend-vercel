@@ -1,11 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.user import router as user_router
 from app.api.auth import router as auth_router
-from app.api.team import router as team_router
 from app.api.kanban import router as kanban_router
-
+from app.api.team import router as team_router
+from app.api.user import router as user_router
 
 app = FastAPI()
 

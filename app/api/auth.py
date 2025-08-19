@@ -1,25 +1,19 @@
 # app/api/auth.py
 from typing import Annotated, Optional
-from fastapi import (
-    Cookie,
-    Depends,
-    HTTPException,
-    status,
-    APIRouter,
-    Response,
-    Request,
-    Security,
-)
-from pymongo.asynchronous.database import AsyncDatabase
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, utils
-import jwt
 
+import jwt
+from fastapi import (APIRouter, Cookie, Depends, HTTPException, Request,
+                     Response, Security, status)
+from fastapi.security import (OAuth2PasswordBearer, OAuth2PasswordRequestForm,
+                              utils)
+from pymongo.asynchronous.database import AsyncDatabase
+
+from app.core.constants import ALGORITHM, SECRET_KEY
+from app.core.security import create_token_pair, verify_password
+from app.db.client import get_db
 from app.schemas.token import TokenRes
 from app.schemas.user import UserModel, UserRes
-from app.db.client import get_db
 from app.service.user import get_user_service
-from app.core.constants import SECRET_KEY, ALGORITHM
-from app.core.security import create_token_pair, verify_password
 
 TOKEN_URL = "/auth/set-token"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL, auto_error=False)

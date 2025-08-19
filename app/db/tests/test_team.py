@@ -1,19 +1,12 @@
 from unittest.mock import AsyncMock
-import pytest
 
+import pytest
 from bson import ObjectId
+
+from app.db.team import (add_kanban_to_team, create_team, get_team_by_id,
+                         get_team_by_name, get_team_members, join_team,
+                         kick_team_member, leave_team, promote_team_member)
 from app.schemas.team import TeamCreateReq
-from app.db.team import (
-    create_team,
-    join_team,
-    get_team_by_name,
-    get_team_by_id,
-    get_team_members,
-    add_kanban_to_team,
-    promote_team_member,
-    leave_team,
-    kick_team_member,
-)
 
 
 @pytest.mark.asyncio

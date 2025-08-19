@@ -1,13 +1,10 @@
 from unittest.mock import AsyncMock
-import pytest
 
+import pytest
 from bson import ObjectId
+
+from app.db.kanban import add_kanban_item, create_kanban, remove_kanban_item
 from app.schemas.kanban import KanbanCreateReq
-from app.db.kanban import (
-    create_kanban,
-    add_kanban_item,
-    remove_kanban_item,
-)
 
 
 @pytest.mark.asyncio

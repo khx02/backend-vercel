@@ -1,11 +1,12 @@
-from typing import Dict, Any, Tuple
-from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, Tuple
+
 import jwt
+from passlib.context import CryptContext
 
-from app.core.constants import ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, ALGORITHM, REFRESH_TOKEN_EXPIRE_HOURS
+from app.core.constants import (ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM,
+                                REFRESH_TOKEN_EXPIRE_HOURS, SECRET_KEY)
 from app.schemas.token import TokenPair
-
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
