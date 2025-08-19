@@ -12,9 +12,10 @@ from app.service.user import get_user_service
 from app.core.constants import SECRET_KEY, ALGORITHM
 from app.core.security import create_token_pair, verify_password
 
-TOKEN_URL = "/auth/token"
+TOKEN_URL = "/auth/set-token"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL)
 router = APIRouter()
+
 
 # ---------- helpers ----------
 def set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
@@ -25,7 +26,7 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
         httponly=True,
         samesite="lax",
         secure=False,
-        max_age= 60 * 15,  # 60 sec * 15
+        max_age=60 * 15,  # 60 sec * 15
         path="/",
     )
     response.set_cookie(
@@ -38,24 +39,64 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
         path="/",
     )
 
+
 def clear_auth_cookies(response: Response) -> None:
     response.delete_cookie(
-        "access_token", 
-        path="/",
-        httponly=True,
-        samesite="lax",
-        secure=False
+        "access_token", path="/", httponly=True, samesite="lax", secure=False
     )
     response.delete_cookie(
-        "refresh_token", 
-        path="/",
-        httponly=True,
-        samesite="lax",
-        secure=False
+        "refresh_token", path="/", httponly=True, samesite="lax", secure=False
     )
 
+
 # ---------- shared deps ----------
-async def get_current_user(
+# This basically runs both the token and the cookie one, prioritising the cookie one
+async def get_current_user() -> UserModel:
+    try:
+        cookie_user = await get_current_user_from_cookie()
+        return cookie_user
+    except Exception as cookie_e:
+        try:
+            token_user = await get_current_user_from_token()
+            return token_user
+        except Exception as token_e:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Cookie: {cookie_e}, Token: {token_e}",
+            )
+
+
+# Cookie-based dependency for /me
+async def get_current_user_from_cookie(
+    access_token: Annotated[Optional[str], Cookie(alias="access_token")] = None,
+    db: AsyncDatabase = Depends(get_db),
+) -> UserModel:
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )
+    try:
+        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+            )
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
+
+    user = await get_user_service(db, email)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
+        )
+    return user
+
+
+# Dev only function as tokens should never be returned to production users
+async def get_current_user_from_token(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: Annotated[AsyncDatabase, Depends(get_db)],
 ) -> UserModel:
@@ -76,6 +117,7 @@ async def get_current_user(
         raise cred_exc
     return user
 
+
 async def authenticate_user(db: AsyncDatabase, email: str, password: str) -> UserModel:
     user = await get_user_service(db, email)
     if user is None or not verify_password(password, user.hashed_password):
@@ -86,10 +128,11 @@ async def authenticate_user(db: AsyncDatabase, email: str, password: str) -> Use
         )
     return user
 
+
 # ---------- endpoints ----------
 @router.post("/set-token", response_model=TokenRes)
 async def login_for_token_access(
-    response: Response,                                   # <-- add response
+    response: Response,  # <-- add response
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: AsyncDatabase = Depends(get_db),
 ) -> TokenRes:
@@ -105,27 +148,36 @@ async def login_for_token_access(
         access_token=token_pair.access_token,
     )
 
+
 @router.post("/refresh_token", response_model=TokenRes)
 async def refresh_token(
-    response: Response,  
+    response: Response,
     refresh_token_cookie: Optional[str] = Cookie(alias="refresh_token"),
     db: AsyncDatabase = Depends(get_db),
 ) -> TokenRes:
 
     if not refresh_token_cookie:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token"
+        )
 
     try:
         payload = jwt.decode(refresh_token_cookie, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
         if not email:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+            )
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+        )
 
     user = await get_user_service(db, email)
     if user is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
+        )
 
     token_pair = create_token_pair(data={"sub": user.email})
 
@@ -137,29 +189,13 @@ async def refresh_token(
         access_token=token_pair.access_token,
     )
 
-# Cookie-based dependency for /me
-async def get_current_user_from_cookie(
-    access_token: Annotated[Optional[str], Cookie(alias="access_token")] = None,
-    db: AsyncDatabase = Depends(get_db)
-) -> UserModel:
-    if not access_token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-    try:
-        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
-        if not email:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
-    user = await get_user_service(db, email)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-    return user
 
 @router.get("/me", response_model=UserRes)
-async def read_me(current_user: UserModel = Depends(get_current_user_from_cookie)) -> UserRes:
+async def read_me(
+    current_user: UserModel = Depends(get_current_user_from_cookie),
+) -> UserRes:
     return UserRes(email=current_user.email)
+
 
 @router.post("/logout")
 async def logout(response: Response):
