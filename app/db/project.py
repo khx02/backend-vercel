@@ -37,18 +37,22 @@ async def db_add_todo(
         {"$addToSet": {"todo_ids": todo_dict["_id"]}},
     )
 
+
 async def db_update_todo(
     project_id: str, update_todo_request: UpdateTodoRequest, db: AsyncDatabase
 ) -> None:
 
     await db[TODOS_COLLECTION].update_one(
         {"_id": ObjectId(update_todo_request.todo_id)},
-        {"$set": {
-            "name": update_todo_request.name,
-            "description": update_todo_request.description,
-            "status_id": update_todo_request.status_id
-        }}
+        {
+            "$set": {
+                "name": update_todo_request.name,
+                "description": update_todo_request.description,
+                "status_id": update_todo_request.status_id,
+            }
+        },
     )
+
 
 async def db_delete_todo(project_id: str, todo_id: str, db: AsyncDatabase) -> None:
 
