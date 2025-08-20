@@ -5,12 +5,21 @@ from app.schemas import project
 from app.schemas.project import (
     AddTodoRequest,
     AddTodoResponse,
+    AddTodoStatusRequest,
+    AddTodoStatusResponse,
+    DeleteTodoStatusRequest,
+    DeleteTodoStatusResponse,
     GetProjectResponse,
     GetTodoItemsResponse,
     Project,
     TodoStatus,
 )
-from app.db.project import db_add_todo, db_get_todo_items
+from app.db.project import (
+    db_add_todo,
+    db_add_todo_status,
+    db_delete_todo_status,
+    db_get_todo_items,
+)
 from app.db.project import db_get_project
 
 from bson import ObjectId
@@ -59,3 +68,23 @@ async def get_todo_items_service(
             for todo in todo_items_in_db_list
         ]
     )
+
+
+async def add_todo_status_service(
+    project_id: str, todo_status_request: AddTodoStatusRequest, db: AsyncDatabase
+) -> AddTodoStatusResponse:
+
+    await db_add_todo_status(project_id, todo_status_request.name, db)
+
+    return AddTodoStatusResponse()
+
+
+async def delete_todo_status_service(
+    project_id: str,
+    delete_todo_status_request: DeleteTodoStatusRequest,
+    db: AsyncDatabase,
+) -> DeleteTodoStatusResponse:
+
+    await db_delete_todo_status(project_id, delete_todo_status_request.status_id, db)
+
+    return DeleteTodoStatusResponse()

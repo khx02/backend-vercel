@@ -17,7 +17,9 @@ async def db_get_project(project_id: str, db: AsyncDatabase) -> Dict[str, Any]:
     return result
 
 
-async def db_add_todo(project_id: str, todo_request: AddTodoRequest, db: AsyncDatabase):
+async def db_add_todo(
+    project_id: str, todo_request: AddTodoRequest, db: AsyncDatabase
+) -> None:
     todo_dict = {
         "name": todo_request.name,
         "description": todo_request.description,
@@ -55,3 +57,23 @@ async def db_get_todo_items(project_id: str, db: AsyncDatabase) -> List[Dict[str
     ]
 
     return todos
+
+
+async def db_add_todo_status(project_id: str, name: str, db: AsyncDatabase) -> None:
+
+    todo_status_dict = {"id": str(ObjectId()), "name": name}
+
+    await db[PROJECTS_COLLECTION].update_one(
+        {"_id": ObjectId(project_id)},
+        {"$addToSet": {"todo_statuses": todo_status_dict}},
+    )
+
+
+async def db_delete_todo_status(
+    project_id: str, status_id: str, db: AsyncDatabase
+) -> None:
+
+    await db[PROJECTS_COLLECTION].update_one(
+        {"_id": ObjectId(project_id)},
+        {"$pull": {"todo_statuses": {"id": status_id}}},
+    )

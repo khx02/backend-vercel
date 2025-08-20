@@ -48,7 +48,7 @@ class GetTodoItemsResponse(BaseModel):
 
 
 # Will pass project_id through path
-# May be able to pass the name straight into the path?
+# Will add the todo status as the last status
 class AddTodoStatusRequest(BaseModel):
     name: str
 
@@ -60,7 +60,7 @@ class AddTodoStatusResponse(BaseModel):
 # Will pass project_id through path
 # May be able to pass status id through path as well
 class DeleteTodoStatusRequest(BaseModel):
-    todo_status_id: str
+    status_id: str
 
 
 class DeleteTodoStatusResponse(BaseModel):
