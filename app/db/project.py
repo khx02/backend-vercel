@@ -77,3 +77,18 @@ async def db_delete_todo_status(
         {"_id": ObjectId(project_id)},
         {"$pull": {"todo_statuses": {"id": status_id}}},
     )
+
+
+async def db_reorder_todo_statuses(
+    project_id: str, new_statuses: List[Dict[str, Any]], db: AsyncDatabase
+) -> None:
+
+    new_statuses = [
+        {"id": ObjectId(status["id"]), "name": status["name"]}
+        for status in new_statuses
+    ]
+
+    await db[PROJECTS_COLLECTION].update_one(
+        {"_id": ObjectId(project_id)},
+        {"$set": {"todo_statuses": new_statuses}},
+    )

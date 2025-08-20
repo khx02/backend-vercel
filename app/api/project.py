@@ -11,6 +11,8 @@ from app.schemas.project import (
     DeleteTodoStatusResponse,
     GetProjectResponse,
     GetTodoItemsResponse,
+    ReorderTodoStatusesRequest,
+    ReorderTodoStatusesResponse,
 )
 from app.service.project import (
     add_todo_service,
@@ -18,6 +20,7 @@ from app.service.project import (
     delete_todo_status_service,
     get_project_service,
     get_todo_items_service,
+    reorder_todo_statuses_service,
 )
 
 router = APIRouter()
@@ -68,3 +71,15 @@ async def delete_todo_status(
 ) -> DeleteTodoStatusResponse:
 
     return await delete_todo_status_service(project_id, delete_todo_status_request, db)
+
+
+@router.post("/reorder-todo-statuses/{project_id}")
+async def reorder_todo_statuses(
+    project_id: str,
+    reorder_todo_statuses_request: ReorderTodoStatusesRequest,
+    db: AsyncDatabase = Depends(get_db),
+) -> ReorderTodoStatusesResponse:
+
+    return await reorder_todo_statuses_service(
+        project_id, reorder_todo_statuses_request, db
+    )

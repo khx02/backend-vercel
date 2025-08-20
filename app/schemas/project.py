@@ -68,11 +68,11 @@ class DeleteTodoStatusResponse(BaseModel):
 
 
 # Will pass project_id through path
-class ReorderTodoStatusRequest(BaseModel):
-    new_todo_statuses: List[str]
+class ReorderTodoStatusesRequest(BaseModel):
+    new_status_ids: List[str]
 
 
-class ReorderTodoStatusResponse(BaseModel):
+class ReorderTodoStatusesResponse(BaseModel):
     pass
 
 
