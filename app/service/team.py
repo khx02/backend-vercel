@@ -1,6 +1,7 @@
+from bson import ObjectId
 from pymongo.asynchronous.database import AsyncDatabase
 
-from app.db.team import create_team as db_create_team
+from app.db.team import create_team as db_create_team, db_create_project
 from app.db.team import get_team_by_id as db_get_team_by_id
 from app.db.team import get_team_by_name as db_get_team_by_name
 from app.db.team import get_team_members as db_get_team_members
@@ -8,7 +9,14 @@ from app.db.team import join_team as db_join_team
 from app.db.team import kick_team_member as db_kick_team_member
 from app.db.team import leave_team as db_leave_team
 from app.db.team import promote_team_member as db_promote_team_member
-from app.schemas.team import KickTeamMemberReq, TeamCreateReq, TeamModel
+from app.schemas.project import Project, TodoStatus
+from app.schemas.team import (
+    CreateProjectRequest,
+    CreateProjectResponse,
+    KickTeamMemberReq,
+    TeamCreateReq,
+    TeamModel,
+)
 
 
 async def create_team_service(
@@ -104,3 +112,20 @@ async def kick_team_member_service(
         )
 
     await db_kick_team_member(db, team_id, kick_member_id, caller_id)
+
+
+async def create_project_service(
+    team_id: str, create_project_request: CreateProjectRequest, db: AsyncDatabase
+) -> CreateProjectResponse:
+
+    project_in_db_dict = await db_create_project(team_id, create_project_request, db)
+
+    return CreateProjectResponse(
+        project=Project(
+            id=project_in_db_dict["_id"],
+            name=project_in_db_dict["name"],
+            description=project_in_db_dict["description"],
+            todo_statuses=project_in_db_dict["todo_statuses"],
+            todo_ids=project_in_db_dict["todo_ids"],
+        )
+    )

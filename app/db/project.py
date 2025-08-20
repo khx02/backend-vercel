@@ -2,24 +2,7 @@ from typing import Any, Dict, List
 from bson import ObjectId
 from pymongo.asynchronous.database import AsyncDatabase
 
-from app.schemas.project import CreateProjectRequest
-
 from app.core.constants import PROJECTS_COLLECTION, TODOS_COLLECTION
-
-
-async def db_create_project(
-    create_project_request: CreateProjectRequest, db: AsyncDatabase
-) -> Dict[str, Any]:
-
-    project_dict = {
-        "name": create_project_request.name,
-        "description": create_project_request.description,
-    }
-
-    result = await db[PROJECTS_COLLECTION].insert_one(project_dict)
-
-    project_dict["_id"] = str(result.inserted_id)
-    return project_dict
 
 
 async def db_get_project(project_id: str, db: AsyncDatabase) -> Dict[str, Any]:

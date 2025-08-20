@@ -10,22 +10,12 @@ class TodoStatus(BaseModel):
     name: str
 
 
-# TODO: Handle todo statuses
 class Project(BaseModel):
     id: str
     name: str
     description: str
     todo_statuses: List[TodoStatus]
     todo_ids: List[str]
-
-
-class CreateProjectRequest(BaseModel):
-    name: str
-    description: str
-
-
-class CreateProjectResponse(BaseModel):
-    project: Project
 
 
 # Will pass project_id through path
