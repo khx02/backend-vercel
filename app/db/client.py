@@ -1,9 +1,9 @@
+import os
+
+import certifi
+from dotenv import load_dotenv
 from pymongo import AsyncMongoClient
 from pymongo.asynchronous.database import AsyncDatabase
-import certifi
-
-from dotenv import load_dotenv
-import os
 
 load_dotenv()
 

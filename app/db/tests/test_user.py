@@ -1,4 +1,5 @@
 from unittest.mock import AsyncMock
+
 import pytest
 
 from app.db.user import create_user, get_user_by_email, update_password
@@ -26,6 +27,8 @@ async def test_create_user_success():
             "_id": "some-unique-id",
         }
     )
+
+    assert isinstance(result, dict)
     assert result["_id"] == "some-unique-id"
     assert result["email"] == user_hashed.email
     assert result["hashed_password"] == user_hashed.hashed_password
@@ -64,6 +67,7 @@ async def test_get_user_by_email_success():
 
     result = await get_user_by_email(mock_db, user_email)
 
+    assert isinstance(result, dict)
     assert result["_id"] == user_id
     assert result["email"] == user_email
     assert result["hashed_password"] == user_hashed_password

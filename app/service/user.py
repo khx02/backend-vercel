@@ -1,13 +1,11 @@
-from app.schemas.user import UserCreateReq, UserModel, UserHashed, ChangePasswordReq
-from app.db.user import (
-    create_user as db_create_user,
-    get_user_by_email as db_get_user_by_email,
-    update_password as db_update_password,
-)
 from pymongo.asynchronous.database import AsyncDatabase
 
-from app.core.security import hash_password, verify_password
 from app.core.constants import USERS_COLLECTION
+from app.core.security import hash_password, verify_password
+from app.db.user import create_user as db_create_user
+from app.db.user import get_user_by_email as db_get_user_by_email
+from app.db.user import update_password as db_update_password
+from app.schemas.user import ChangePasswordReq, UserCreateReq, UserHashed, UserModel
 
 
 async def create_user_service(
@@ -23,6 +21,9 @@ async def create_user_service(
     user_hashed = UserHashed(email=user_create.email, hashed_password=hashed_password)
 
     user_in_db_dict = await db_create_user(db, user_hashed)
+    if not user_in_db_dict:
+        raise ValueError("Failed to create user")
+
     return UserModel(
         id=user_in_db_dict["_id"],
         email=user_in_db_dict["email"],

@@ -1,13 +1,10 @@
 from unittest.mock import AsyncMock
-import pytest
 
+import pytest
 from bson import ObjectId
+
+from app.db.kanban import add_kanban_item, create_kanban, remove_kanban_item
 from app.schemas.kanban import KanbanCreateReq
-from app.db.kanban import (
-    create_kanban,
-    add_kanban_item,
-    remove_kanban_item,
-)
 
 
 @pytest.mark.asyncio
@@ -24,6 +21,7 @@ async def test_create_kanban_success():
 
     result = await create_kanban(mock_db, kanban_req)
 
+    assert isinstance(result, dict)
     assert result["_id"] == "some-kanban-id"
     assert result["name"] == "addi-kanban"
 
@@ -60,6 +58,7 @@ async def test_add_kanban_item_success():
     result = await add_kanban_item(mock_db, kanban_id, kanban_item)
 
     mock_collection.update_one.assert_called_once()
+    assert isinstance(result, dict)
     assert "_id" in result
     assert result["name"] == "addi-task"
     assert result["owner"] == "addi@addi.com"

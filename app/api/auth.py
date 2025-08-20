@@ -1,25 +1,26 @@
 # app/api/auth.py
 from typing import Annotated, Optional
+
+import jwt
 from fastapi import (
+    APIRouter,
     Cookie,
     Depends,
     HTTPException,
-    status,
-    APIRouter,
-    Response,
     Request,
+    Response,
     Security,
+    status,
 )
-from pymongo.asynchronous.database import AsyncDatabase
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, utils
-import jwt
+from pymongo.asynchronous.database import AsyncDatabase
 
+from app.core.constants import ALGORITHM, SECRET_KEY
+from app.core.security import create_token_pair, verify_password
+from app.db.client import get_db
 from app.schemas.token import TokenRes
 from app.schemas.user import UserModel, UserRes
-from app.db.client import get_db
 from app.service.user import get_user_service
-from app.core.constants import SECRET_KEY, ALGORITHM
-from app.core.security import create_token_pair, verify_password
 
 TOKEN_URL = "/auth/set-token"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL, auto_error=False)
@@ -118,6 +119,8 @@ async def get_current_user_from_token(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    if not access_token:
+        raise cred_exc
     try:
         payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")

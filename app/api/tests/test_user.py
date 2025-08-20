@@ -1,11 +1,11 @@
-from fastapi import HTTPException
-import pytest
 from unittest.mock import AsyncMock, patch
 
+import pytest
+from fastapi import HTTPException
+
 from app.api.user import change_password, create_user
-from app.schemas.user import UserCreateReq, ChangePasswordReq
 from app.schemas.token import TokenPair
-from app.schemas.user import UserModel
+from app.schemas.user import ChangePasswordReq, UserCreateReq, UserModel
 
 
 @pytest.mark.asyncio
@@ -23,6 +23,7 @@ async def test_create_user_success(mock_create_user_service):
 
     result = await create_user(user_create, mock_db)
 
+    assert isinstance(result, UserModel)
     assert result.id == "1"
     assert result.email == "addi@addi.com"
     assert result.hashed_password == "hashed-alex's"
@@ -67,6 +68,7 @@ async def test_change_password_success(mock_change_password_service):
 
     result = await change_password(change_password_req, mock_current_user, mock_db)
 
+    assert isinstance(result, UserModel)
     assert result.id == user_id
     assert result.email == email
     assert result.hashed_password == "hashed-new-alex's"

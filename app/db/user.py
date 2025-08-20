@@ -1,8 +1,9 @@
+from typing import Any, Dict
+
 from pymongo.asynchronous.database import AsyncDatabase
-from app.schemas.user import UserHashed
-from typing import Dict, Any
 
 from app.core.constants import USERS_COLLECTION
+from app.schemas.user import UserHashed
 
 
 async def create_user(

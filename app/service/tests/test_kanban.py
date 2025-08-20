@@ -1,15 +1,12 @@
 from unittest.mock import AsyncMock, patch
+
 import pytest
 
+from app.schemas.kanban import AddKanbanItemReq, KanbanCreateReq, RemoveKanbanItemReq
 from app.service.kanban import (
-    create_kanban_service,
     add_kanban_item_service,
+    create_kanban_service,
     delete_kanban_item_service,
-)
-from app.schemas.kanban import (
-    KanbanCreateReq,
-    AddKanbanItemReq,
-    RemoveKanbanItemReq,
 )
 
 

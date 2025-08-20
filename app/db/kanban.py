@@ -1,10 +1,10 @@
-from pymongo.asynchronous.database import AsyncDatabase
-from app.schemas.kanban import KanbanCreateReq
-from typing import Dict, Any
+from typing import Any, Dict
 
 from bson import ObjectId
+from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.constants import KANBANS_COLLECTION
+from app.schemas.kanban import KanbanCreateReq
 
 
 async def create_kanban(
@@ -24,7 +24,7 @@ async def create_kanban(
 # TODO: Validate kanban item, such as checking if the column is valid
 async def add_kanban_item(
     db: AsyncDatabase, kanban_id: str, kanban_item: Dict[str, Any]
-) -> None:
+) -> Dict[str, Any]:
     item_object_id = ObjectId()
 
     kanban_item["_id"] = item_object_id
@@ -34,7 +34,6 @@ async def add_kanban_item(
     )
 
     kanban_item["_id"] = str(item_object_id)  # Convert back to string for return
-
     return kanban_item
 
 

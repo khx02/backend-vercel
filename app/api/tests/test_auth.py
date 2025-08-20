@@ -1,18 +1,19 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import jwt
+import pytest
 from fastapi import HTTPException, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
-import jwt
 
 from app.api.auth import (
+    authenticate_user,
+    clear_auth_cookies,
+    get_current_user,
+    get_current_user_from_cookie,
     get_current_user_from_token,
     login_for_token_access,
-    get_current_user,
-    authenticate_user,
     refresh_token,
-    get_current_user_from_cookie,
     set_auth_cookies,
-    clear_auth_cookies,
 )
 from app.schemas.token import TokenPair
 from app.schemas.user import UserModel

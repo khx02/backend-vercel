@@ -1,24 +1,25 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pymongo.asynchronous.database import AsyncDatabase
 
+from app.api.auth import get_current_user
 from app.db.client import get_db
-
 from app.schemas.team import (
-    TeamCreateReq,
-    TeamModel,
+    CreateProjectRequest,
+    CreateProjectResponse,
     KickTeamMemberReq,
     PromoteTeamMemberReq,
+    TeamCreateReq,
+    TeamModel,
 )
 from app.schemas.user import UserModel
 from app.service.team import (
+    create_project_service,
     create_team_service,
     join_team_service,
-    leave_team_service,
     kick_team_member_service,
+    leave_team_service,
     promote_team_member_service,
 )
-from app.api.auth import get_current_user
-
 
 router = APIRouter()
 
@@ -115,3 +116,13 @@ async def kick_team_member(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to kick team member",
         )
+
+
+@router.post("/create-project/{team_id}")
+async def create_project(
+    team_id: str,
+    create_project_request: CreateProjectRequest,
+    db: AsyncDatabase = Depends(get_db),
+) -> CreateProjectResponse:
+
+    return await create_project_service(team_id, create_project_request, db)

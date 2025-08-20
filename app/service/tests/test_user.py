@@ -1,12 +1,13 @@
 from unittest.mock import AsyncMock, patch
+
 import pytest
 
+from app.schemas.user import ChangePasswordReq, UserCreateReq, UserModel
 from app.service.user import (
     change_password_service,
     create_user_service,
     get_user_service,
 )
-from app.schemas.user import UserCreateReq, ChangePasswordReq, UserModel
 
 
 @pytest.mark.asyncio
@@ -78,6 +79,7 @@ async def test_get_user_service_success(mock_db_get_user_by_email):
 
     result = await get_user_service(mock_db, user_email)
 
+    assert isinstance(result, UserModel)
     assert result.id == user_id
     assert result.email == user_email
     assert result.hashed_password == user_hashed_password
@@ -132,6 +134,7 @@ async def test_change_password_service_success(
 
     result = await change_password_service(mock_db, change_password_req, user_email)
 
+    assert isinstance(result, UserModel)
     assert result.id == user_id
     assert result.email == user_email
     assert result.hashed_password == "hashed-new-alex's"

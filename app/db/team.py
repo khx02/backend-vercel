@@ -1,10 +1,11 @@
-from pymongo.asynchronous.database import AsyncDatabase
-from app.schemas.team import TeamCreateReq
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 from bson import ObjectId
+from pymongo.asynchronous.database import AsyncDatabase
 
-from app.core.constants import TEAMS_COLLECTION
+from app.core.constants import PROJECTS_COLLECTION, TEAMS_COLLECTION
+from app.schemas.project import TodoStatus
+from app.schemas.team import CreateProjectRequest, TeamCreateReq
 
 
 async def create_team(
@@ -102,3 +103,29 @@ async def kick_team_member(
         )
     except Exception as e:
         raise ValueError(f"Failed to remove user from team: {str(e)}")
+
+
+async def db_create_project(
+    team_id: str, create_project_request: CreateProjectRequest, db: AsyncDatabase
+) -> Dict[str, Any]:
+
+    project_dict = {
+        "name": create_project_request.name,
+        "description": create_project_request.description,
+        "todo_statuses": [
+            {"id": str(ObjectId()), "name": "To Do"},
+            {"id": str(ObjectId()), "name": "In Progress"},
+            {"id": str(ObjectId()), "name": "Done"},
+        ],
+        "todo_ids": [],
+    }
+
+    result = await db[PROJECTS_COLLECTION].insert_one(project_dict)
+
+    project_dict["_id"] = str(result.inserted_id)
+    await db[TEAMS_COLLECTION].update_one(
+        {"_id": ObjectId(team_id)},
+        {"$addToSet": {"project_ids": project_dict["_id"]}},
+    )
+
+    return project_dict

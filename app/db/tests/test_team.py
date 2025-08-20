@@ -1,19 +1,20 @@
 from unittest.mock import AsyncMock
-import pytest
 
+import pytest
 from bson import ObjectId
-from app.schemas.team import TeamCreateReq
+
 from app.db.team import (
-    create_team,
-    join_team,
-    get_team_by_name,
-    get_team_by_id,
-    get_team_members,
     add_kanban_to_team,
-    promote_team_member,
-    leave_team,
+    create_team,
+    get_team_by_id,
+    get_team_by_name,
+    get_team_members,
+    join_team,
     kick_team_member,
+    leave_team,
+    promote_team_member,
 )
+from app.schemas.team import TeamCreateReq
 
 
 @pytest.mark.asyncio
@@ -103,6 +104,7 @@ async def test_get_team_by_name_success():
 
     result = await get_team_by_name(mock_db, team_name)
 
+    assert isinstance(result, dict)
     assert result["_id"] == str(team_id)
     assert result["name"] == team_name
     assert result["member_ids"] == ["addi-id"]
@@ -141,6 +143,7 @@ async def test_get_team_by_id_success():
 
     result = await get_team_by_id(mock_db, team_id)
 
+    assert isinstance(result, dict)
     assert result["_id"] == team_id
     assert result["name"] == "addi-team"
     assert result["member_ids"] == ["addi-id"]

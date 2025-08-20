@@ -2,17 +2,16 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.db.client import get_db
-
 from app.schemas.kanban import (
-    KanbanModel,
-    KanbanCreateReq,
     AddKanbanItemReq,
+    KanbanCreateReq,
     KanbanItem,
+    KanbanModel,
     RemoveKanbanItemReq,
 )
 from app.service.kanban import (
-    create_kanban_service,
     add_kanban_item_service,
+    create_kanban_service,
     delete_kanban_item_service,
 )
 
