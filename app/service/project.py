@@ -1,13 +1,16 @@
 from pymongo.asynchronous.database import AsyncDatabase
 
+from app.core.constants import TODOS_COLLECTION
 from app.schemas import project
 from app.schemas.project import (
+    AddTodoRequest,
+    AddTodoResponse,
     GetProjectResponse,
     GetTodoItemsResponse,
     Project,
     TodoStatus,
 )
-from app.db.project import db_get_todo_items
+from app.db.project import db_add_todo, db_get_todo_items
 from app.db.project import db_get_project
 
 from bson import ObjectId
@@ -28,6 +31,15 @@ async def get_project_service(project_id: str, db: AsyncDatabase) -> GetProjectR
             todo_ids=project_in_db_dict["todo_ids"],
         )
     )
+
+
+async def add_todo_service(
+    project_id: str, todo_request: AddTodoRequest, db: AsyncDatabase
+) -> AddTodoResponse:
+
+    await db_add_todo(project_id, todo_request, db)
+
+    return AddTodoResponse()
 
 
 async def get_todo_items_service(
