@@ -7,6 +7,8 @@ from app.schemas.project import (
     AddTodoResponse,
     AddTodoStatusRequest,
     AddTodoStatusResponse,
+    DeleteTodoRequest,
+    DeleteTodoResponse,
     DeleteTodoStatusRequest,
     DeleteTodoStatusResponse,
     GetProjectResponse,
@@ -19,6 +21,7 @@ from app.schemas.project import (
 from app.db.project import (
     db_add_todo,
     db_add_todo_status,
+    db_delete_todo,
     db_delete_todo_status,
     db_get_todo_items,
     db_reorder_todo_statuses,
@@ -52,6 +55,16 @@ async def add_todo_service(
     await db_add_todo(project_id, todo_request, db)
 
     return AddTodoResponse()
+
+async def delete_todo_service(
+    project_id: str,
+    delete_todo_request: DeleteTodoRequest,
+    db: AsyncDatabase,
+) -> DeleteTodoResponse:
+
+    await db_delete_todo(project_id, delete_todo_request.todo_id, db)
+
+    return DeleteTodoResponse()
 
 
 async def get_todo_items_service(

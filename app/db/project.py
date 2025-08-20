@@ -13,6 +13,12 @@ async def db_get_project(project_id: str, db: AsyncDatabase) -> Dict[str, Any]:
         raise ValueError(f"Project with ID {project_id} not found")
 
     result["_id"] = str(result["_id"])
+    result["todo_statuses"] = [
+        {"id": str(status["id"]), "name": status["name"]}
+        for status in result["todo_statuses"]
+    ]
+
+    print(result)
 
     return result
 
@@ -31,6 +37,15 @@ async def db_add_todo(
     await db[PROJECTS_COLLECTION].update_one(
         {"_id": ObjectId(project_id)},
         {"$addToSet": {"todo_ids": todo_dict["_id"]}},
+    )
+
+
+async def db_delete_todo(project_id: str, todo_id: str, db: AsyncDatabase) -> None:
+
+    await db[TODOS_COLLECTION].delete_one({"_id": ObjectId(todo_id)})
+    await db[PROJECTS_COLLECTION].update_one(
+        {"_id": ObjectId(project_id)},
+        {"$pull": {"todo_ids": todo_id}},
     )
 
 

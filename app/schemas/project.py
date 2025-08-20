@@ -39,6 +39,16 @@ class AddTodoResponse(BaseModel):
 
 
 # Will pass project_id through path
+# May be worth considering just using the path for the todo_id as well
+class DeleteTodoRequest(BaseModel):
+    todo_id: str
+
+
+class DeleteTodoResponse(BaseModel):
+    pass
+
+
+# Will pass project_id through path
 class GetTodoItemsRequest(BaseModel):
     pass
 
@@ -73,14 +83,4 @@ class ReorderTodoStatusesRequest(BaseModel):
 
 
 class ReorderTodoStatusesResponse(BaseModel):
-    pass
-
-
-# Will pass project_id through path
-# May be worth considering just using the path for the todo_id as well
-class DeleteTodoRequest(BaseModel):
-    todo_id: str
-
-
-class DeleteTodoResponse(BaseModel):
     pass

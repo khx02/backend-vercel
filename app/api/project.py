@@ -7,6 +7,8 @@ from app.schemas.project import (
     AddTodoResponse,
     AddTodoStatusRequest,
     AddTodoStatusResponse,
+    DeleteTodoRequest,
+    DeleteTodoResponse,
     DeleteTodoStatusRequest,
     DeleteTodoStatusResponse,
     GetProjectResponse,
@@ -17,6 +19,7 @@ from app.schemas.project import (
 from app.service.project import (
     add_todo_service,
     add_todo_status_service,
+    delete_todo_service,
     delete_todo_status_service,
     get_project_service,
     get_todo_items_service,
@@ -44,6 +47,14 @@ async def add_todo(
 
     return await add_todo_service(project_id, todo_request, db)
 
+@router.delete("/delete-todo/{project_id}")
+async def delete_todo(
+    project_id: str,
+    delete_todo_request: DeleteTodoRequest,
+    db: AsyncDatabase = Depends(get_db),
+) -> DeleteTodoResponse:
+
+    return await delete_todo_service(project_id, delete_todo_request, db)
 
 @router.get("/get-todo-items/{project_id}")
 async def get_todo_items(
