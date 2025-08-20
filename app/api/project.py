@@ -15,6 +15,8 @@ from app.schemas.project import (
     GetTodoItemsResponse,
     ReorderTodoStatusesRequest,
     ReorderTodoStatusesResponse,
+    UpdateTodoRequest,
+    UpdateTodoResponse,
 )
 from app.service.project import (
     add_todo_service,
@@ -24,6 +26,7 @@ from app.service.project import (
     get_project_service,
     get_todo_items_service,
     reorder_todo_statuses_service,
+    update_todo_service,
 )
 
 router = APIRouter()
@@ -46,6 +49,17 @@ async def add_todo(
 ) -> AddTodoResponse:
 
     return await add_todo_service(project_id, todo_request, db)
+
+
+# TODO: Ensure that todo status falls within the existing status ids
+@router.post("/update-todo/{project_id}")
+async def update_todo(
+    project_id: str,
+    update_todo_request: UpdateTodoRequest,
+    db: AsyncDatabase = Depends(get_db),
+) -> UpdateTodoResponse:
+
+    return await update_todo_service(project_id, update_todo_request, db)
 
 
 @router.delete("/delete-todo/{project_id}")

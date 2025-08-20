@@ -39,6 +39,18 @@ class AddTodoResponse(BaseModel):
 
 
 # Will pass project_id through path
+class UpdateTodoRequest(BaseModel):
+    todo_id: str
+    name: str
+    description: str
+    status_id: str
+
+
+class UpdateTodoResponse(BaseModel):
+    pass
+
+
+# Will pass project_id through path
 # May be worth considering just using the path for the todo_id as well
 class DeleteTodoRequest(BaseModel):
     todo_id: str

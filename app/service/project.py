@@ -1,7 +1,5 @@
 from pymongo.asynchronous.database import AsyncDatabase
 
-from app.core.constants import TODOS_COLLECTION
-from app.schemas import project
 from app.schemas.project import (
     AddTodoRequest,
     AddTodoResponse,
@@ -16,7 +14,8 @@ from app.schemas.project import (
     Project,
     ReorderTodoStatusesRequest,
     ReorderTodoStatusesResponse,
-    TodoStatus,
+    UpdateTodoRequest,
+    UpdateTodoResponse,
 )
 from app.db.project import (
     db_add_todo,
@@ -25,6 +24,7 @@ from app.db.project import (
     db_delete_todo_status,
     db_get_todo_items,
     db_reorder_todo_statuses,
+    db_update_todo,
 )
 from app.db.project import db_get_project
 
@@ -55,6 +55,15 @@ async def add_todo_service(
     await db_add_todo(project_id, todo_request, db)
 
     return AddTodoResponse()
+
+
+async def update_todo_service(
+    project_id: str, update_todo_request: UpdateTodoRequest, db: AsyncDatabase
+) -> UpdateTodoResponse:
+
+    await db_update_todo(project_id, update_todo_request, db)
+
+    return UpdateTodoResponse()
 
 
 async def delete_todo_service(
