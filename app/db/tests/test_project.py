@@ -41,7 +41,9 @@ async def test_db_get_project_success():
 @pytest.mark.asyncio
 async def test_db_add_todo_success():
     project_id = "507f1f77bcf86cd799439011"
-    todo_req = AddTodoRequest(name="Todo", description="Desc", status_id="status1")
+    todo_req = AddTodoRequest(
+        name="Todo", description="Desc", status_id="status1", owner_id="owner1"
+    )
     mock_todos_collection = AsyncMock()
     mock_projects_collection = AsyncMock()
     mock_result = AsyncMock()
@@ -65,7 +67,11 @@ async def test_db_add_todo_success():
 async def test_db_update_todo_success():
     project_id = "507f1f77bcf86cd799439011"
     update_req = UpdateTodoRequest(
-        todo_id=str(ObjectId()), name="Updated", description="Desc", status_id="status1"
+        todo_id=str(ObjectId()),
+        name="Updated",
+        description="Desc",
+        status_id="status1",
+        owner_id="owner1",
     )
     mock_todos_collection = AsyncMock()
     mock_db = AsyncMock()

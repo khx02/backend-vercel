@@ -6,3 +6,4 @@ class Todo(BaseModel):
     name: str
     description: str
     status_id: str
+    owner_id: str

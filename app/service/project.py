@@ -90,6 +90,7 @@ async def get_todo_items_service(
                 name=todo["name"],
                 description=todo["description"],
                 status_id=todo["status_id"],
+                owner_id=todo["owner_id"],
             )
             for todo in todo_items_in_db_list
         ]

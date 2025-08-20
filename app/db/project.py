@@ -22,12 +22,13 @@ async def db_get_project(project_id: str, db: AsyncDatabase) -> Dict[str, Any]:
 
 
 async def db_add_todo(
-    project_id: str, todo_request: AddTodoRequest, db: AsyncDatabase
+    project_id: str, add_todo_request: AddTodoRequest, db: AsyncDatabase
 ) -> None:
     todo_dict = {
-        "name": todo_request.name,
-        "description": todo_request.description,
-        "status_id": todo_request.status_id,
+        "name": add_todo_request.name,
+        "description": add_todo_request.description,
+        "status_id": add_todo_request.status_id,
+        "owner_id": add_todo_request.owner_id,
     }
     result = await db[TODOS_COLLECTION].insert_one(todo_dict)
 
@@ -49,6 +50,7 @@ async def db_update_todo(
                 "name": update_todo_request.name,
                 "description": update_todo_request.description,
                 "status_id": update_todo_request.status_id,
+                "owner_id": update_todo_request.owner_id,
             }
         },
     )
