@@ -50,7 +50,9 @@ async def test_get_project_service_success(mock_db_get_project):
 async def test_add_todo_service_success(mock_db_add_todo):
     project_id = "proj1"
     mock_db = AsyncMock()
-    todo_req = AddTodoRequest(name="Todo", description="Desc", status_id="status1")
+    todo_req = AddTodoRequest(
+        name="Todo", description="Desc", status_id="status1", owner_id="owner1"
+    )
     mock_db_add_todo.return_value = None
     result = await add_todo_service(project_id, todo_req, mock_db)
     assert result is not None
@@ -62,7 +64,11 @@ async def test_update_todo_service_success(mock_db_update_todo):
     project_id = "proj1"
     mock_db = AsyncMock()
     update_req = UpdateTodoRequest(
-        todo_id="todo1", name="Updated", description="Desc", status_id="status1"
+        todo_id="todo1",
+        name="Updated",
+        description="Desc",
+        status_id="status1",
+        owner_id="owner1",
     )
     mock_db_update_todo.return_value = None
     result = await update_todo_service(project_id, update_req, mock_db)
@@ -86,7 +92,13 @@ async def test_get_todo_items_service_success(mock_db_get_todo_items):
     project_id = "proj1"
     mock_db = AsyncMock()
     mock_db_get_todo_items.return_value = [
-        {"_id": "todo1", "name": "Todo", "description": "Desc", "status_id": "status1"}
+        {
+            "_id": "todo1",
+            "name": "Todo",
+            "description": "Desc",
+            "status_id": "status1",
+            "owner_id": "owner1",
+        }
     ]
     result = await get_todo_items_service(project_id, mock_db)
     assert isinstance(result, GetTodoItemsResponse)
