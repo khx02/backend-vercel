@@ -47,6 +47,7 @@ async def add_todo(
 
     return await add_todo_service(project_id, todo_request, db)
 
+
 @router.delete("/delete-todo/{project_id}")
 async def delete_todo(
     project_id: str,
@@ -55,6 +56,7 @@ async def delete_todo(
 ) -> DeleteTodoResponse:
 
     return await delete_todo_service(project_id, delete_todo_request, db)
+
 
 @router.get("/get-todo-items/{project_id}")
 async def get_todo_items(

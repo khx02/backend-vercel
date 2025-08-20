@@ -56,6 +56,7 @@ async def add_todo_service(
 
     return AddTodoResponse()
 
+
 async def delete_todo_service(
     project_id: str,
     delete_todo_request: DeleteTodoRequest,
