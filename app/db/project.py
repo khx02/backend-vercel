@@ -18,8 +18,6 @@ async def db_get_project(project_id: str, db: AsyncDatabase) -> Dict[str, Any]:
         for status in result["todo_statuses"]
     ]
 
-    print(result)
-
     return result
 
 
