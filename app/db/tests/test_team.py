@@ -20,11 +20,11 @@ from app.schemas.team import TeamCreateReq
 @pytest.mark.asyncio
 async def test_create_team_success():
     team_req = TeamCreateReq(name="addi-team")
-    creator_id = "addi-creator-id"
+    creator_id = str(ObjectId())
 
     mock_collection = AsyncMock()
     mock_result = AsyncMock()
-    mock_result.inserted_id = "some-team-id"
+    mock_result.inserted_id = ObjectId()
     mock_collection.insert_one.return_value = mock_result
 
     mock_db = AsyncMock()
@@ -32,16 +32,16 @@ async def test_create_team_success():
 
     result = await create_team(mock_db, team_req, creator_id)
 
-    assert result["_id"] == "some-team-id"
-    assert result["name"] == "addi-team"
-    assert result["member_ids"] == ["addi-creator-id"]
-    assert result["exec_member_ids"] == ["addi-creator-id"]
+    assert result["_id"] == str(mock_result.inserted_id)
+    assert result["name"] == team_req.name
+    assert result["member_ids"] == [creator_id]
+    assert result["exec_member_ids"] == [creator_id]
 
 
 @pytest.mark.asyncio
 async def test_create_team_failure():
     team_req = TeamCreateReq(name="addi-team")
-    creator_id = "addi-creator-id"
+    creator_id = str(ObjectId())
 
     mock_collection = AsyncMock()
     mock_collection.insert_one.side_effect = Exception("Database error")
@@ -55,9 +55,8 @@ async def test_create_team_failure():
 
 @pytest.mark.asyncio
 async def test_join_team_success():
-    team_id = "507f1f77bcf86cd799439011"
-    user_id = "addi-user-id"
-
+    team_id = str(ObjectId())
+    user_id = str(ObjectId())
     mock_collection = AsyncMock()
     mock_db = AsyncMock()
     mock_db.__getitem__.return_value = mock_collection
@@ -65,14 +64,14 @@ async def test_join_team_success():
     await join_team(mock_db, team_id, user_id)
 
     mock_collection.update_one.assert_called_once_with(
-        {"_id": ObjectId(team_id)}, {"$addToSet": {"member_ids": user_id}}
+        {"_id": ObjectId(team_id)}, {"$addToSet": {"member_ids": ObjectId(user_id)}}
     )
 
 
 @pytest.mark.asyncio
 async def test_join_team_failure():
-    team_id = "507f1f77bcf86cd799439011"
-    user_id = "addi-user-id"
+    team_id = str(ObjectId())
+    user_id = str(ObjectId())
 
     mock_collection = AsyncMock()
     mock_collection.update_one.side_effect = Exception("Database error")
@@ -169,12 +168,15 @@ async def test_get_team_members_success():
     team_id = "507f1f77bcf86cd799439011"
     object_id = ObjectId(team_id)
 
+    exec_id = ObjectId()
+    member_id = ObjectId()
+
     mock_collection = AsyncMock()
     mock_collection.find_one.return_value = {
         "_id": object_id,
         "name": "addi-team",
-        "member_ids": ["addi-id", "member-2-id"],
-        "exec_member_ids": ["addi-id"],
+        "member_ids": [exec_id, member_id],
+        "exec_member_ids": [exec_id],
     }
 
     mock_db = AsyncMock()
@@ -182,7 +184,7 @@ async def test_get_team_members_success():
 
     result = await get_team_members(mock_db, team_id)
 
-    assert result == ["addi-id", "member-2-id"]
+    assert result == [str(exec_id), str(member_id)]
 
 
 @pytest.mark.asyncio
@@ -203,7 +205,7 @@ async def test_get_team_members_failure():
 @pytest.mark.asyncio
 async def test_add_kanban_to_team_success():
     team_id = "507f1f77bcf86cd799439011"
-    kanban_id = "addi-kanban-id"
+    kanban_id = str(ObjectId())
 
     mock_collection = AsyncMock()
     mock_db = AsyncMock()
@@ -212,14 +214,14 @@ async def test_add_kanban_to_team_success():
     await add_kanban_to_team(mock_db, team_id, kanban_id)
 
     mock_collection.update_one.assert_called_once_with(
-        {"_id": ObjectId(team_id)}, {"$addToSet": {"kanban_ids": kanban_id}}
+        {"_id": ObjectId(team_id)}, {"$addToSet": {"kanban_ids": ObjectId(kanban_id)}}
     )
 
 
 @pytest.mark.asyncio
 async def test_add_kanban_to_team_failure():
     team_id = "507f1f77bcf86cd799439011"
-    kanban_id = "addi-kanban-id"
+    kanban_id = str(ObjectId())
 
     mock_collection = AsyncMock()
     mock_collection.update_one.side_effect = Exception("Database error")
@@ -236,7 +238,7 @@ async def test_add_kanban_to_team_failure():
 @pytest.mark.asyncio
 async def test_promote_team_member_success():
     team_id = "507f1f77bcf86cd799439011"
-    member_id = "addi-member-id"
+    member_id = str(ObjectId())
 
     mock_collection = AsyncMock()
     mock_db = AsyncMock()
@@ -245,14 +247,15 @@ async def test_promote_team_member_success():
     await promote_team_member(mock_db, team_id, member_id)
 
     mock_collection.update_one.assert_called_once_with(
-        {"_id": ObjectId(team_id)}, {"$addToSet": {"exec_member_ids": member_id}}
+        {"_id": ObjectId(team_id)},
+        {"$addToSet": {"exec_member_ids": ObjectId(member_id)}},
     )
 
 
 @pytest.mark.asyncio
 async def test_promote_team_member_failure():
     team_id = "507f1f77bcf86cd799439011"
-    member_id = "addi-member-id"
+    member_id = str(ObjectId())
 
     mock_collection = AsyncMock()
     mock_collection.update_one.side_effect = Exception("Database error")
@@ -269,7 +272,7 @@ async def test_promote_team_member_failure():
 @pytest.mark.asyncio
 async def test_leave_team_success():
     team_id = "507f1f77bcf86cd799439011"
-    user_id = "addi-user-id"
+    user_id = str(ObjectId())
 
     mock_collection = AsyncMock()
     mock_db = AsyncMock()
@@ -279,14 +282,19 @@ async def test_leave_team_success():
 
     mock_collection.update_one.assert_called_once_with(
         {"_id": ObjectId(team_id)},
-        {"$pull": {"member_ids": user_id, "exec_member_ids": user_id}},
+        {
+            "$pull": {
+                "member_ids": ObjectId(user_id),
+                "exec_member_ids": ObjectId(user_id),
+            }
+        },
     )
 
 
 @pytest.mark.asyncio
 async def test_leave_team_failure():
     team_id = "507f1f77bcf86cd799439011"
-    user_id = "addi-user-id"
+    user_id = str(ObjectId())
 
     mock_collection = AsyncMock()
     mock_collection.update_one.side_effect = Exception("Database error")
@@ -303,8 +311,8 @@ async def test_leave_team_failure():
 @pytest.mark.asyncio
 async def test_kick_team_member_success():
     team_id = "507f1f77bcf86cd799439011"
-    kick_member_id = "member-to-kick-id"
-    caller_id = "addi-caller-id"
+    kick_member_id = str(ObjectId())
+    caller_id = str(ObjectId())
 
     mock_collection = AsyncMock()
     mock_db = AsyncMock()
@@ -313,15 +321,15 @@ async def test_kick_team_member_success():
     await kick_team_member(mock_db, team_id, kick_member_id, caller_id)
 
     mock_collection.update_one.assert_called_once_with(
-        {"_id": ObjectId(team_id)}, {"$pull": {"member_ids": kick_member_id}}
+        {"_id": ObjectId(team_id)}, {"$pull": {"member_ids": ObjectId(kick_member_id)}}
     )
 
 
 @pytest.mark.asyncio
 async def test_kick_team_member_failure():
     team_id = "507f1f77bcf86cd799439011"
-    kick_member_id = "member-to-kick-id"
-    caller_id = "addi-caller-id"
+    kick_member_id = str(ObjectId())
+    caller_id = str(ObjectId())
 
     mock_collection = AsyncMock()
     mock_collection.update_one.side_effect = Exception("Database error")
