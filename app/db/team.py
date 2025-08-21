@@ -18,6 +18,9 @@ def stringify_team_dict(team_dict: Dict[str, Any]) -> Dict[str, Any]:
         ],
     }
 
+    team_dict["_id"] = str(team_dict["_id"])
+    return team_dict
+
 
 async def create_team(
     db: AsyncDatabase, team_req: TeamCreateReq, creator_id: str

@@ -1,5 +1,6 @@
 from unittest.mock import AsyncMock
 
+from bson import ObjectId
 import pytest
 
 from app.db.user import create_user, get_user_by_email, update_password
@@ -9,10 +10,11 @@ from app.schemas.user import UserHashed
 @pytest.mark.asyncio
 async def test_create_user_success():
     user_hashed = UserHashed(email="addi@addi.com", hashed_password="hashed-alex's")
+    user_id = str(ObjectId())
 
     mock_collection = AsyncMock()
     mock_result = AsyncMock()
-    mock_result.inserted_id = "some-unique-id"
+    mock_result.inserted_id = ObjectId(user_id)
     mock_collection.insert_one.return_value = mock_result
 
     mock_db = AsyncMock()
@@ -22,14 +24,16 @@ async def test_create_user_success():
 
     mock_collection.insert_one.assert_called_once_with(
         {
+            "_id": ObjectId(user_id),
             "email": user_hashed.email,
             "hashed_password": user_hashed.hashed_password,
-            "_id": "some-unique-id",
         }
     )
 
+    print(result)
+
     assert isinstance(result, dict)
-    assert result["_id"] == "some-unique-id"
+    assert result["_id"] == user_id
     assert result["email"] == user_hashed.email
     assert result["hashed_password"] == user_hashed.hashed_password
 
@@ -51,7 +55,7 @@ async def test_create_user_failure():
 
 @pytest.mark.asyncio
 async def test_get_user_by_email_success():
-    user_id = "1"
+    user_id = str(ObjectId())
     user_email = "addi@addi.com"
     user_hashed_password = "hashed-alex's"
 
