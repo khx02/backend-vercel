@@ -19,6 +19,19 @@ def stringify_project_dict(project_dict: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def stringify_todo_list(todo_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    return [
+        {
+            "_id": str(todo["_id"]),
+            "name": todo["name"],
+            "description": todo["description"],
+            "status_id": str(todo["status_id"]),
+            "owner_id": str(todo["owner_id"]),
+        }
+        for todo in todo_list
+    ]
+
+
 async def db_get_project(project_id: str, db: AsyncDatabase) -> Dict[str, Any]:
 
     result = await db[PROJECTS_COLLECTION].find_one({"_id": ObjectId(project_id)})
@@ -85,12 +98,7 @@ async def db_get_todo_items(project_id: str, db: AsyncDatabase) -> List[Dict[str
     todos = await db[TODOS_COLLECTION].find({"_id": {"$in": todo_ids}}).to_list(None)
 
     # Turn all ObjectIDs into strings
-    todos = [
-        {**todo, "_id": str(todo["_id"]), "status_id": str(todo["status_id"])}
-        for todo in todos
-    ]
-
-    return todos
+    return stringify_todo_list(todos)
 
 
 async def db_add_todo_status(project_id: str, name: str, db: AsyncDatabase) -> None:
