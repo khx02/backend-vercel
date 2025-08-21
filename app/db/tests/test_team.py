@@ -6,6 +6,7 @@ from bson import ObjectId
 from app.db.team import (
     add_kanban_to_team,
     create_team,
+    db_create_project,
     get_team_by_id,
     get_team_by_name,
     get_team_members,
@@ -14,7 +15,8 @@ from app.db.team import (
     leave_team,
     promote_team_member,
 )
-from app.schemas.team import TeamCreateReq
+
+from app.schemas.team import CreateProjectRequest, TeamCreateReq
 
 
 @pytest.mark.asyncio
@@ -126,7 +128,7 @@ async def test_get_team_by_name_failure():
 
 @pytest.mark.asyncio
 async def test_get_team_by_id_success():
-    team_id = "507f1f77bcf86cd799439011"
+    team_id = str(ObjectId())
     object_id = ObjectId(team_id)
 
     mock_collection = AsyncMock()
@@ -150,7 +152,7 @@ async def test_get_team_by_id_success():
 
 @pytest.mark.asyncio
 async def test_get_team_by_id_failure():
-    team_id = "507f1f77bcf86cd799439011"
+    team_id = str(ObjectId())
 
     mock_collection = AsyncMock()
     mock_collection.find_one.side_effect = Exception("Database error")
@@ -165,7 +167,7 @@ async def test_get_team_by_id_failure():
 
 @pytest.mark.asyncio
 async def test_get_team_members_success():
-    team_id = "507f1f77bcf86cd799439011"
+    team_id = str(ObjectId())
     object_id = ObjectId(team_id)
 
     exec_id = ObjectId()
@@ -189,7 +191,7 @@ async def test_get_team_members_success():
 
 @pytest.mark.asyncio
 async def test_get_team_members_failure():
-    team_id = "507f1f77bcf86cd799439011"
+    team_id = str(ObjectId())
 
     mock_collection = AsyncMock()
     mock_collection.find_one.side_effect = Exception("Database error")
@@ -204,7 +206,7 @@ async def test_get_team_members_failure():
 
 @pytest.mark.asyncio
 async def test_add_kanban_to_team_success():
-    team_id = "507f1f77bcf86cd799439011"
+    team_id = str(ObjectId())
     kanban_id = str(ObjectId())
 
     mock_collection = AsyncMock()
@@ -220,7 +222,7 @@ async def test_add_kanban_to_team_success():
 
 @pytest.mark.asyncio
 async def test_add_kanban_to_team_failure():
-    team_id = "507f1f77bcf86cd799439011"
+    team_id = str(ObjectId())
     kanban_id = str(ObjectId())
 
     mock_collection = AsyncMock()
@@ -237,7 +239,7 @@ async def test_add_kanban_to_team_failure():
 
 @pytest.mark.asyncio
 async def test_promote_team_member_success():
-    team_id = "507f1f77bcf86cd799439011"
+    team_id = str(ObjectId())
     member_id = str(ObjectId())
 
     mock_collection = AsyncMock()
@@ -254,7 +256,7 @@ async def test_promote_team_member_success():
 
 @pytest.mark.asyncio
 async def test_promote_team_member_failure():
-    team_id = "507f1f77bcf86cd799439011"
+    team_id = str(ObjectId())
     member_id = str(ObjectId())
 
     mock_collection = AsyncMock()
@@ -271,7 +273,7 @@ async def test_promote_team_member_failure():
 
 @pytest.mark.asyncio
 async def test_leave_team_success():
-    team_id = "507f1f77bcf86cd799439011"
+    team_id = str(ObjectId())
     user_id = str(ObjectId())
 
     mock_collection = AsyncMock()
@@ -293,7 +295,7 @@ async def test_leave_team_success():
 
 @pytest.mark.asyncio
 async def test_leave_team_failure():
-    team_id = "507f1f77bcf86cd799439011"
+    team_id = str(ObjectId())
     user_id = str(ObjectId())
 
     mock_collection = AsyncMock()
@@ -310,7 +312,7 @@ async def test_leave_team_failure():
 
 @pytest.mark.asyncio
 async def test_kick_team_member_success():
-    team_id = "507f1f77bcf86cd799439011"
+    team_id = str(ObjectId())
     kick_member_id = str(ObjectId())
     caller_id = str(ObjectId())
 
@@ -327,7 +329,7 @@ async def test_kick_team_member_success():
 
 @pytest.mark.asyncio
 async def test_kick_team_member_failure():
-    team_id = "507f1f77bcf86cd799439011"
+    team_id = str(ObjectId())
     kick_member_id = str(ObjectId())
     caller_id = str(ObjectId())
 
@@ -341,3 +343,26 @@ async def test_kick_team_member_failure():
         await kick_team_member(mock_db, team_id, kick_member_id, caller_id)
 
     assert "Failed to remove user from team" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_create_project_success():
+    team_id = str(ObjectId())
+    create_project_request = CreateProjectRequest(
+        name="Test Project",
+        description="A project for testing",
+    )
+
+    mock_collection = AsyncMock()
+    mock_collection.insert_one.return_value = AsyncMock(inserted_id=ObjectId())
+    mock_db = AsyncMock()
+    mock_db.__getitem__.return_value = mock_collection
+
+    result = await db_create_project(team_id, create_project_request, mock_db)
+
+    assert result["name"] == create_project_request.name
+    assert result["description"] == create_project_request.description
+    assert len(result["todo_statuses"]) == 3
+    assert all(
+        "id" in status and "name" in status for status in result["todo_statuses"]
+    )

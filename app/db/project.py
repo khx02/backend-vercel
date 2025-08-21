@@ -6,6 +6,19 @@ from app.core.constants import PROJECTS_COLLECTION, TODOS_COLLECTION
 from app.schemas.project import AddTodoRequest, UpdateTodoRequest
 
 
+def stringify_project_dict(project_dict: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "_id": str(project_dict["_id"]),
+        "name": project_dict["name"],
+        "description": project_dict["description"],
+        "todo_statuses": [
+            {"id": str(status["id"]), "name": status["name"]}
+            for status in project_dict["todo_statuses"]
+        ],
+        "todo_ids": [str(todo_id) for todo_id in project_dict["todo_ids"]],
+    }
+
+
 async def db_get_project(project_id: str, db: AsyncDatabase) -> Dict[str, Any]:
 
     result = await db[PROJECTS_COLLECTION].find_one({"_id": ObjectId(project_id)})

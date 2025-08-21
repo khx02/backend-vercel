@@ -4,7 +4,7 @@ from bson import ObjectId
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.constants import PROJECTS_COLLECTION, TEAMS_COLLECTION
-from app.schemas.project import TodoStatus
+from app.db.project import stringify_project_dict
 from app.schemas.team import CreateProjectRequest, TeamCreateReq
 
 
@@ -17,9 +17,6 @@ def stringify_team_dict(team_dict: Dict[str, Any]) -> Dict[str, Any]:
             str(member_id) for member_id in team_dict.get("exec_member_ids", [])
         ],
     }
-
-    team_dict["_id"] = str(team_dict["_id"])
-    return team_dict
 
 
 async def create_team(
@@ -133,19 +130,19 @@ async def db_create_project(
         "name": create_project_request.name,
         "description": create_project_request.description,
         "todo_statuses": [
-            {"id": str(ObjectId()), "name": "To Do"},
-            {"id": str(ObjectId()), "name": "In Progress"},
-            {"id": str(ObjectId()), "name": "Done"},
+            {"id": ObjectId(), "name": "To Do"},
+            {"id": ObjectId(), "name": "In Progress"},
+            {"id": ObjectId(), "name": "Done"},
         ],
         "todo_ids": [],
     }
 
     result = await db[PROJECTS_COLLECTION].insert_one(project_dict)
 
-    project_dict["_id"] = str(result.inserted_id)
+    project_dict["_id"] = result.inserted_id
     await db[TEAMS_COLLECTION].update_one(
         {"_id": ObjectId(team_id)},
         {"$addToSet": {"project_ids": project_dict["_id"]}},
     )
 
-    return project_dict
+    return stringify_project_dict(project_dict)
