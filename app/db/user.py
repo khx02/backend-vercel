@@ -6,14 +6,23 @@ from app.core.constants import USERS_COLLECTION
 from app.schemas.user import UserHashed
 
 
+def stringify_user_dict(user_dict: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "_id": str(user_dict["_id"]),
+        "email": user_dict["email"],
+        "hashed_password": user_dict["hashed_password"],
+    }
+
+
 async def create_user(
     db: AsyncDatabase, user_hashed: UserHashed
 ) -> Dict[str, Any] | None:
     try:
         user_hashed_dict = user_hashed.model_dump()
         result = await db[USERS_COLLECTION].insert_one(user_hashed_dict)
-        user_hashed_dict["_id"] = str(result.inserted_id)
-        return user_hashed_dict
+        user_hashed_dict["_id"] = result.inserted_id
+
+        return stringify_user_dict(user_hashed_dict)
     except Exception as e:
         return None
 
@@ -22,8 +31,7 @@ async def get_user_by_email(db: AsyncDatabase, email: str) -> Dict[str, Any] | N
     try:
         user_dict = await db[USERS_COLLECTION].find_one({"email": email})
         if user_dict:
-            user_dict["_id"] = str(user_dict["_id"])
-            return user_dict
+            return stringify_user_dict(user_dict)
         return None
     except Exception as e:
         return None
