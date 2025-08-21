@@ -131,6 +131,7 @@ async def test_db_get_todo_items_success():
                 "name": "Todo",
                 "description": "Desc",
                 "status_id": ObjectId("507f1f77bcf86cd799439012"),
+                "owner_id": ObjectId("507f1f77bcf86cd799439013"),
             }
         ]
     )
