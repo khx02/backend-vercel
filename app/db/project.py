@@ -25,13 +25,7 @@ async def db_get_project(project_id: str, db: AsyncDatabase) -> Dict[str, Any]:
     if not result:
         raise ValueError(f"Project with ID {project_id} not found")
 
-    result["_id"] = str(result["_id"])
-    result["todo_statuses"] = [
-        {"id": str(status["id"]), "name": status["name"]}
-        for status in result["todo_statuses"]
-    ]
-
-    return result
+    return stringify_project_dict(result)
 
 
 async def db_add_todo(
@@ -40,12 +34,12 @@ async def db_add_todo(
     todo_dict = {
         "name": add_todo_request.name,
         "description": add_todo_request.description,
-        "status_id": add_todo_request.status_id,
-        "owner_id": add_todo_request.owner_id,
+        "status_id": ObjectId(add_todo_request.status_id),
+        "owner_id": ObjectId(add_todo_request.owner_id),
     }
     result = await db[TODOS_COLLECTION].insert_one(todo_dict)
 
-    todo_dict["_id"] = str(result.inserted_id)
+    todo_dict["_id"] = result.inserted_id
     await db[PROJECTS_COLLECTION].update_one(
         {"_id": ObjectId(project_id)},
         {"$addToSet": {"todo_ids": todo_dict["_id"]}},
@@ -62,8 +56,8 @@ async def db_update_todo(
             "$set": {
                 "name": update_todo_request.name,
                 "description": update_todo_request.description,
-                "status_id": update_todo_request.status_id,
-                "owner_id": update_todo_request.owner_id,
+                "status_id": ObjectId(update_todo_request.status_id),
+                "owner_id": ObjectId(update_todo_request.owner_id),
             }
         },
     )
@@ -74,7 +68,7 @@ async def db_delete_todo(project_id: str, todo_id: str, db: AsyncDatabase) -> No
     await db[TODOS_COLLECTION].delete_one({"_id": ObjectId(todo_id)})
     await db[PROJECTS_COLLECTION].update_one(
         {"_id": ObjectId(project_id)},
-        {"$pull": {"todo_ids": todo_id}},
+        {"$pull": {"todo_ids": ObjectId(todo_id)}},
     )
 
 
@@ -88,11 +82,7 @@ async def db_get_todo_items(project_id: str, db: AsyncDatabase) -> List[Dict[str
     if not todo_ids:
         return []
 
-    todos = (
-        await db[TODOS_COLLECTION]
-        .find({"_id": {"$in": [ObjectId(todo_id) for todo_id in todo_ids]}})
-        .to_list(None)
-    )
+    todos = await db[TODOS_COLLECTION].find({"_id": {"$in": todo_ids}}).to_list(None)
 
     # Turn all ObjectIDs into strings
     todos = [
@@ -105,7 +95,7 @@ async def db_get_todo_items(project_id: str, db: AsyncDatabase) -> List[Dict[str
 
 async def db_add_todo_status(project_id: str, name: str, db: AsyncDatabase) -> None:
 
-    todo_status_dict = {"id": str(ObjectId()), "name": name}
+    todo_status_dict = {"id": ObjectId(), "name": name}
 
     await db[PROJECTS_COLLECTION].update_one(
         {"_id": ObjectId(project_id)},
@@ -119,7 +109,7 @@ async def db_delete_todo_status(
 
     await db[PROJECTS_COLLECTION].update_one(
         {"_id": ObjectId(project_id)},
-        {"$pull": {"todo_statuses": {"id": status_id}}},
+        {"$pull": {"todo_statuses": {"id": ObjectId(status_id)}}},
     )
 
 
