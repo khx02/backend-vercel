@@ -3,8 +3,8 @@ from typing import Any, Dict, List
 from bson import ObjectId
 from pymongo.asynchronous.database import AsyncDatabase
 
-from app.core.common import stringify_object_ids
 from app.core.constants import PROJECTS_COLLECTION, TEAMS_COLLECTION
+from app.db.project import stringify_project_dict
 from app.schemas.team import CreateProjectRequest, TeamCreateReq
 
 
@@ -31,7 +31,8 @@ async def create_team(
     result = await db[TEAMS_COLLECTION].insert_one(team_dict)
     team_dict["_id"] = result.inserted_id
 
-    return stringify_object_ids(team_dict)
+    team_dict = stringify_team_dict(team_dict)
+    return team_dict
 
 
 async def join_team(db: AsyncDatabase, team_id: str, user_id: str) -> None:
@@ -144,4 +145,4 @@ async def db_create_project(
         {"$addToSet": {"project_ids": project_dict["_id"]}},
     )
 
-    return stringify_object_ids(project_dict)
+    return stringify_project_dict(project_dict)
