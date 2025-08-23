@@ -43,32 +43,11 @@ async def join_team(db: AsyncDatabase, team_id: str, user_id: str) -> None:
         raise ValueError(f"Failed to add user to team: {str(e)}")
 
 
-async def get_team_by_name(db: AsyncDatabase, team_name: str) -> Dict[str, Any] | None:
-    try:
-        team_dict = await db[TEAMS_COLLECTION].find_one({"name": team_name})
-        if team_dict:
-            return stringify_team_dict(team_dict)
-        return None
-    except Exception as e:
-        return None
-
-
 async def get_team_by_id(db: AsyncDatabase, team_id: str) -> Dict[str, Any] | None:
     try:
         team_dict = await db[TEAMS_COLLECTION].find_one({"_id": ObjectId(team_id)})
         if team_dict:
             return stringify_team_dict(team_dict)
-        return None
-    except Exception as e:
-        return None
-
-
-async def get_team_members(db: AsyncDatabase, team_id: str) -> List[str] | None:
-    try:
-        team_dict = await db[TEAMS_COLLECTION].find_one({"_id": ObjectId(team_id)})
-        if team_dict:
-            team_dict = stringify_team_dict(team_dict)
-            return team_dict["member_ids"]
         return None
     except Exception as e:
         return None

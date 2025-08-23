@@ -8,8 +8,6 @@ from app.db.team import (
     create_team,
     db_create_project,
     get_team_by_id,
-    get_team_by_name,
-    get_team_members,
     join_team,
     kick_team_member,
     leave_team,
@@ -88,45 +86,6 @@ async def test_join_team_failure():
 
 
 @pytest.mark.asyncio
-async def test_get_team_by_name_success():
-    team_name = "addi-team"
-    team_id = ObjectId()
-
-    mock_collection = AsyncMock()
-    mock_collection.find_one.return_value = {
-        "_id": team_id,
-        "name": team_name,
-        "member_ids": ["addi-id"],
-        "exec_member_ids": ["addi-id"],
-    }
-
-    mock_db = AsyncMock()
-    mock_db.__getitem__.return_value = mock_collection
-
-    result = await get_team_by_name(mock_db, team_name)
-
-    assert isinstance(result, dict)
-    assert result["_id"] == str(team_id)
-    assert result["name"] == team_name
-    assert result["member_ids"] == ["addi-id"]
-
-
-@pytest.mark.asyncio
-async def test_get_team_by_name_failure():
-    team_name = "addi-team"
-
-    mock_collection = AsyncMock()
-    mock_collection.find_one.side_effect = Exception("Database error")
-
-    mock_db = AsyncMock()
-    mock_db.__getitem__.return_value = mock_collection
-
-    result = await get_team_by_name(mock_db, team_name)
-
-    assert result is None
-
-
-@pytest.mark.asyncio
 async def test_get_team_by_id_success():
     team_id = str(ObjectId())
     object_id = ObjectId(team_id)
@@ -161,45 +120,6 @@ async def test_get_team_by_id_failure():
     mock_db.__getitem__.return_value = mock_collection
 
     result = await get_team_by_id(mock_db, team_id)
-
-    assert result is None
-
-
-@pytest.mark.asyncio
-async def test_get_team_members_success():
-    team_id = str(ObjectId())
-    object_id = ObjectId(team_id)
-
-    exec_id = ObjectId()
-    member_id = ObjectId()
-
-    mock_collection = AsyncMock()
-    mock_collection.find_one.return_value = {
-        "_id": object_id,
-        "name": "addi-team",
-        "member_ids": [exec_id, member_id],
-        "exec_member_ids": [exec_id],
-    }
-
-    mock_db = AsyncMock()
-    mock_db.__getitem__.return_value = mock_collection
-
-    result = await get_team_members(mock_db, team_id)
-
-    assert result == [str(exec_id), str(member_id)]
-
-
-@pytest.mark.asyncio
-async def test_get_team_members_failure():
-    team_id = str(ObjectId())
-
-    mock_collection = AsyncMock()
-    mock_collection.find_one.side_effect = Exception("Database error")
-
-    mock_db = AsyncMock()
-    mock_db.__getitem__.return_value = mock_collection
-
-    result = await get_team_members(mock_db, team_id)
 
     assert result is None
 
