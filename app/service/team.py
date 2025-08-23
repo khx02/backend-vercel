@@ -57,6 +57,7 @@ async def get_team_service(
             name=existing_team["name"],
             member_ids=existing_team["member_ids"],
             exec_member_ids=existing_team["exec_member_ids"],
+            project_ids=existing_team["project_ids"],
         )
     )
 
