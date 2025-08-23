@@ -12,6 +12,7 @@ from app.schemas.project import Project, TodoStatus
 from app.schemas.team import (
     CreateProjectRequest,
     CreateProjectResponse,
+    GetTeamResponse,
     KickTeamMemberReq,
     TeamCreateReq,
     TeamModel,
@@ -35,7 +36,7 @@ async def create_team_service(
 
 async def get_team_service(
     team_id: str, current_user: UserModel, db: AsyncDatabase
-) -> TeamModel:
+) -> GetTeamResponse:
     existing_team = await db_get_team_by_id(db, team_id)
     if not existing_team:
         raise HTTPException(
@@ -49,11 +50,13 @@ async def get_team_service(
             detail=f"User is not a member of the team: user_id={current_user.id}, team_id={team_id}",
         )
 
-    return TeamModel(
-        id=existing_team["_id"],
-        name=existing_team["name"],
-        member_ids=existing_team["member_ids"],
-        exec_member_ids=existing_team["exec_member_ids"],
+    return GetTeamResponse(
+        team=TeamModel(
+            id=existing_team["_id"],
+            name=existing_team["name"],
+            member_ids=existing_team["member_ids"],
+            exec_member_ids=existing_team["exec_member_ids"],
+        )
     )
 
 

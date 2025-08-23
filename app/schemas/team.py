@@ -18,6 +18,14 @@ class TeamCreateReq(BaseModel):
     name: str
 
 
+class GetTeamRequest(BaseModel):
+    pass
+
+
+class GetTeamResponse(BaseModel):
+    team: TeamModel
+
+
 class KickTeamMemberReq(BaseModel):
     member_id: str
 

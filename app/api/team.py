@@ -6,6 +6,7 @@ from app.db.client import get_db
 from app.schemas.team import (
     CreateProjectRequest,
     CreateProjectResponse,
+    GetTeamResponse,
     KickTeamMemberReq,
     PromoteTeamMemberReq,
     TeamCreateReq,
@@ -50,7 +51,7 @@ async def get_team(
     team_id: str,
     current_user: UserModel = Depends(get_current_user),
     db: AsyncDatabase = Depends(get_db),
-) -> TeamModel:
+) -> GetTeamResponse:
     return await get_team_service(team_id, current_user, db)
 
 
