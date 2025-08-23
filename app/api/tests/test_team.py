@@ -38,7 +38,7 @@ async def test_create_team_success(mock_create_team_service):
         name=mock_team_name,
         member_ids=[user_id],
         exec_member_ids=[user_id],
-        kanban_ids=[],
+        project_ids=[],
     )
 
     result = await create_team(team_create_req, mock_current_user, mock_db)
@@ -47,7 +47,7 @@ async def test_create_team_success(mock_create_team_service):
     assert result.name == mock_team_name
     assert result.member_ids == [user_id]
     assert result.exec_member_ids == [user_id]
-    assert result.kanban_ids == []
+    assert result.project_ids == []
 
 
 @pytest.mark.asyncio

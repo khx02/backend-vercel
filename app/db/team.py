@@ -26,6 +26,7 @@ async def create_team(
         "name": team_req.name,
         "member_ids": [ObjectId(creator_id)],
         "exec_member_ids": [ObjectId(creator_id)],
+        "project_ids": [],
     }
 
     result = await db[TEAMS_COLLECTION].insert_one(team_dict)

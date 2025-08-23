@@ -3,8 +3,17 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from app.api.auth import get_current_user
 from app.db.client import get_db
-from app.schemas.user import ChangePasswordReq, UserCreateReq, UserModel
-from app.service.user import change_password_service, create_user_service
+from app.schemas.user import (
+    ChangePasswordReq,
+    GetCurrentUserTeamsResponse,
+    UserCreateReq,
+    UserModel,
+)
+from app.service.user import (
+    change_password_service,
+    create_user_service,
+    get_current_user_teams_service,
+)
 
 router = APIRouter()
 
@@ -18,6 +27,14 @@ async def create_user(
         return user
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get("/get-user-teams")
+async def get_current_user_teams(
+    current_user: UserModel = Depends(get_current_user),
+    db: AsyncDatabase = Depends(get_db),
+) -> GetCurrentUserTeamsResponse:
+    return get_current_user_teams_service(current_user, db)
 
 
 @router.post("/change_password", response_model=UserModel)

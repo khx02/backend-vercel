@@ -31,6 +31,7 @@ async def create_team_service(
         name=team_in_db_dict["name"],
         member_ids=team_in_db_dict["member_ids"],
         exec_member_ids=team_in_db_dict["exec_member_ids"],
+        project_ids=team_in_db_dict["project_ids"],
     )
 
 
