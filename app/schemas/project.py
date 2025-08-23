@@ -71,6 +71,14 @@ class GetTodoItemsResponse(BaseModel):
     todos: List[Todo]
 
 
+class ReorderTodoItemsRequest(BaseModel):
+    new_todo_ids: List[str]
+
+
+class ReorderTodoItemsResponse(BaseModel):
+    pass
+
+
 # Will pass project_id through path
 # Will add the todo status as the last status
 class AddTodoStatusRequest(BaseModel):

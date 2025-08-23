@@ -76,6 +76,16 @@ async def db_get_todo_items(project_id: str, db: AsyncDatabase) -> List[Dict[str
     return stringify_object_ids(todos)
 
 
+async def db_reorder_todo_items(
+    project_id: str, new_todo_ids: List[str], db: AsyncDatabase
+) -> None:
+
+    await db[PROJECTS_COLLECTION].update_one(
+        {"_id": ObjectId(project_id)},
+        {"$set": {"todo_ids": [ObjectId(todo_id) for todo_id in new_todo_ids]}},
+    )
+
+
 async def db_add_todo_status(project_id: str, name: str, db: AsyncDatabase) -> None:
 
     todo_status_dict = {"id": ObjectId(), "name": name}

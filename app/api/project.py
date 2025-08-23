@@ -13,6 +13,8 @@ from app.schemas.project import (
     DeleteTodoStatusResponse,
     GetProjectResponse,
     GetTodoItemsResponse,
+    ReorderTodoItemsRequest,
+    ReorderTodoItemsResponse,
     ReorderTodoStatusesRequest,
     ReorderTodoStatusesResponse,
     UpdateTodoRequest,
@@ -25,6 +27,7 @@ from app.service.project import (
     delete_todo_status_service,
     get_project_service,
     get_todo_items_service,
+    reorder_todo_items_service,
     reorder_todo_statuses_service,
     update_todo_service,
 )
@@ -78,6 +81,18 @@ async def get_todo_items(
 ) -> GetTodoItemsResponse:
 
     return await get_todo_items_service(project_id, db)
+
+
+@router.post("/reorder-todo-items/{project_id}")
+async def reorder_todo_items(
+    project_id: str,
+    reorder_todo_items_request: ReorderTodoItemsRequest,
+    db: AsyncDatabase = Depends(get_db),
+) -> ReorderTodoItemsResponse:
+
+    return await reorder_todo_items_service(
+        project_id, reorder_todo_items_request, db
+    )
 
 
 @router.post("/add-todo-status/{project_id}")
