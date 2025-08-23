@@ -2,34 +2,9 @@ from typing import Any, Dict, List
 from bson import ObjectId
 from pymongo.asynchronous.database import AsyncDatabase
 
+from app.core.common import stringify_object_ids
 from app.core.constants import PROJECTS_COLLECTION, TODOS_COLLECTION
 from app.schemas.project import AddTodoRequest, UpdateTodoRequest
-
-
-def stringify_project_dict(project_dict: Dict[str, Any]) -> Dict[str, Any]:
-    return {
-        "_id": str(project_dict["_id"]),
-        "name": project_dict["name"],
-        "description": project_dict["description"],
-        "todo_statuses": [
-            {"id": str(status["id"]), "name": status["name"]}
-            for status in project_dict["todo_statuses"]
-        ],
-        "todo_ids": [str(todo_id) for todo_id in project_dict["todo_ids"]],
-    }
-
-
-def stringify_todo_list(todo_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    return [
-        {
-            "_id": str(todo["_id"]),
-            "name": todo["name"],
-            "description": todo["description"],
-            "status_id": str(todo["status_id"]),
-            "owner_id": str(todo["owner_id"]),
-        }
-        for todo in todo_list
-    ]
 
 
 async def db_get_project(project_id: str, db: AsyncDatabase) -> Dict[str, Any]:
@@ -38,7 +13,7 @@ async def db_get_project(project_id: str, db: AsyncDatabase) -> Dict[str, Any]:
     if not result:
         raise ValueError(f"Project with ID {project_id} not found")
 
-    return stringify_project_dict(result)
+    return stringify_object_ids(result)
 
 
 async def db_add_todo(
@@ -98,7 +73,7 @@ async def db_get_todo_items(project_id: str, db: AsyncDatabase) -> List[Dict[str
     todos = await db[TODOS_COLLECTION].find({"_id": {"$in": todo_ids}}).to_list(None)
 
     # Turn all ObjectIDs into strings
-    return stringify_todo_list(todos)
+    return stringify_object_ids(todos)
 
 
 async def db_add_todo_status(project_id: str, name: str, db: AsyncDatabase) -> None:
