@@ -34,10 +34,10 @@ async def get_current_user_teams(
     current_user: UserModel = Depends(get_current_user),
     db: AsyncDatabase = Depends(get_db),
 ) -> GetCurrentUserTeamsResponse:
-    return get_current_user_teams_service(current_user, db)
+    return await get_current_user_teams_service(current_user, db)
 
 
-@router.post("/change_password", response_model=UserModel)
+@router.post("/change-password", response_model=UserModel)
 async def change_password(
     change_password: ChangePasswordReq,
     current_user: UserModel = Depends(get_current_user),
