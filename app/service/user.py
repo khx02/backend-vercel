@@ -1,11 +1,19 @@
+from annotated_types import T
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.constants import USERS_COLLECTION
 from app.core.security import hash_password, verify_password
-from app.db.user import create_user as db_create_user
+from app.db.user import create_user as db_create_user, db_get_user_teams_by_id
 from app.db.user import get_user_by_email as db_get_user_by_email
 from app.db.user import update_password as db_update_password
-from app.schemas.user import ChangePasswordReq, UserCreateReq, UserHashed, UserModel
+from app.schemas.team import TeamModel
+from app.schemas.user import (
+    ChangePasswordReq,
+    GetCurrentUserTeamsResponse,
+    UserCreateReq,
+    UserHashed,
+    UserModel,
+)
 
 
 async def create_user_service(
@@ -28,6 +36,27 @@ async def create_user_service(
         id=user_in_db_dict["_id"],
         email=user_in_db_dict["email"],
         hashed_password=user_in_db_dict["hashed_password"],
+    )
+
+
+async def get_current_user_teams_service(
+    current_user: UserModel,
+    db: AsyncDatabase,
+) -> GetCurrentUserTeamsResponse:
+
+    team_models_in_db = await db_get_user_teams_by_id(current_user.id, db)
+
+    return GetCurrentUserTeamsResponse(
+        teams=[
+            TeamModel(
+                id=str(team["_id"]),
+                name=team["name"],
+                member_ids=team["member_ids"],
+                exec_member_ids=team["exec_member_ids"],
+                project_ids=team["project_ids"],
+            )
+            for team in team_models_in_db
+        ]
     )
 
 

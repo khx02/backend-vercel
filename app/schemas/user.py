@@ -1,5 +1,7 @@
 from pydantic import BaseModel, EmailStr, field_validator
 
+from app.schemas.team import TeamModel
+
 
 def is_valid_password(password: str) -> str:
     if len(password) < 6:
@@ -29,6 +31,14 @@ class UserModel(BaseModel):
 
 class UserRes(BaseModel):
     email: EmailStr
+
+
+class GetCurrentUserTeamsRequest(BaseModel):
+    pass
+
+
+class GetCurrentUserTeamsResponse(BaseModel):
+    teams: list[TeamModel]
 
 
 class ChangePasswordReq(BaseModel):

@@ -10,12 +10,19 @@ class TeamModel(BaseModel):
     name: str
     member_ids: List[str]
     exec_member_ids: List[str]
-    kanban_ids: List[str] = []
-    project_ids: List[str] = []
+    project_ids: List[str]
 
 
 class TeamCreateReq(BaseModel):
     name: str
+
+
+class GetTeamRequest(BaseModel):
+    pass
+
+
+class GetTeamResponse(BaseModel):
+    team: TeamModel
 
 
 class KickTeamMemberReq(BaseModel):

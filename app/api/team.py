@@ -6,6 +6,7 @@ from app.db.client import get_db
 from app.schemas.team import (
     CreateProjectRequest,
     CreateProjectResponse,
+    GetTeamResponse,
     KickTeamMemberReq,
     PromoteTeamMemberReq,
     TeamCreateReq,
@@ -15,6 +16,7 @@ from app.schemas.user import UserModel
 from app.service.team import (
     create_project_service,
     create_team_service,
+    get_team_service,
     join_team_service,
     kick_team_member_service,
     leave_team_service,
@@ -27,7 +29,7 @@ router = APIRouter()
 # TODO: Returning the object ID and using it to join teams is not the most user-friendly
 # May be worth considering using shortened team ids or other identifiers instead
 # Team name has been made unique, so we may be able to use it for joining
-@router.post("/create_team", response_model=TeamModel)
+@router.post("/create-team", response_model=TeamModel)
 async def create_team(
     team_create: TeamCreateReq,
     current_user: UserModel = Depends(get_current_user),
@@ -44,7 +46,16 @@ async def create_team(
         )
 
 
-@router.post("/join_team/{team_id}")
+@router.get("/get-team/{team_id}")
+async def get_team(
+    team_id: str,
+    current_user: UserModel = Depends(get_current_user),
+    db: AsyncDatabase = Depends(get_db),
+) -> GetTeamResponse:
+    return await get_team_service(team_id, current_user, db)
+
+
+@router.post("/join-team/{team_id}")
 async def join_team(
     team_id: str,
     current_user: UserModel = Depends(get_current_user),
@@ -61,7 +72,7 @@ async def join_team(
         )
 
 
-@router.post("/promote_team_member/{team_id}")
+@router.post("/promote-team-member/{team_id}")
 async def promote_team_member(
     team_id: str,
     promote_team_member: PromoteTeamMemberReq,
@@ -81,7 +92,7 @@ async def promote_team_member(
         )
 
 
-@router.post("/leave_team/{team_id}")
+@router.post("/leave-team/{team_id}")
 async def leave_team(
     team_id: str,
     current_user: UserModel = Depends(get_current_user),
@@ -98,7 +109,7 @@ async def leave_team(
         )
 
 
-@router.post("/kick_team_member/{team_id}")
+@router.post("/kick-team-member/{team_id}")
 async def kick_team_member(
     team_id: str,
     kick_team_member: KickTeamMemberReq,
@@ -124,5 +135,4 @@ async def create_project(
     create_project_request: CreateProjectRequest,
     db: AsyncDatabase = Depends(get_db),
 ) -> CreateProjectResponse:
-
     return await create_project_service(team_id, create_project_request, db)

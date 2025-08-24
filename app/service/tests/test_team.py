@@ -14,10 +14,7 @@ from app.service.team import (
 
 @pytest.mark.asyncio
 @patch("app.service.team.db_create_team")
-@patch("app.service.team.db_get_team_by_name")
-async def test_create_team_service_success(
-    mock_db_get_team_by_name, mock_db_create_team
-):
+async def test_create_team_service_success(mock_db_create_team):
     team_id = "1"
     team_name = "addi's team"
     creator_id = "alex's_id"
@@ -25,12 +22,12 @@ async def test_create_team_service_success(
 
     mock_db = AsyncMock()
 
-    mock_db_get_team_by_name.return_value = None
     mock_db_create_team.return_value = {
         "_id": team_id,
         "name": team_name,
         "member_ids": [creator_id],
         "exec_member_ids": [creator_id],
+        "project_ids": [],
     }
 
     result = await create_team_service(mock_db, team_create_req, creator_id)
@@ -39,38 +36,13 @@ async def test_create_team_service_success(
     assert result.name == team_name
     assert result.member_ids == [creator_id]
     assert result.exec_member_ids == [creator_id]
-
-
-@pytest.mark.asyncio
-@patch("app.service.team.db_get_team_by_name")
-async def test_create_team_service_failure(mock_db_get_team_by_name):
-    team_id = "1"
-    team_name = "addi's team"
-    creator_id = "alex's_id"
-    team_create_req = TeamCreateReq(name=team_name)
-
-    mock_db = AsyncMock()
-
-    mock_db_get_team_by_name.return_value = {
-        "_id": team_id,
-        "name": team_name,
-        "member_ids": [creator_id],
-        "exec_member_ids": [creator_id],
-    }
-
-    with pytest.raises(ValueError) as exc_info:
-        await create_team_service(mock_db, team_create_req, creator_id)
-
-    assert str(exc_info.value) == f"Team with name '{team_name}' already exists"
+    assert result.project_ids == []
 
 
 @pytest.mark.asyncio
 @patch("app.service.team.db_join_team")
-@patch("app.service.team.db_get_team_members")
 @patch("app.service.team.db_get_team_by_id")
-async def test_join_team_service_success(
-    mock_db_get_team_by_id, mock_db_get_team_members, mock_db_join_team
-):
+async def test_join_team_service_success(mock_db_get_team_by_id, mock_db_join_team):
     team_id = "1"
     user_id = "addi@addi.com"
 
@@ -82,7 +54,6 @@ async def test_join_team_service_success(
         "member_ids": ["alex's_id"],
         "exec_member_ids": ["alex's_id"],
     }
-    mock_db_get_team_members.return_value = ["alex's_id"]
     mock_db_join_team.return_value = None
 
     await join_team_service(mock_db, team_id, user_id)
@@ -107,11 +78,8 @@ async def test_join_team_service_failure_team_not_exist(mock_db_get_team_by_id):
 
 
 @pytest.mark.asyncio
-@patch("app.service.team.db_get_team_members")
 @patch("app.service.team.db_get_team_by_id")
-async def test_join_team_service_failure_user_already_in_team(
-    mock_db_get_team_by_id, mock_db_get_team_members
-):
+async def test_join_team_service_failure_user_already_in_team(mock_db_get_team_by_id):
     team_id = "1"
     user_id = "addi@addi.com"
 
@@ -120,10 +88,9 @@ async def test_join_team_service_failure_user_already_in_team(
     mock_db_get_team_by_id.return_value = {
         "_id": team_id,
         "name": "alex's team",
-        "member_ids": [user_id],
+        "member_ids": [user_id, "alex's_id"],
         "exec_member_ids": ["alex's_id"],
     }
-    mock_db_get_team_members.return_value = [user_id, "alex's_id"]
 
     with pytest.raises(ValueError) as exc_info:
         await join_team_service(mock_db, team_id, user_id)
@@ -192,11 +159,8 @@ async def test_promote_team_member_service_failure_no_permission(
 
 @pytest.mark.asyncio
 @patch("app.service.team.db_leave_team")
-@patch("app.service.team.db_get_team_members")
 @patch("app.service.team.db_get_team_by_id")
-async def test_leave_team_service_success(
-    mock_db_get_team_by_id, mock_db_get_team_members, mock_db_leave_team
-):
+async def test_leave_team_service_success(mock_db_get_team_by_id, mock_db_leave_team):
     team_id = "1"
     user_id = "addi@addi.com"
 
@@ -208,7 +172,6 @@ async def test_leave_team_service_success(
         "member_ids": ["alex's_id", user_id],
         "exec_member_ids": ["alex's_id"],
     }
-    mock_db_get_team_members.return_value = ["alex's_id", user_id]
     mock_db_leave_team.return_value = None
 
     await leave_team_service(mock_db, team_id, user_id)
@@ -217,11 +180,8 @@ async def test_leave_team_service_success(
 
 
 @pytest.mark.asyncio
-@patch("app.service.team.db_get_team_members")
 @patch("app.service.team.db_get_team_by_id")
-async def test_leave_team_service_failure_last_exec(
-    mock_db_get_team_by_id, mock_db_get_team_members
-):
+async def test_leave_team_service_failure_last_exec(mock_db_get_team_by_id):
     team_id = "1"
     user_id = "alex's_id"
 
@@ -233,7 +193,6 @@ async def test_leave_team_service_failure_last_exec(
         "member_ids": [user_id],
         "exec_member_ids": [user_id],
     }
-    mock_db_get_team_members.return_value = [user_id]
 
     with pytest.raises(ValueError) as exc_info:
         await leave_team_service(mock_db, team_id, user_id)

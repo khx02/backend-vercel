@@ -12,6 +12,8 @@ from app.schemas.project import (
     GetProjectResponse,
     GetTodoItemsResponse,
     Project,
+    ReorderTodoItemsRequest,
+    ReorderTodoItemsResponse,
     ReorderTodoStatusesRequest,
     ReorderTodoStatusesResponse,
     UpdateTodoRequest,
@@ -23,6 +25,7 @@ from app.db.project import (
     db_delete_todo,
     db_delete_todo_status,
     db_get_todo_items,
+    db_reorder_todo_items,
     db_reorder_todo_statuses,
     db_update_todo,
 )
@@ -95,6 +98,27 @@ async def get_todo_items_service(
             for todo in todo_items_in_db_list
         ]
     )
+
+
+async def reorder_todo_items_service(
+    project_id: str,
+    reorder_todo_items_request: ReorderTodoItemsRequest,
+    db: AsyncDatabase,
+) -> ReorderTodoItemsResponse:
+
+    new_todo_ids = reorder_todo_items_request.new_todo_ids
+
+    # Get the project's current todos
+    project_in_db_dict = await db_get_project(project_id, db)
+
+    new_todos = sorted(
+        project_in_db_dict["todos"],
+        key=lambda todo: new_todo_ids.index(str(todo["id"])),
+    )
+
+    await db_reorder_todo_items(project_id, new_todos, db)
+
+    return ReorderTodoItemsResponse()
 
 
 async def add_todo_status_service(
