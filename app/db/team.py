@@ -125,3 +125,16 @@ async def db_create_project(
     )
 
     return stringify_object_ids(project_dict)
+
+
+async def db_get_project_ids_by_team_id(
+    team_id: str, db: AsyncDatabase
+) -> List[Dict[str, Any]]:
+    try:
+        team = await db[TEAMS_COLLECTION].find_one({"_id": ObjectId(team_id)})
+        if not team:
+            return []
+
+        return team.get("project_ids", [])
+    except Exception as e:
+        return []

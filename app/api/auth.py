@@ -7,9 +7,7 @@ from fastapi import (
     Cookie,
     Depends,
     HTTPException,
-    Request,
     Response,
-    Security,
     status,
 )
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, utils
@@ -22,7 +20,7 @@ from app.schemas.token import TokenRes
 from app.schemas.user import UserModel, UserRes
 from app.service.user import get_user_service
 
-TOKEN_URL = "/auth/set-token"
+TOKEN_URL = "/api/auth/set-token"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL, auto_error=False)
 router = APIRouter()
 
