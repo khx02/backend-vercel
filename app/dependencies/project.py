@@ -8,14 +8,15 @@ from app.schemas.user import UserModel
 
 from pymongo.asynchronous.database import AsyncDatabase
 
+from app.service.user import get_current_user_teams_service
+
 
 async def require_standard_project_access(
     project_id: str,
     current_user: UserModel = Depends(get_current_user),
     db: AsyncDatabase = Depends(get_db),
 ) -> None:
-    user_teams_in_db = await db_get_user_teams_by_id(current_user.id, db)
-    user_teams = [TeamModel(**team) for team in user_teams_in_db]
+    user_teams = (await get_current_user_teams_service(current_user, db)).teams
 
     found_access = False
     for team in user_teams:
@@ -35,8 +36,7 @@ async def require_executive_project_access(
     current_user: UserModel = Depends(get_current_user),
     db: AsyncDatabase = Depends(get_db),
 ) -> None:
-    user_teams_in_db = await db_get_user_teams_by_id(current_user.id, db)
-    user_teams = [TeamModel(**team) for team in user_teams_in_db]
+    user_teams = (await get_current_user_teams_service(current_user, db)).teams
 
     found_access = False
     for team in user_teams:
