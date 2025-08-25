@@ -1,7 +1,12 @@
+import re
 from fastapi import APIRouter, Depends, HTTPException, status
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.db.client import get_db
+from app.dependencies.project import (
+    require_standard_project_access,
+    require_executive_project_access,
+)
 from app.schemas.project import (
     AddTodoRequest,
     AddTodoResponse,
@@ -38,6 +43,7 @@ router = APIRouter()
 @router.get("/get-project/{project_id}")
 async def get_project(
     project_id: str,
+    _: None = Depends(require_standard_project_access),
     db: AsyncDatabase = Depends(get_db),
 ) -> GetProjectResponse:
 
@@ -48,6 +54,7 @@ async def get_project(
 async def add_todo(
     project_id: str,
     todo_request: AddTodoRequest,
+    _: None = Depends(require_executive_project_access),
     db: AsyncDatabase = Depends(get_db),
 ) -> AddTodoResponse:
 
@@ -59,6 +66,7 @@ async def add_todo(
 async def update_todo(
     project_id: str,
     update_todo_request: UpdateTodoRequest,
+    _: None = Depends(require_executive_project_access),
     db: AsyncDatabase = Depends(get_db),
 ) -> UpdateTodoResponse:
 
@@ -69,6 +77,7 @@ async def update_todo(
 async def delete_todo(
     project_id: str,
     delete_todo_request: DeleteTodoRequest,
+    _: None = Depends(require_executive_project_access),
     db: AsyncDatabase = Depends(get_db),
 ) -> DeleteTodoResponse:
 
@@ -77,7 +86,9 @@ async def delete_todo(
 
 @router.get("/get-todo-items/{project_id}")
 async def get_todo_items(
-    project_id: str, db: AsyncDatabase = Depends(get_db)
+    project_id: str,
+    _: None = Depends(require_standard_project_access),
+    db: AsyncDatabase = Depends(get_db),
 ) -> GetTodoItemsResponse:
 
     return await get_todo_items_service(project_id, db)
@@ -87,18 +98,18 @@ async def get_todo_items(
 async def reorder_todo_items(
     project_id: str,
     reorder_todo_items_request: ReorderTodoItemsRequest,
+    _: None = Depends(require_executive_project_access),
     db: AsyncDatabase = Depends(get_db),
 ) -> ReorderTodoItemsResponse:
 
-    return await reorder_todo_items_service(
-        project_id, reorder_todo_items_request, db
-    )
+    return await reorder_todo_items_service(project_id, reorder_todo_items_request, db)
 
 
 @router.post("/add-todo-status/{project_id}")
 async def add_todo_status(
     project_id: str,
     add_todo_status_request: AddTodoStatusRequest,
+    _: None = Depends(require_executive_project_access),
     db: AsyncDatabase = Depends(get_db),
 ) -> AddTodoStatusResponse:
 
@@ -109,6 +120,7 @@ async def add_todo_status(
 async def delete_todo_status(
     project_id: str,
     delete_todo_status_request: DeleteTodoStatusRequest,
+    _: None = Depends(require_executive_project_access),
     db: AsyncDatabase = Depends(get_db),
 ) -> DeleteTodoStatusResponse:
 
@@ -119,6 +131,7 @@ async def delete_todo_status(
 async def reorder_todo_statuses(
     project_id: str,
     reorder_todo_statuses_request: ReorderTodoStatusesRequest,
+    _: None = Depends(require_executive_project_access),
     db: AsyncDatabase = Depends(get_db),
 ) -> ReorderTodoStatusesResponse:
 

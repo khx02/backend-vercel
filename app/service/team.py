@@ -8,12 +8,11 @@ from app.db.team import join_team as db_join_team
 from app.db.team import kick_team_member as db_kick_team_member
 from app.db.team import leave_team as db_leave_team
 from app.db.team import promote_team_member as db_promote_team_member
-from app.schemas.project import Project, TodoStatus
+from app.schemas.project import Project
 from app.schemas.team import (
     CreateProjectRequest,
     CreateProjectResponse,
     GetTeamResponse,
-    KickTeamMemberReq,
     TeamCreateReq,
     TeamModel,
 )
