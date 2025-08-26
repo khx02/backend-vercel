@@ -2,10 +2,26 @@ from unittest.mock import AsyncMock, patch
 
 from bson import ObjectId
 import pytest
-from fastapi import HTTPException, status
+from fastapi import HTTPException
 
-from app.api.team import *
-from app.schemas.team import *
+from app.api.team import (
+    create_team,
+    join_team,
+    kick_team_member,
+    leave_team,
+    promote_team_member,
+)
+from app.schemas.team import (
+    CreateTeamRequest,
+    CreateTeamResponse,
+    JoinTeamResponse,
+    KickTeamMemberRequest,
+    KickTeamMemberResponse,
+    LeaveTeamResponse,
+    PromoteTeamMemberRequest,
+    PromoteTeamMemberResponse,
+    TeamModel,
+)
 from app.schemas.user import UserModel
 
 MOCK_USER_ID = str(ObjectId())
