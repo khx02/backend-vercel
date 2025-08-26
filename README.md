@@ -12,6 +12,7 @@ This layer is where the business logic lives. It processes requests sent from th
 This layer is where the database operations live. Any CRUD operations done on the database are to be done here.
 
 As there are a few ways to handle queries, we will define a straightforward approach to function returns.
+
 Create
 - Inject the new ObjectID before returning
 - Return what was just created (multiple in a List if necessary)
