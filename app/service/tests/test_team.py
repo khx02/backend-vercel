@@ -1,4 +1,3 @@
-from re import A
 from unittest.mock import AsyncMock, patch
 
 from bson import ObjectId
@@ -21,15 +20,12 @@ from app.service.team import (
     promote_team_member_service,
 )
 
-MOCK_USER_ID = str(ObjectId())
-MOCK_USER_EMAIL = "addi@addi.com"
-MOCK_USER_PASSWORD = "addiii"
-MOCK_USER_PASSWORD_HASHED = "hashed-addiii"
-
-MOCK_USER_2_ID = str(ObjectId())
-
-MOCK_TEAM_NAME = "Mock Team"
-MOCK_TEAM_ID = str(ObjectId())
+from app.test_shared.constants import (
+    MOCK_USER_ID,
+    MOCK_USER_2_ID,
+    MOCK_TEAM_NAME,
+    MOCK_TEAM_ID,
+)
 
 
 @pytest.mark.asyncio
