@@ -22,15 +22,12 @@ async def db_create_user(
 async def db_get_user_teams_by_id(
     user_id: str, db: AsyncDatabase
 ) -> List[Dict[str, Any]]:
-    try:
-        teams = (
-            await db[TEAMS_COLLECTION]
-            .find({"member_ids": ObjectId(user_id)})
-            .to_list(length=None)
-        )
-        return [stringify_object_ids(team) for team in teams]
-    except Exception as e:
-        return []
+    teams = (
+        await db[TEAMS_COLLECTION]
+        .find({"member_ids": ObjectId(user_id)})
+        .to_list(length=None)
+    )
+    return [stringify_object_ids(team) for team in teams]
 
 
 async def get_user_by_email(db: AsyncDatabase, email: str) -> Dict[str, Any] | None:

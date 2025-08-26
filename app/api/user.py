@@ -26,6 +26,14 @@ async def create_user(
     return await create_user_service(create_user_request, db)
 
 
+@router.get("/get-current-user-teams")
+async def get_current_user_teams(
+    current_user: UserModel = Depends(get_current_user),
+    db: AsyncDatabase = Depends(get_db),
+) -> GetCurrentUserTeamsResponse:
+    return await get_current_user_teams_service(current_user.id, db)
+
+
 # @router.get("/get-user-teams")
 # async def get_current_user_teams(
 #     current_user: UserModel = Depends(get_current_user),

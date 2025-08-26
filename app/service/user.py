@@ -4,7 +4,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.constants import USERS_COLLECTION
 from app.core.security import hash_password, verify_password
-from app.db.user import db_create_user, get_user_by_email as db_get_user_by_email
+from app.db.user import db_create_user, db_get_user_teams_by_id, get_user_by_email as db_get_user_by_email
 from app.db.user import update_password as db_update_password
 from app.schemas.team import TeamModel
 from app.schemas.user import (
@@ -40,11 +40,11 @@ async def create_user_service(
 
 
 async def get_current_user_teams_service(
-    current_user: UserModel,
+    current_user_id: str,
     db: AsyncDatabase,
 ) -> GetCurrentUserTeamsResponse:
 
-    team_models_in_db = await db_get_user_teams_by_id(current_user.id, db)
+    team_models_in_db = await db_get_user_teams_by_id(current_user_id, db)
 
     return GetCurrentUserTeamsResponse(
         teams=[
