@@ -45,7 +45,7 @@ async def create_team_service(
 async def join_team_service(
     team_id: str, user_id: str, db: AsyncDatabase
 ) -> JoinTeamResponse:
-    existing_team = await db_get_team_by_id(db, team_id)
+    existing_team = await db_get_team_by_id(team_id, db)
     if not existing_team:
         raise HTTPException(
             status_code=404, detail=f"Team does not exist: team_id={team_id}"
@@ -66,7 +66,7 @@ async def join_team_service(
 async def get_team_service(
     team_id: str, current_user: UserModel, db: AsyncDatabase
 ) -> GetTeamResponse:
-    existing_team = await db_get_team_by_id(db, team_id)
+    existing_team = await db_get_team_by_id(team_id, db)
     if not existing_team:
         raise HTTPException(
             status_code=404, detail=f"Team does not exist: team_id={team_id}"
@@ -93,7 +93,7 @@ async def get_team_service(
 async def promote_team_member_service(
     team_id: str, promote_member_id: str, caller_id: str, db: AsyncDatabase
 ) -> PromoteTeamMemberResponse:
-    existing_team = await db_get_team_by_id(db, team_id)
+    existing_team = await db_get_team_by_id(team_id, db)
     if not existing_team:
         raise HTTPException(
             status_code=404, detail=f"Team does not exist: team_id={team_id}"
@@ -119,7 +119,7 @@ async def promote_team_member_service(
 async def leave_team_service(
     team_id: str, user_id: str, db: AsyncDatabase
 ) -> LeaveTeamResponse:
-    existing_team = await db_get_team_by_id(db, team_id)
+    existing_team = await db_get_team_by_id(team_id, db)
     if not existing_team:
         raise HTTPException(
             status_code=404, detail=f"Team does not exist: team_id={team_id}"
@@ -149,7 +149,7 @@ async def leave_team_service(
 async def kick_team_member_service(
     team_id: str, kick_member_id: str, caller_id: str, db: AsyncDatabase
 ) -> KickTeamMemberResponse:
-    existing_team = await db_get_team_by_id(db, team_id)
+    existing_team = await db_get_team_by_id(team_id, db)
     if not existing_team:
         raise HTTPException(
             status_code=404, detail=f"Team does not exist: team_id={team_id}"

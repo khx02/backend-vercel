@@ -169,7 +169,7 @@ async def test_leave_team_service_success(mock_db_get_team_by_id, mock_db_leave_
     }
     mock_db_leave_team.return_value = None
 
-    result = await leave_team_service(MOCK_TEAM_ID, MOCK_USER_ID, mock_db)
+    result = await leave_team_service(MOCK_TEAM_ID, MOCK_USER_2_ID, mock_db)
 
     assert isinstance(result, LeaveTeamResponse)
 

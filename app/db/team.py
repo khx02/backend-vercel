@@ -30,7 +30,7 @@ async def db_join_team(team_id: str, user_id: str, db: AsyncDatabase) -> None:
     )
 
 
-async def db_get_team_by_id(db: AsyncDatabase, team_id: str) -> Dict[str, Any]:
+async def db_get_team_by_id(team_id: str, db: AsyncDatabase) -> Dict[str, Any]:
     team_dict = await db[TEAMS_COLLECTION].find_one({"_id": ObjectId(team_id)})
     return stringify_object_ids(team_dict)
 
