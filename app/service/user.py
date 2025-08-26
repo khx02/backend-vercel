@@ -1,41 +1,41 @@
 from annotated_types import T
+from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.constants import USERS_COLLECTION
 from app.core.security import hash_password, verify_password
-from app.db.user import create_user as db_create_user, db_get_user_teams_by_id
-from app.db.user import get_user_by_email as db_get_user_by_email
+from app.db.user import db_create_user, get_user_by_email as db_get_user_by_email
 from app.db.user import update_password as db_update_password
 from app.schemas.team import TeamModel
 from app.schemas.user import (
     ChangePasswordReq,
+    CreateUserRequest,
+    CreateUserResponse,
     GetCurrentUserTeamsResponse,
-    UserCreateReq,
-    UserHashed,
     UserModel,
 )
 
 
 async def create_user_service(
-    db: AsyncDatabase, user_create: UserCreateReq
-) -> UserModel:
+    create_user_request: CreateUserRequest, db: AsyncDatabase
+) -> CreateUserResponse:
 
-    existing_user = await db_get_user_by_email(db, user_create.email)
+    existing_user = await db_get_user_by_email(db, create_user_request.email)
     if existing_user:
-        raise ValueError(f"User with email '{user_create.email}' already exists")
+        raise HTTPException(
+            status_code=400,
+            detail=f"A user has already been created using this email address: email={create_user_request.email}",
+        )
 
-    hashed_password = hash_password(user_create.password)
+    hashed_password = hash_password(create_user_request.password)
 
-    user_hashed = UserHashed(email=user_create.email, hashed_password=hashed_password)
+    user_in_db_dict = await db_create_user(create_user_request, hashed_password, db)
 
-    user_in_db_dict = await db_create_user(db, user_hashed)
-    if not user_in_db_dict:
-        raise ValueError("Failed to create user")
-
-    return UserModel(
-        id=user_in_db_dict["_id"],
-        email=user_in_db_dict["email"],
-        hashed_password=user_in_db_dict["hashed_password"],
+    return CreateUserResponse(
+        user=UserModel(
+            id=user_in_db_dict["_id"],
+            email=user_in_db_dict["email"],
+        )
     )
 
 
@@ -66,7 +66,6 @@ async def get_user_service(db: AsyncDatabase, email: str) -> UserModel | None:
         return UserModel(
             id=str(user_in_db["_id"]),
             email=user_in_db["email"],
-            hashed_password=user_in_db["hashed_password"],
         )
     return None
 

@@ -9,7 +9,12 @@ def is_valid_password(password: str) -> str:
     return password
 
 
-class UserCreateReq(BaseModel):
+class UserModel(BaseModel):
+    id: str
+    email: EmailStr
+
+
+class CreateUserRequest(BaseModel):
     email: EmailStr
     password: str
 
@@ -18,13 +23,11 @@ class UserCreateReq(BaseModel):
         return is_valid_password(password)
 
 
+class CreateUserResponse(BaseModel):
+    user: UserModel
+
+
 class UserHashed(BaseModel):
-    email: EmailStr
-    hashed_password: str
-
-
-class UserModel(BaseModel):
-    id: str
     email: EmailStr
     hashed_password: str
 

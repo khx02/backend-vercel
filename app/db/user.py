@@ -5,20 +5,18 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.common import stringify_object_ids
 from app.core.constants import USERS_COLLECTION, TEAMS_COLLECTION
-from app.schemas.user import UserHashed
+from app.schemas.user import CreateUserRequest, UserHashed
 
 
-async def create_user(
-    db: AsyncDatabase, user_hashed: UserHashed
-) -> Dict[str, Any] | None:
-    try:
-        user_hashed_dict = user_hashed.model_dump()
-        result = await db[USERS_COLLECTION].insert_one(user_hashed_dict)
-        user_hashed_dict["_id"] = result.inserted_id
+async def db_create_user(
+    create_user_request: CreateUserRequest, hashed_password: str, db: AsyncDatabase
+) -> Dict[str, Any]:
+    user_dict = {"email": create_user_request.email, "hashed_password": hashed_password}
 
-        return stringify_object_ids(user_hashed_dict)
-    except Exception as e:
-        return None
+    result = await db[USERS_COLLECTION].insert_one(user_dict)
+    user_dict["_id"] = result.inserted_id
+
+    return stringify_object_ids(user_dict)
 
 
 async def db_get_user_teams_by_id(

@@ -4,7 +4,6 @@ import pytest
 from fastapi import HTTPException
 
 from app.api.user import change_password, create_user
-from app.schemas.token import TokenPair
 from app.schemas.user import ChangePasswordReq, UserCreateReq, UserModel
 
 
