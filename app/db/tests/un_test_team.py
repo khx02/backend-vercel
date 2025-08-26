@@ -3,16 +3,7 @@ from unittest.mock import AsyncMock
 import pytest
 from bson import ObjectId
 
-from app.db.team import (
-    add_kanban_to_team,
-    create_team,
-    db_create_project,
-    get_team_by_id,
-    join_team,
-    kick_team_member,
-    leave_team,
-    promote_team_member,
-)
+from app.db.team import *
 
 from app.schemas.team import CreateProjectRequest, TeamCreateReq
 

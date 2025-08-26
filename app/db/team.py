@@ -5,25 +5,14 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.common import stringify_object_ids
 from app.core.constants import PROJECTS_COLLECTION, TEAMS_COLLECTION
-from app.schemas.team import CreateProjectRequest, TeamCreateReq
+from app.schemas.team import CreateProjectRequest
 
 
-def stringify_team_dict(team_dict: Dict[str, Any]) -> Dict[str, Any]:
-    return {
-        "_id": str(team_dict["_id"]),
-        "name": team_dict["name"],
-        "member_ids": [str(member_id) for member_id in team_dict.get("member_ids", [])],
-        "exec_member_ids": [
-            str(member_id) for member_id in team_dict.get("exec_member_ids", [])
-        ],
-    }
-
-
-async def create_team(
-    db: AsyncDatabase, team_req: TeamCreateReq, creator_id: str
+async def db_create_team(
+    creator_id: str, team_name: str, db: AsyncDatabase
 ) -> Dict[str, Any]:
     team_dict = {
-        "name": team_req.name,
+        "name": team_name,
         "member_ids": [ObjectId(creator_id)],
         "exec_member_ids": [ObjectId(creator_id)],
         "project_ids": [],
@@ -35,70 +24,45 @@ async def create_team(
     return stringify_object_ids(team_dict)
 
 
-async def join_team(db: AsyncDatabase, team_id: str, user_id: str) -> None:
-    try:
-        await db[TEAMS_COLLECTION].update_one(
-            {"_id": ObjectId(team_id)}, {"$addToSet": {"member_ids": ObjectId(user_id)}}
-        )
-    except Exception as e:
-        raise ValueError(f"Failed to add user to team: {str(e)}")
+async def db_join_team(team_id: str, user_id: str, db: AsyncDatabase) -> None:
+    await db[TEAMS_COLLECTION].update_one(
+        {"_id": ObjectId(team_id)}, {"$addToSet": {"member_ids": ObjectId(user_id)}}
+    )
 
 
-async def get_team_by_id(db: AsyncDatabase, team_id: str) -> Dict[str, Any] | None:
-    try:
-        team_dict = await db[TEAMS_COLLECTION].find_one({"_id": ObjectId(team_id)})
-        if team_dict:
-            return stringify_team_dict(team_dict)
-        return None
-    except Exception as e:
-        return None
+async def db_get_team_by_id(db: AsyncDatabase, team_id: str) -> Dict[str, Any]:
+    team_dict = await db[TEAMS_COLLECTION].find_one({"_id": ObjectId(team_id)})
+    return stringify_object_ids(team_dict)
 
 
-async def add_kanban_to_team(db: AsyncDatabase, team_id: str, kanban_id: str) -> None:
-    try:
-        await db[TEAMS_COLLECTION].update_one(
-            {"_id": ObjectId(team_id)},
-            {"$addToSet": {"kanban_ids": ObjectId(kanban_id)}},
-        )
-    except Exception as e:
-        raise ValueError(f"Failed to add kanban to team: {str(e)}")
-
-
-async def promote_team_member(db: AsyncDatabase, team_id: str, member_id: str) -> None:
-    try:
-        await db[TEAMS_COLLECTION].update_one(
-            {"_id": ObjectId(team_id)},
-            {"$addToSet": {"exec_member_ids": ObjectId(member_id)}},
-        )
-    except Exception as e:
-        raise ValueError(f"Failed to promote team member: {str(e)}")
-
-
-async def leave_team(db: AsyncDatabase, team_id: str, user_id: str) -> None:
-    try:
-        await db[TEAMS_COLLECTION].update_one(
-            {"_id": ObjectId(team_id)},
-            {
-                "$pull": {
-                    "member_ids": ObjectId(user_id),
-                    "exec_member_ids": ObjectId(user_id),
-                }
-            },
-        )
-    except Exception as e:
-        raise ValueError(f"Failed to remove user from team: {str(e)}")
-
-
-async def kick_team_member(
-    db: AsyncDatabase, team_id: str, kick_member_id: str, caller_id: str
+async def db_promote_team_member(
+    team_id: str, promote_member_id: str, db: AsyncDatabase
 ) -> None:
-    try:
-        await db[TEAMS_COLLECTION].update_one(
-            {"_id": ObjectId(team_id)},
-            {"$pull": {"member_ids": ObjectId(kick_member_id)}},
-        )
-    except Exception as e:
-        raise ValueError(f"Failed to remove user from team: {str(e)}")
+    await db[TEAMS_COLLECTION].update_one(
+        {"_id": ObjectId(team_id)},
+        {"$addToSet": {"exec_member_ids": ObjectId(promote_member_id)}},
+    )
+
+
+async def db_leave_team(team_id: str, user_id: str, db: AsyncDatabase) -> None:
+    await db[TEAMS_COLLECTION].update_one(
+        {"_id": ObjectId(team_id)},
+        {
+            "$pull": {
+                "member_ids": ObjectId(user_id),
+                "exec_member_ids": ObjectId(user_id),
+            }
+        },
+    )
+
+
+async def db_kick_team_member(
+    team_id: str, kick_member_id: str, db: AsyncDatabase
+) -> None:
+    await db[TEAMS_COLLECTION].update_one(
+        {"_id": ObjectId(team_id)},
+        {"$pull": {"member_ids": ObjectId(kick_member_id)}},
+    )
 
 
 async def db_create_project(

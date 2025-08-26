@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.schemas.team import TeamCreateReq, TeamModel
+from app.schemas.team import TeamModel
 from app.service.team import (
     create_team_service,
     join_team_service,
