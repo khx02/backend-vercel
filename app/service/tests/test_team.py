@@ -1,8 +1,18 @@
+from re import A
 from unittest.mock import AsyncMock, patch
 
+from bson import ObjectId
+from fastapi import HTTPException
 import pytest
 
-from app.schemas.team import TeamCreateReq, TeamModel
+from app.schemas.team import (
+    CreateTeamResponse,
+    JoinTeamResponse,
+    KickTeamMemberResponse,
+    LeaveTeamResponse,
+    PromoteTeamMemberResponse,
+    TeamModel,
+)
 from app.service.team import (
     create_team_service,
     join_team_service,
@@ -11,93 +21,89 @@ from app.service.team import (
     promote_team_member_service,
 )
 
+MOCK_USER_ID = str(ObjectId())
+MOCK_USER_EMAIL = "addi@addi.com"
+MOCK_USER_PASSWORD = "addiii"
+MOCK_USER_PASSWORD_HASHED = "hashed-addiii"
+
+MOCK_USER_2_ID = str(ObjectId())
+
+MOCK_TEAM_NAME = "Mock Team"
+MOCK_TEAM_ID = str(ObjectId())
+
 
 @pytest.mark.asyncio
 @patch("app.service.team.db_create_team")
 async def test_create_team_service_success(mock_db_create_team):
-    team_id = "1"
-    team_name = "addi's team"
-    creator_id = "alex's_id"
-    team_create_req = TeamCreateReq(name=team_name)
-
     mock_db = AsyncMock()
-
     mock_db_create_team.return_value = {
-        "_id": team_id,
-        "name": team_name,
-        "member_ids": [creator_id],
-        "exec_member_ids": [creator_id],
+        "_id": "team-1",
+        "name": MOCK_TEAM_NAME,
+        "member_ids": [MOCK_USER_ID],
+        "exec_member_ids": [MOCK_USER_ID],
         "project_ids": [],
     }
 
-    result = await create_team_service(mock_db, team_create_req, creator_id)
+    result = await create_team_service(MOCK_USER_ID, MOCK_TEAM_NAME, mock_db)
 
-    assert result.id == team_id
-    assert result.name == team_name
-    assert result.member_ids == [creator_id]
-    assert result.exec_member_ids == [creator_id]
-    assert result.project_ids == []
+    assert isinstance(result, CreateTeamResponse)
+    assert isinstance(result.team, TeamModel)
+    assert result.team.id == "team-1"
+    assert result.team.name == MOCK_TEAM_NAME
+    assert result.team.member_ids == [MOCK_USER_ID]
+    assert result.team.exec_member_ids == [MOCK_USER_ID]
+    assert result.team.project_ids == []
 
 
 @pytest.mark.asyncio
 @patch("app.service.team.db_join_team")
 @patch("app.service.team.db_get_team_by_id")
 async def test_join_team_service_success(mock_db_get_team_by_id, mock_db_join_team):
-    team_id = "1"
-    user_id = "addi@addi.com"
-
     mock_db = AsyncMock()
-
     mock_db_get_team_by_id.return_value = {
-        "_id": team_id,
-        "name": "alex's team",
-        "member_ids": ["alex's_id"],
-        "exec_member_ids": ["alex's_id"],
+        "_id": MOCK_TEAM_ID,
+        "name": MOCK_TEAM_NAME,
+        "member_ids": [MOCK_USER_ID],
+        "exec_member_ids": [MOCK_USER_ID],
     }
     mock_db_join_team.return_value = None
 
-    await join_team_service(mock_db, team_id, user_id)
+    result = await join_team_service(MOCK_TEAM_ID, MOCK_USER_2_ID, mock_db)
 
-    mock_db_join_team.assert_called_once_with(mock_db, team_id, user_id)
+    assert isinstance(result, JoinTeamResponse)
 
 
 @pytest.mark.asyncio
 @patch("app.service.team.db_get_team_by_id")
 async def test_join_team_service_failure_team_not_exist(mock_db_get_team_by_id):
-    team_id = "1"
-    user_id = "addi@addi.com"
-
     mock_db = AsyncMock()
-
     mock_db_get_team_by_id.return_value = None
 
-    with pytest.raises(ValueError) as exc_info:
-        await join_team_service(mock_db, team_id, user_id)
+    with pytest.raises(HTTPException) as exc_info:
+        await join_team_service(MOCK_TEAM_ID, MOCK_USER_2_ID, mock_db)
 
-    assert str(exc_info.value) == f"Team with ID '{team_id}' does not exist"
+        assert exc_info.value.status_code == 404
+        assert exc_info.value.detail == f"Team does not exist: team_id={MOCK_TEAM_ID}"
 
 
 @pytest.mark.asyncio
 @patch("app.service.team.db_get_team_by_id")
 async def test_join_team_service_failure_user_already_in_team(mock_db_get_team_by_id):
-    team_id = "1"
-    user_id = "addi@addi.com"
-
     mock_db = AsyncMock()
-
     mock_db_get_team_by_id.return_value = {
-        "_id": team_id,
-        "name": "alex's team",
-        "member_ids": [user_id, "alex's_id"],
-        "exec_member_ids": ["alex's_id"],
+        "_id": MOCK_TEAM_ID,
+        "name": MOCK_TEAM_NAME,
+        "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
+        "exec_member_ids": [MOCK_USER_ID],
     }
 
-    with pytest.raises(ValueError) as exc_info:
-        await join_team_service(mock_db, team_id, user_id)
+    with pytest.raises(HTTPException) as exc_info:
+        await join_team_service(MOCK_TEAM_ID, MOCK_USER_2_ID, mock_db)
 
+    assert exc_info.value.status_code == 400
     assert (
-        str(exc_info.value)
-        == f"User with ID '{user_id}' is already in team '{team_id}'"
+        exc_info.value.detail
+        == f"User is already in the team: user_id={MOCK_USER_2_ID}, team_id={MOCK_TEAM_ID}"
     )
 
 
@@ -107,53 +113,46 @@ async def test_join_team_service_failure_user_already_in_team(mock_db_get_team_b
 async def test_promote_team_member_service_success(
     mock_db_get_team_by_id, mock_db_promote_team_member
 ):
-    team_id = "1"
-    promote_member_id = "addi@addi.com"
-    caller_id = "alex's_id"
-
     mock_db = AsyncMock()
-
     mock_db_get_team_by_id.return_value = {
-        "_id": team_id,
-        "name": "alex's team",
-        "member_ids": [caller_id, promote_member_id],
-        "exec_member_ids": [caller_id],
+        "_id": MOCK_TEAM_ID,
+        "name": MOCK_TEAM_NAME,
+        "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
+        "exec_member_ids": [MOCK_USER_ID],
     }
     mock_db_promote_team_member.return_value = None
 
-    await promote_team_member_service(mock_db, team_id, promote_member_id, caller_id)
-
-    mock_db_promote_team_member.assert_called_once_with(
-        mock_db, team_id, promote_member_id
+    result = await promote_team_member_service(
+        MOCK_TEAM_ID, MOCK_USER_2_ID, MOCK_USER_ID, mock_db
     )
+
+    assert isinstance(result, PromoteTeamMemberResponse)
 
 
 @pytest.mark.asyncio
+@patch("app.service.team.db_promote_team_member")
 @patch("app.service.team.db_get_team_by_id")
 async def test_promote_team_member_service_failure_no_permission(
-    mock_db_get_team_by_id,
+    mock_db_get_team_by_id, mock_db_promote_team_member
 ):
-    team_id = "1"
-    promote_member_id = "addi@addi.com"
-    caller_id = "alex's_id"
-
     mock_db = AsyncMock()
-
     mock_db_get_team_by_id.return_value = {
-        "_id": team_id,
-        "name": "alex's team",
-        "member_ids": [caller_id, promote_member_id],
-        "exec_member_ids": ["other_exec"],
+        "_id": MOCK_TEAM_ID,
+        "name": MOCK_TEAM_NAME,
+        "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
+        "exec_member_ids": [MOCK_USER_ID],
     }
+    mock_db_promote_team_member.return_value = None
 
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(HTTPException) as exc_info:
         await promote_team_member_service(
-            mock_db, team_id, promote_member_id, caller_id
+            MOCK_TEAM_ID, MOCK_USER_2_ID, MOCK_USER_2_ID, mock_db
         )
 
+    assert exc_info.value.status_code == 403
     assert (
-        str(exc_info.value)
-        == f"User with ID '{caller_id}' does not have permission to promote members in team '{team_id}'"
+        exc_info.value.detail
+        == f"User does not have permission to promote members in team: user_id={MOCK_USER_2_ID}, team_id={MOCK_TEAM_ID}"
     )
 
 
@@ -161,45 +160,38 @@ async def test_promote_team_member_service_failure_no_permission(
 @patch("app.service.team.db_leave_team")
 @patch("app.service.team.db_get_team_by_id")
 async def test_leave_team_service_success(mock_db_get_team_by_id, mock_db_leave_team):
-    team_id = "1"
-    user_id = "addi@addi.com"
-
     mock_db = AsyncMock()
-
     mock_db_get_team_by_id.return_value = {
-        "_id": team_id,
-        "name": "alex's team",
-        "member_ids": ["alex's_id", user_id],
-        "exec_member_ids": ["alex's_id"],
+        "_id": MOCK_TEAM_ID,
+        "name": MOCK_TEAM_NAME,
+        "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
+        "exec_member_ids": [MOCK_USER_ID],
     }
     mock_db_leave_team.return_value = None
 
-    await leave_team_service(mock_db, team_id, user_id)
+    result = await leave_team_service(MOCK_TEAM_ID, MOCK_USER_2_ID, mock_db)
 
-    mock_db_leave_team.assert_called_once_with(mock_db, team_id, user_id)
+    assert isinstance(result, LeaveTeamResponse)
 
 
 @pytest.mark.asyncio
 @patch("app.service.team.db_get_team_by_id")
 async def test_leave_team_service_failure_last_exec(mock_db_get_team_by_id):
-    team_id = "1"
-    user_id = "alex's_id"
-
     mock_db = AsyncMock()
-
     mock_db_get_team_by_id.return_value = {
-        "_id": team_id,
-        "name": "alex's team",
-        "member_ids": [user_id],
-        "exec_member_ids": [user_id],
+        "_id": MOCK_TEAM_ID,
+        "name": MOCK_TEAM_NAME,
+        "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
+        "exec_member_ids": [MOCK_USER_ID],
     }
 
-    with pytest.raises(ValueError) as exc_info:
-        await leave_team_service(mock_db, team_id, user_id)
+    with pytest.raises(HTTPException) as exc_info:
+        await leave_team_service(MOCK_TEAM_ID, MOCK_USER_ID, mock_db)
 
+    assert exc_info.value.status_code == 403
     assert (
-        str(exc_info.value)
-        == f"User with ID '{user_id}' is the last executive member and cannot leave the team '{team_id}'"
+        exc_info.value.detail
+        == f"User is the last executive member and cannot leave the team: user_id={MOCK_USER_ID}, team_id={MOCK_TEAM_ID}"
     )
 
 
@@ -209,47 +201,40 @@ async def test_leave_team_service_failure_last_exec(mock_db_get_team_by_id):
 async def test_kick_team_member_service_success(
     mock_db_get_team_by_id, mock_db_kick_team_member
 ):
-    team_id = "1"
-    kick_member_id = "addi@addi.com"
-    caller_id = "alex's_id"
-
     mock_db = AsyncMock()
-
     mock_db_get_team_by_id.return_value = {
-        "_id": team_id,
-        "name": "alex's team",
-        "member_ids": [caller_id, kick_member_id],
-        "exec_member_ids": [caller_id],
+        "_id": MOCK_TEAM_ID,
+        "name": MOCK_TEAM_NAME,
+        "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
+        "exec_member_ids": [MOCK_USER_ID],
     }
     mock_db_kick_team_member.return_value = None
 
-    await kick_team_member_service(mock_db, team_id, kick_member_id, caller_id)
-
-    mock_db_kick_team_member.assert_called_once_with(
-        mock_db, team_id, kick_member_id, caller_id
+    result = await kick_team_member_service(
+        MOCK_TEAM_ID, MOCK_USER_2_ID, MOCK_USER_ID, mock_db
     )
+
+    assert isinstance(result, KickTeamMemberResponse)
 
 
 @pytest.mark.asyncio
 @patch("app.service.team.db_get_team_by_id")
 async def test_kick_team_member_service_failure_kick_exec(mock_db_get_team_by_id):
-    team_id = "1"
-    kick_member_id = "addi@addi.com"
-    caller_id = "alex's_id"
-
     mock_db = AsyncMock()
-
     mock_db_get_team_by_id.return_value = {
-        "_id": team_id,
-        "name": "alex's team",
-        "member_ids": [caller_id, kick_member_id],
-        "exec_member_ids": [caller_id, kick_member_id],
+        "_id": MOCK_TEAM_ID,
+        "name": MOCK_TEAM_NAME,
+        "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
+        "exec_member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
     }
 
-    with pytest.raises(ValueError) as exc_info:
-        await kick_team_member_service(mock_db, team_id, kick_member_id, caller_id)
+    with pytest.raises(HTTPException) as exc_info:
+        await kick_team_member_service(
+            MOCK_TEAM_ID, MOCK_USER_2_ID, MOCK_USER_ID, mock_db
+        )
 
+    assert exc_info.value.status_code == 403
     assert (
-        str(exc_info.value)
-        == f"Member with ID '{kick_member_id}' is an executive and cannot be kicked"
+        exc_info.value.detail
+        == f"Member is an executive and cannot be kicked: member_id={MOCK_USER_2_ID}, team_id={MOCK_TEAM_ID}"
     )

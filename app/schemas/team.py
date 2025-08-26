@@ -13,8 +13,20 @@ class TeamModel(BaseModel):
     project_ids: List[str]
 
 
-class TeamCreateReq(BaseModel):
+class CreateTeamRequest(BaseModel):
     name: str
+
+
+class CreateTeamResponse(BaseModel):
+    team: TeamModel
+
+
+class JoinTeamRequest(BaseModel):
+    user_id: str
+
+
+class JoinTeamResponse(BaseModel):
+    pass
 
 
 class GetTeamRequest(BaseModel):
@@ -25,12 +37,28 @@ class GetTeamResponse(BaseModel):
     team: TeamModel
 
 
-class KickTeamMemberReq(BaseModel):
+class PromoteTeamMemberRequest(BaseModel):
     member_id: str
 
 
-class PromoteTeamMemberReq(BaseModel):
+class PromoteTeamMemberResponse(BaseModel):
+    pass
+
+
+class LeaveTeamRequest(BaseModel):
+    pass
+
+
+class LeaveTeamResponse(BaseModel):
+    pass
+
+
+class KickTeamMemberRequest(BaseModel):
     member_id: str
+
+
+class KickTeamMemberResponse(BaseModel):
+    pass
 
 
 class CreateProjectRequest(BaseModel):

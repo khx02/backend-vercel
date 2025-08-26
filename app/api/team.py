@@ -6,10 +6,15 @@ from app.db.client import get_db
 from app.schemas.team import (
     CreateProjectRequest,
     CreateProjectResponse,
+    CreateTeamRequest,
+    CreateTeamResponse,
     GetTeamResponse,
-    KickTeamMemberReq,
-    PromoteTeamMemberReq,
-    TeamCreateReq,
+    JoinTeamResponse,
+    KickTeamMemberRequest,
+    KickTeamMemberResponse,
+    LeaveTeamResponse,
+    PromoteTeamMemberRequest,
+    PromoteTeamMemberResponse,
     TeamModel,
 )
 from app.schemas.user import UserModel
@@ -26,24 +31,22 @@ from app.service.team import (
 router = APIRouter()
 
 
-# TODO: Returning the object ID and using it to join teams is not the most user-friendly
-# May be worth considering using shortened team ids or other identifiers instead
-# Team name has been made unique, so we may be able to use it for joining
 @router.post("/create-team", response_model=TeamModel)
 async def create_team(
-    team_create: TeamCreateReq,
+    create_team_request: CreateTeamRequest,
     current_user: UserModel = Depends(get_current_user),
     db: AsyncDatabase = Depends(get_db),
-) -> TeamModel:
-    try:
-        return await create_team_service(db, team_create, current_user.id)
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create team",
-        )
+) -> CreateTeamResponse:
+    return await create_team_service(current_user.id, create_team_request.name, db)
+
+
+@router.post("/join-team/{team_id}")
+async def join_team(
+    team_id: str,
+    current_user: UserModel = Depends(get_current_user),
+    db: AsyncDatabase = Depends(get_db),
+) -> JoinTeamResponse:
+    return await join_team_service(team_id, current_user.id, db)
 
 
 @router.get("/get-team/{team_id}")
@@ -55,41 +58,16 @@ async def get_team(
     return await get_team_service(team_id, current_user, db)
 
 
-@router.post("/join-team/{team_id}")
-async def join_team(
-    team_id: str,
-    current_user: UserModel = Depends(get_current_user),
-    db: AsyncDatabase = Depends(get_db),
-) -> None:
-    try:
-        await join_team_service(db, team_id, current_user.id)
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to join team",
-        )
-
-
 @router.post("/promote-team-member/{team_id}")
 async def promote_team_member(
     team_id: str,
-    promote_team_member: PromoteTeamMemberReq,
+    promote_team_member_request: PromoteTeamMemberRequest,
     current_user: UserModel = Depends(get_current_user),
     db: AsyncDatabase = Depends(get_db),
-) -> None:
-    try:
-        await promote_team_member_service(
-            db, team_id, promote_team_member.member_id, current_user.id
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to promote team member",
-        )
+) -> PromoteTeamMemberResponse:
+    return await promote_team_member_service(
+        team_id, promote_team_member_request.member_id, current_user.id, db
+    )
 
 
 @router.post("/leave-team/{team_id}")
@@ -97,36 +75,20 @@ async def leave_team(
     team_id: str,
     current_user: UserModel = Depends(get_current_user),
     db: AsyncDatabase = Depends(get_db),
-) -> None:
-    try:
-        await leave_team_service(db, team_id, current_user.id)
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to leave team",
-        )
+) -> LeaveTeamResponse:
+    return await leave_team_service(team_id, current_user.id, db)
 
 
 @router.post("/kick-team-member/{team_id}")
 async def kick_team_member(
     team_id: str,
-    kick_team_member: KickTeamMemberReq,
+    kick_team_member: KickTeamMemberRequest,
     current_user: UserModel = Depends(get_current_user),
     db: AsyncDatabase = Depends(get_db),
-) -> None:
-    try:
-        await kick_team_member_service(
-            db, team_id, kick_team_member.member_id, current_user.id
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to kick team member",
-        )
+) -> KickTeamMemberResponse:
+    return await kick_team_member_service(
+        team_id, kick_team_member.member_id, current_user.id, db
+    )
 
 
 @router.post("/create-project/{team_id}")
