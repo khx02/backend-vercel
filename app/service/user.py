@@ -2,13 +2,18 @@ from annotated_types import T
 from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 
-from app.core.constants import USERS_COLLECTION
 from app.core.security import hash_password, verify_password
-from app.db.user import db_create_user, db_get_user_teams_by_id, get_user_by_email as db_get_user_by_email
-from app.db.user import update_password as db_update_password
+from app.db.user import (
+    db_create_user,
+    db_get_user_by_id,
+    db_get_user_teams_by_id,
+    db_get_user_by_email,
+    db_update_password,
+)
 from app.schemas.team import TeamModel
 from app.schemas.user import (
-    ChangePasswordReq,
+    ChangePasswordRequest,
+    ChangePasswordResponse,
     CreateUserRequest,
     CreateUserResponse,
     GetCurrentUserTeamsResponse,
@@ -19,8 +24,7 @@ from app.schemas.user import (
 async def create_user_service(
     create_user_request: CreateUserRequest, db: AsyncDatabase
 ) -> CreateUserResponse:
-
-    existing_user = await db_get_user_by_email(db, create_user_request.email)
+    existing_user = await db_get_user_by_email(create_user_request.email, db)
     if existing_user:
         raise HTTPException(
             status_code=400,
@@ -43,6 +47,11 @@ async def get_current_user_teams_service(
     current_user_id: str,
     db: AsyncDatabase,
 ) -> GetCurrentUserTeamsResponse:
+    existing_user = await db_get_user_by_id(current_user_id, db)
+    if not existing_user:
+        raise HTTPException(
+            status_code=404, detail=f"User not found: id={current_user_id}"
+        )
 
     team_models_in_db = await db_get_user_teams_by_id(current_user_id, db)
 
@@ -60,30 +69,27 @@ async def get_current_user_teams_service(
     )
 
 
-async def get_user_service(db: AsyncDatabase, email: str) -> UserModel | None:
-    user_in_db = await db_get_user_by_email(db, email)
-    if user_in_db:
-        return UserModel(
-            id=str(user_in_db["_id"]),
-            email=user_in_db["email"],
-        )
-    return None
-
-
 async def change_password_service(
-    db: AsyncDatabase, change_password: ChangePasswordReq, current_user_email: str
-) -> UserModel | None:
+    current_user_id: str,
+    change_password_request: ChangePasswordRequest,
+    db: AsyncDatabase,
+) -> ChangePasswordResponse:
+    user_in_db = await db_get_user_by_id(current_user_id, db)
+    if not user_in_db:
+        raise HTTPException(
+            status_code=404, detail=f"User not found: id={current_user_id}"
+        )
 
-    user_in_db = await get_user_service(db, current_user_email)
-    if not user_in_db:  # This should not happen as the user should be authenticated
-        raise ValueError("User not found")
+    hashed_password = user_in_db["hashed_password"]
 
-    if not verify_password(change_password.old_password, user_in_db.hashed_password):
-        raise ValueError("Old password is incorrect")
+    if not verify_password(change_password_request.old_password, hashed_password):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Incorrect old password, please try again: id={current_user_id}",
+        )
 
-    new_hashed_password = hash_password(change_password.new_password)
+    new_hashed_password = hash_password(change_password_request.new_password)
 
-    await db_update_password(db, current_user_email, new_hashed_password)
+    await db_update_password(current_user_id, new_hashed_password, db)
 
-    user_in_db.hashed_password = new_hashed_password
-    return user_in_db
+    return ChangePasswordResponse()

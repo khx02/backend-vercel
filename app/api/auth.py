@@ -16,9 +16,9 @@ from pymongo.asynchronous.database import AsyncDatabase
 from app.core.constants import ALGORITHM, SECRET_KEY
 from app.core.security import create_token_pair, verify_password
 from app.db.client import get_db
-from app.schemas.token import TokenRes
-from app.schemas.user import UserModel, UserRes
-from app.service.user import get_user_service
+from app.db.user import db_get_user_or_none_by_email
+from app.schemas.token import TokenRes, UserRes
+from app.schemas.user import UserModel
 
 TOKEN_URL = "/api/auth/set-token"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL, auto_error=False)
@@ -99,12 +99,15 @@ async def get_current_user_from_cookie(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
         )
 
-    user = await get_user_service(db, email)
-    if not user:
+    user_dict_in_db = await db_get_user_or_none_by_email(email, db)
+    if not user_dict_in_db:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
         )
-    return user
+    return UserModel(
+        id=str(user_dict_in_db["_id"]),
+        email=user_dict_in_db["email"],
+    )
 
 
 # Dev only function as tokens should never be returned to production users
@@ -126,20 +129,29 @@ async def get_current_user_from_token(
             raise cred_exc
     except jwt.InvalidTokenError:
         raise cred_exc
-    user = await get_user_service(db, email)
-    if not user:
+    user_in_db_dict = await db_get_user_or_none_by_email(email, db)
+    if not user_in_db_dict:
         raise cred_exc
-    return user
+    return UserModel(
+        id=str(user_in_db_dict["_id"]),
+        email=user_in_db_dict["email"],
+    )
 
 
 async def authenticate_user(db: AsyncDatabase, email: str, password: str) -> UserModel:
-    user = await get_user_service(db, email)
-    if user is None or not verify_password(password, user.hashed_password):
+    user_in_db_dict = await db_get_user_or_none_by_email(email, db)
+    if user_in_db_dict is None or not verify_password(
+        password, user_in_db_dict["hashed_password"]
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    user = UserModel(
+        id=str(user_in_db_dict["_id"]),
+        email=user_in_db_dict["email"],
+    )
     return user
 
 
@@ -187,11 +199,15 @@ async def refresh_token(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
         )
 
-    user = await get_user_service(db, email)
-    if user is None:
+    user_in_db_dict = await db_get_user_or_none_by_email(email, db)
+    if user_in_db_dict is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
         )
+    user = UserModel(
+        id=str(user_in_db_dict["_id"]),
+        email=user_in_db_dict["email"],
+    )
 
     token_pair = create_token_pair(data={"sub": user.email})
 

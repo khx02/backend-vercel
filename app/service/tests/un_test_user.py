@@ -2,11 +2,10 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.schemas.user import ChangePasswordReq, UserCreateReq, UserModel
+from app.schemas.user import UserModel
 from app.service.user import (
     change_password_service,
     create_user_service,
-    get_user_service,
 )
 
 

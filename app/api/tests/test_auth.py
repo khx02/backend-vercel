@@ -27,14 +27,13 @@ async def test_authenticate_user_success(mock_verify_password, mock_get_user_ser
     mock_email = "addi@addi.com"
     mock_password = "alex's"
 
-    mock_user = UserModel(id="1", email=mock_email, hashed_password="hashed-alex's")
+    mock_user = UserModel(id="1", email=mock_email)
     mock_get_user_service.return_value = mock_user
     mock_verify_password.return_value = True
 
     result = await authenticate_user(mock_db, mock_email, mock_password)
     assert result.id == "1"
     assert result.email == mock_email
-    assert result.hashed_password == "hashed-alex's"
 
 
 @pytest.mark.asyncio
@@ -66,9 +65,7 @@ async def test_login_for_token_access(mock_create_token_pair, mock_authenticate_
 
     mock_db = AsyncMock()
 
-    mock_user = UserModel(
-        id="1", email="addi@addi.com", hashed_password="hashed-alex's"
-    )
+    mock_user = UserModel(id="1", email="addi@addi.com")
 
     mock_authenticate_user.return_value = mock_user
 
@@ -130,7 +127,7 @@ async def test_refresh_token_success(
     mock_email = "addi@addi.com"
 
     mock_decode.return_value = {"sub": mock_email}
-    mock_user = UserModel(id="1", email=mock_email, hashed_password="hashed-alex's")
+    mock_user = UserModel(id="1", email=mock_email)
     mock_get_user_service.return_value = mock_user
 
     mock_create_token_pair.return_value = TokenPair(
@@ -229,16 +226,13 @@ def test_clear_auth_cookies():
 async def test_get_current_user_cookie_available_success(
     mock_get_current_user_from_cookie,
 ):
-    mock_user = UserModel(
-        id="1", email="addi@addi.com", hashed_password="hashed-alex's"
-    )
+    mock_user = UserModel(id="1", email="addi@addi.com")
     mock_get_current_user_from_cookie.return_value = mock_user
 
     result = await get_current_user()
 
     assert result.id == "1"
     assert result.email == "addi@addi.com"
-    assert result.hashed_password == "hashed-alex's"
 
 
 @pytest.mark.asyncio
@@ -247,9 +241,7 @@ async def test_get_current_user_cookie_available_success(
 async def test_get_current_user_token_available_success(
     mock_get_current_user_from_cookie, mock_get_current_user_from_token
 ):
-    mock_user = UserModel(
-        id="1", email="addi@addi.com", hashed_password="hashed-alex's"
-    )
+    mock_user = UserModel(id="1", email="addi@addi.com")
     mock_get_current_user_from_cookie.side_effect = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
     )
@@ -259,7 +251,6 @@ async def test_get_current_user_token_available_success(
 
     assert result.id == "1"
     assert result.email == "addi@addi.com"
-    assert result.hashed_password == "hashed-alex's"
 
 
 @pytest.mark.asyncio
@@ -294,7 +285,7 @@ async def test_get_current_user_from_cookie_success(mock_decode, mock_get_user_s
     access_token = "valid-access-token"
 
     mock_decode.return_value = {"sub": "test@example.com"}
-    mock_user = UserModel(id="1", email="test@example.com", hashed_password="hashed")
+    mock_user = UserModel(id="1", email="test@example.com")
     mock_get_user_service.return_value = mock_user
 
     result = await get_current_user_from_cookie(access_token, mock_db)
@@ -324,16 +315,13 @@ async def test_get_current_user_from_token_success(mock_decode, mock_get_user_se
     mock_token = "fake-jwt-token"
     mock_decode.return_value = {"sub": "addi@addi.com"}
 
-    mock_user = UserModel(
-        id="1", email="addi@addi.com", hashed_password="hashed-alex's"
-    )
+    mock_user = UserModel(id="1", email="addi@addi.com")
     mock_get_user_service.return_value = mock_user
 
     result = await get_current_user_from_token(mock_token, mock_db)
 
     assert result.id == "1"
     assert result.email == "addi@addi.com"
-    assert result.hashed_password == "hashed-alex's"
 
 
 @pytest.mark.asyncio

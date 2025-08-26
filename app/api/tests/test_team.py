@@ -41,7 +41,6 @@ async def test_create_team_success(mock_create_team_service):
     mock_current_user = UserModel(
         id=MOCK_USER_ID,
         email=MOCK_USER_EMAIL,
-        hashed_password=MOCK_USER_PASSWORD_HASHED,
     )
     mock_create_team_service.return_value = CreateTeamResponse(
         team=TeamModel(
@@ -72,7 +71,6 @@ async def test_join_team_success(mock_join_team_service):
     mock_current_user = UserModel(
         id=MOCK_USER_ID,
         email=MOCK_USER_EMAIL,
-        hashed_password=MOCK_USER_PASSWORD_HASHED,
     )
     mock_join_team_service.return_value = JoinTeamResponse()
 
@@ -88,7 +86,6 @@ async def test_join_team_failure(mock_join_team_service):
     mock_current_user = UserModel(
         id=MOCK_USER_ID,
         email=MOCK_USER_EMAIL,
-        hashed_password=MOCK_USER_PASSWORD_HASHED,
     )
     mock_join_team_service.side_effect = HTTPException(
         status_code=404,
@@ -109,7 +106,6 @@ async def test_promote_team_member_success(mock_promote_team_member_service):
     mock_current_user = UserModel(
         id=MOCK_USER_ID,
         email=MOCK_USER_EMAIL,
-        hashed_password=MOCK_USER_PASSWORD_HASHED,
     )
     mock_promote_team_member_service.return_value = PromoteTeamMemberResponse()
     promote_team_member_request = PromoteTeamMemberRequest(member_id=MOCK_USER_2_ID)
@@ -128,7 +124,6 @@ async def test_promote_team_member_failure(mock_promote_team_member_service):
     mock_current_user = UserModel(
         id=MOCK_USER_ID,
         email=MOCK_USER_EMAIL,
-        hashed_password=MOCK_USER_PASSWORD_HASHED,
     )
     mock_promote_team_member_service.side_effect = HTTPException(
         status_code=404,
@@ -152,7 +147,6 @@ async def test_leave_team_success(mock_leave_team_service):
     mock_current_user = UserModel(
         id=MOCK_USER_ID,
         email=MOCK_USER_EMAIL,
-        hashed_password=MOCK_USER_PASSWORD_HASHED,
     )
     mock_leave_team_service.return_value = LeaveTeamResponse()
 
@@ -168,7 +162,6 @@ async def test_leave_team_failure(mock_leave_team_service):
     mock_current_user = UserModel(
         id=MOCK_USER_ID,
         email=MOCK_USER_EMAIL,
-        hashed_password=MOCK_USER_PASSWORD_HASHED,
     )
     mock_leave_team_service.side_effect = HTTPException(
         status_code=404, detail=f"Team does not exist: team_id={MOCK_TEAM_ID}"
@@ -188,7 +181,6 @@ async def test_kick_team_member_success(mock_kick_team_member_service):
     mock_current_user = UserModel(
         id=MOCK_USER_ID,
         email=MOCK_USER_EMAIL,
-        hashed_password=MOCK_USER_PASSWORD_HASHED,
     )
     kick_team_member_request = KickTeamMemberRequest(member_id=MOCK_USER_2_ID)
     mock_kick_team_member_service.return_value = KickTeamMemberResponse()
@@ -207,7 +199,6 @@ async def test_kick_team_member_failure(mock_kick_team_member_service):
     mock_current_user = UserModel(
         id=MOCK_USER_ID,
         email=MOCK_USER_EMAIL,
-        hashed_password=MOCK_USER_PASSWORD_HASHED,
     )
     kick_team_member_request = KickTeamMemberRequest(member_id=MOCK_USER_2_ID)
     mock_kick_team_member_service.side_effect = HTTPException(

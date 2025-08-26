@@ -27,15 +27,6 @@ class CreateUserResponse(BaseModel):
     user: UserModel
 
 
-class UserHashed(BaseModel):
-    email: EmailStr
-    hashed_password: str
-
-
-class UserRes(BaseModel):
-    email: EmailStr
-
-
 class GetCurrentUserTeamsRequest(BaseModel):
     pass
 
@@ -44,10 +35,14 @@ class GetCurrentUserTeamsResponse(BaseModel):
     teams: list[TeamModel]
 
 
-class ChangePasswordReq(BaseModel):
+class ChangePasswordRequest(BaseModel):
     old_password: str
     new_password: str
 
     @field_validator("new_password")
     def validate_new_password(cls, new_password: str) -> str:
         return is_valid_password(new_password)
+
+
+class ChangePasswordResponse(BaseModel):
+    pass
