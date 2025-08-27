@@ -1,122 +1,100 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi import HTTPException
 
-from app.api.user import change_password, create_user
-from app.schemas.token import TokenPair
-from app.schemas.user import ChangePasswordReq, UserCreateReq, UserModel
+from app.api.user import change_password, create_user, get_current_user_teams
+from app.schemas.team import TeamModel
+from app.schemas.user import (
+    ChangePasswordRequest,
+    ChangePasswordResponse,
+    CreateUserRequest,
+    CreateUserResponse,
+    GetCurrentUserTeamsResponse,
+    UserModel,
+)
+
+from app.test_shared.constants import *
 
 
 @pytest.mark.asyncio
 @patch("app.api.user.create_user_service")
 async def test_create_user_success(mock_create_user_service):
-
-    user_create = UserCreateReq(email="addi@addi.com", password="alex's")
-
     mock_db = AsyncMock()
-    mock_user_data = UserModel(
-        id="1", email="addi@addi.com", hashed_password="hashed-alex's"
+    create_user_request = CreateUserRequest(
+        email=MOCK_USER_EMAIL, password=MOCK_USER_PASSWORD
     )
+    mock_create_user_response = CreateUserResponse(
+        user=UserModel(
+            id=MOCK_USER_ID,
+            email=MOCK_USER_EMAIL,
+        )
+    )
+    mock_create_user_service.return_value = mock_create_user_response
 
-    mock_create_user_service.return_value = mock_user_data
+    result = await create_user(create_user_request, mock_db)
 
-    result = await create_user(user_create, mock_db)
+    assert isinstance(result, CreateUserResponse)
+    assert result.user.id == MOCK_USER_ID
+    assert result.user.email == MOCK_USER_EMAIL
 
-    assert isinstance(result, UserModel)
-    assert result.id == "1"
-    assert result.email == "addi@addi.com"
-    assert result.hashed_password == "hashed-alex's"
+
+"""
+@router.get("/get-current-user-teams")
+async def get_current_user_teams(
+    current_user: UserModel = Depends(get_current_user),
+    db: AsyncDatabase = Depends(get_db),
+) -> GetCurrentUserTeamsResponse:
+    return await get_current_user_teams_service(current_user.id, db)
+
+"""
 
 
 @pytest.mark.asyncio
-@patch("app.api.user.create_user_service")
-async def test_create_user_failure(mock_create_user_service):
-
-    user_create = UserCreateReq(email="not-addi@not-addi.com", password="not-alex's")
-
+@patch("app.api.user.get_current_user_teams_service")
+async def test_get_current_user_teams_success(mock_get_current_user_teams_service):
     mock_db = AsyncMock()
-    mock_create_user_service.side_effect = ValueError("User already exists")
+    mock_current_user = UserModel(
+        id=MOCK_USER_ID,
+        email=MOCK_USER_EMAIL,
+    )
+    mock_get_current_user_teams_service.return_value = GetCurrentUserTeamsResponse(
+        teams=[
+            TeamModel(
+                id=MOCK_TEAM_ID,
+                name=MOCK_TEAM_NAME,
+                member_ids=[MOCK_USER_ID],
+                exec_member_ids=[MOCK_USER_ID],
+                project_ids=[],
+            )
+        ]
+    )
 
-    with pytest.raises(HTTPException) as exc_info:
-        await create_user(user_create, mock_db)
+    result = await get_current_user_teams(mock_current_user, mock_db)
 
-    assert exc_info.value.status_code == 400
-    assert exc_info.value.detail == "User already exists"
+    assert isinstance(result, GetCurrentUserTeamsResponse)
+    assert len(result.teams) == 1
+    assert result.teams[0].id == MOCK_TEAM_ID
+    assert result.teams[0].name == MOCK_TEAM_NAME
+    assert result.teams[0].member_ids == [MOCK_USER_ID]
+    assert result.teams[0].exec_member_ids == [MOCK_USER_ID]
+    assert result.teams[0].project_ids == []
 
 
 @pytest.mark.asyncio
 @patch("app.api.user.change_password_service")
 async def test_change_password_success(mock_change_password_service):
-
-    user_id = "1"
-    email = "addi@addi.com"
-    mock_current_user = UserModel(
-        id=user_id, email=email, hashed_password="hashed-old-alex's"
-    )
-
-    old_password = "old-alex's"
-    new_password = "new-alex's"
-    change_password_req = ChangePasswordReq(
-        old_password=old_password, new_password=new_password
-    )
-
     mock_db = AsyncMock()
-    mock_change_password_service.return_value = UserModel(
-        id=user_id, email=email, hashed_password="hashed-new-alex's"
-    )
-
-    result = await change_password(change_password_req, mock_current_user, mock_db)
-
-    assert isinstance(result, UserModel)
-    assert result.id == user_id
-    assert result.email == email
-    assert result.hashed_password == "hashed-new-alex's"
-
-
-@pytest.mark.asyncio
-@patch("app.api.user.change_password_service")
-async def test_change_password_failure(mock_change_password_service):
-    user_id = "1"
-    email = "addi@addi.com"
     mock_current_user = UserModel(
-        id=user_id, email=email, hashed_password="hashed-old-alex's"
+        id=MOCK_USER_ID,
+        email=MOCK_USER_EMAIL,
+    )
+    mock_change_password_request = ChangePasswordRequest(
+        old_password=MOCK_USER_PASSWORD, new_password=MOCK_USER_NEW_PASSWORD
+    )
+    mock_change_password_service.return_value = ChangePasswordResponse()
+
+    result = await change_password(
+        mock_change_password_request, mock_current_user, mock_db
     )
 
-    change_password_req = ChangePasswordReq(
-        old_password="old-alex's", new_password="new-alex's"
-    )
-
-    mock_db = AsyncMock()
-    mock_change_password_service.side_effect = ValueError("Invalid password")
-
-    with pytest.raises(HTTPException) as exc_info:
-        await change_password(change_password_req, mock_current_user, mock_db)
-
-    assert exc_info.value.status_code == 400
-    assert exc_info.value.detail == "Invalid password"
-
-
-@pytest.mark.asyncio
-@patch("app.api.user.change_password_service")
-async def test_change_password_server_error(mock_change_password_service):
-    """Test change password with unexpected server error."""
-    user_id = "1"
-    email = "addi@addi.com"
-    mock_current_user = UserModel(
-        id=user_id, email=email, hashed_password="hashed-old-alex's"
-    )
-
-    change_password_req = ChangePasswordReq(
-        old_password="old-alex's", new_password="new-alex's"
-    )
-
-    mock_db = AsyncMock()
-    # Simulate unexpected exception (not ValueError)
-    mock_change_password_service.side_effect = RuntimeError("Database error")
-
-    with pytest.raises(HTTPException) as exc_info:
-        await change_password(change_password_req, mock_current_user, mock_db)
-
-    assert exc_info.value.status_code == 500
-    assert exc_info.value.detail == "Failed to change password"
+    assert isinstance(result, ChangePasswordResponse)

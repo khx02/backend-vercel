@@ -4,9 +4,17 @@ from pymongo.errors import PyMongoError
 import pytest
 from bson import ObjectId
 
-from app.db.team import *
-from app.schemas.project import Project
+from app.db.team import (
+    db_create_project,
+    db_create_team,
+    db_join_team,
+    db_get_team_by_id,
+    db_promote_team_member,
+    db_leave_team,
+    db_kick_team_member,
+)
 
+from app.schemas.team import CreateProjectRequest
 from app.test_shared.constants import (
     MOCK_USER_ID,
     MOCK_USER_2_ID,

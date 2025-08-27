@@ -3,123 +3,149 @@ from unittest.mock import AsyncMock
 from bson import ObjectId
 import pytest
 
-from app.db.user import create_user, get_user_by_email, update_password
-from app.schemas.user import UserHashed
+from app.core.constants import TEAMS_COLLECTION
+from app.db.user import (
+    db_create_user,
+    db_get_user_by_email,
+    db_get_user_by_id,
+    db_get_user_teams_by_id,
+    db_update_password,
+)
+from app.schemas.team import TeamModel
+from app.schemas.user import CreateUserRequest
+from app.test_shared.constants import *
 
 
 @pytest.mark.asyncio
-async def test_create_user_success():
-    user_hashed = UserHashed(email="addi@addi.com", hashed_password="hashed-alex's")
-    user_id = str(ObjectId())
-
-    mock_collection = AsyncMock()
-    mock_result = AsyncMock()
-    mock_result.inserted_id = ObjectId(user_id)
-    mock_collection.insert_one.return_value = mock_result
-
+async def test_db_create_user_success():
     mock_db = AsyncMock()
-    mock_db.__getitem__.return_value = mock_collection
-
-    result = await create_user(mock_db, user_hashed)
-
-    mock_collection.insert_one.assert_called_once_with(
-        {
-            "_id": ObjectId(user_id),
-            "email": user_hashed.email,
-            "hashed_password": user_hashed.hashed_password,
-        }
+    mock_users_collection = AsyncMock()
+    mock_users_collection.insert_one.return_value = AsyncMock(
+        inserted_id=ObjectId(MOCK_INSERTED_ID)
+    )
+    mock_db.__getitem__.return_value = mock_users_collection
+    mock_create_user_request = CreateUserRequest(
+        email=MOCK_USER_EMAIL, password=MOCK_USER_PASSWORD
     )
 
-    print(result)
+    result = await db_create_user(
+        mock_create_user_request, MOCK_USER_PASSWORD_HASHED, mock_db
+    )
 
     assert isinstance(result, dict)
-    assert result["_id"] == user_id
-    assert result["email"] == user_hashed.email
-    assert result["hashed_password"] == user_hashed.hashed_password
+    assert result["_id"] == MOCK_INSERTED_ID
+    assert result["email"] == MOCK_USER_EMAIL
+    assert result["hashed_password"] == MOCK_USER_PASSWORD_HASHED
 
 
 @pytest.mark.asyncio
-async def test_create_user_failure():
-    user_hashed = UserHashed(email="addi@addi.com", hashed_password="hashed-alex's")
-
-    mock_collection = AsyncMock()
-    mock_collection.insert_one.side_effect = Exception("Database error")
-
+async def test_get_current_user_teams_service_success():
     mock_db = AsyncMock()
-    mock_db.__getitem__.return_value = mock_collection
+    mock_db[TEAMS_COLLECTION].find.return_value.to_list = AsyncMock(
+        return_value=[
+            {
+                "_id": ObjectId(MOCK_TEAM_ID),
+                "name": MOCK_TEAM_NAME,
+                "member_ids": [ObjectId(MOCK_USER_ID)],
+                "exec_member_ids": [ObjectId(MOCK_USER_ID)],
+                "project_ids": [ObjectId(MOCK_PROJECT_ID)],
+            },
+            {
+                "_id": ObjectId(MOCK_TEAM_2_ID),
+                "name": MOCK_TEAM_2_NAME,
+                "member_ids": [ObjectId(MOCK_USER_2_ID)],
+                "exec_member_ids": [ObjectId(MOCK_USER_2_ID)],
+                "project_ids": [ObjectId(MOCK_PROJECT_2_ID)],
+            },
+        ]
+    )
 
-    result = await create_user(mock_db, user_hashed)
+    result = await db_get_user_teams_by_id(MOCK_USER_ID, mock_db)
 
-    assert result is None
+    assert isinstance(result, list)
+    assert len(result) == 2
+    assert result[0]["_id"] == MOCK_TEAM_ID
+    assert result[1]["_id"] == MOCK_TEAM_2_ID
 
 
 @pytest.mark.asyncio
-async def test_get_user_by_email_success():
-    user_id = str(ObjectId())
-    user_email = "addi@addi.com"
-    user_hashed_password = "hashed-alex's"
-
-    mock_collection = AsyncMock()
-    mock_collection.find_one.return_value = {
-        "_id": user_id,
-        "email": user_email,
-        "hashed_password": user_hashed_password,
+async def test_db_get_user_by_id_success():
+    mock_db = AsyncMock()
+    mock_users_collection = AsyncMock()
+    mock_users_collection.find_one.return_value = {
+        "_id": ObjectId(MOCK_USER_ID),
+        "email": MOCK_USER_EMAIL,
+        "hashed_password": MOCK_USER_PASSWORD_HASHED,
     }
+    mock_db.__getitem__.return_value = mock_users_collection
 
-    mock_db = AsyncMock()
-    mock_db.__getitem__.return_value = mock_collection
-
-    result = await get_user_by_email(mock_db, user_email)
+    result = await db_get_user_by_id(MOCK_USER_ID, mock_db)
 
     assert isinstance(result, dict)
-    assert result["_id"] == user_id
-    assert result["email"] == user_email
-    assert result["hashed_password"] == user_hashed_password
+    assert result["_id"] == MOCK_USER_ID
+    assert result["email"] == MOCK_USER_EMAIL
+    assert result["hashed_password"] == MOCK_USER_PASSWORD_HASHED
 
 
 @pytest.mark.asyncio
-async def test_get_user_by_email_failure():
-    user_email = "addi@addi.com"
-
-    mock_collection = AsyncMock()
-    mock_collection.find_one.side_effect = Exception("Database error")
-
+async def test_db_get_user_by_email_success():
     mock_db = AsyncMock()
-    mock_db.__getitem__.return_value = mock_collection
+    mock_users_collection = AsyncMock()
+    mock_users_collection.find_one.return_value = {
+        "_id": ObjectId(MOCK_USER_ID),
+        "email": MOCK_USER_EMAIL,
+        "hashed_password": MOCK_USER_PASSWORD_HASHED,
+    }
+    mock_db.__getitem__.return_value = mock_users_collection
 
-    result = await get_user_by_email(mock_db, user_email)
+    result = await db_get_user_by_email(MOCK_USER_EMAIL, mock_db)
+
+    assert isinstance(result, dict)
+    assert result["_id"] == MOCK_USER_ID
+    assert result["email"] == MOCK_USER_EMAIL
+    assert result["hashed_password"] == MOCK_USER_PASSWORD_HASHED
+
+
+@pytest.mark.asyncio
+async def test_db_get_user_or_none_by_email_success_user_case():
+    mock_db = AsyncMock()
+    mock_users_collection = AsyncMock()
+    mock_users_collection.find_one.return_value = {
+        "_id": ObjectId(MOCK_USER_ID),
+        "email": MOCK_USER_EMAIL,
+        "hashed_password": MOCK_USER_PASSWORD_HASHED,
+    }
+    mock_db.__getitem__.return_value = mock_users_collection
+
+    result = await db_get_user_by_email(MOCK_USER_EMAIL, mock_db)
+
+    assert isinstance(result, dict)
+    assert result["_id"] == MOCK_USER_ID
+    assert result["email"] == MOCK_USER_EMAIL
+    assert result["hashed_password"] == MOCK_USER_PASSWORD_HASHED
+
+
+@pytest.mark.asyncio
+async def test_db_get_user_or_none_by_email_failure_none_case():
+    mock_db = AsyncMock()
+    mock_users_collection = AsyncMock()
+    mock_users_collection.find_one.return_value = None
+    mock_db.__getitem__.return_value = mock_users_collection
+
+    result = await db_get_user_by_email(MOCK_USER_EMAIL, mock_db)
 
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_update_password_success():
-    mock_collection = AsyncMock()
+async def test_db_update_password_success():
     mock_db = AsyncMock()
-    mock_db.__getitem__.return_value = mock_collection
+    mock_users_collection = AsyncMock()
+    mock_users_collection.update_one.return_value = AsyncMock()
+    mock_db.__getitem__.return_value = mock_users_collection
 
-    result = await update_password(mock_db, "addi@addi.com", "new-hashed-password")
-
-    mock_collection.update_one.assert_called_once_with(
-        {"email": "addi@addi.com"},
-        {"$set": {"hashed_password": "new-hashed-password"}},
+    result = await db_update_password(
+        MOCK_USER_ID, MOCK_USER_NEW_PASSWORD_HASHED, mock_db
     )
+
     assert result is None
-
-
-@pytest.mark.asyncio
-async def test_update_password_failure():
-    mock_collection = AsyncMock()
-    mock_collection.update_one.side_effect = Exception("Database error")
-
-    mock_db = AsyncMock()
-    mock_db.__getitem__.return_value = mock_collection
-
-    with pytest.raises(Exception) as exc_info:
-        await update_password(mock_db, "addi@addi.com", "new-hashed-password")
-
-    mock_collection.update_one.assert_called_once_with(
-        {"email": "addi@addi.com"},
-        {"$set": {"hashed_password": "new-hashed-password"}},
-    )
-    assert str(exc_info.value) == "Database error"

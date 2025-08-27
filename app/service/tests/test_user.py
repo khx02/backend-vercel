@@ -1,13 +1,23 @@
+from math import e
 from unittest.mock import AsyncMock, patch
 
+from fastapi import HTTPException
 import pytest
 
-from app.schemas.user import ChangePasswordReq, UserCreateReq, UserModel
+from app.schemas.user import (
+    ChangePasswordRequest,
+    ChangePasswordResponse,
+    CreateUserRequest,
+    CreateUserResponse,
+    GetCurrentUserTeamsResponse,
+)
 from app.service.user import (
     change_password_service,
     create_user_service,
-    get_user_service,
+    get_current_user_teams_service,
 )
+
+from app.test_shared.constants import *
 
 
 @pytest.mark.asyncio
@@ -17,152 +27,108 @@ from app.service.user import (
 async def test_create_user_service_success(
     mock_db_get_user_by_email, mock_hash_password, mock_db_create_user
 ):
-    user_id = "1"
-    user_email = "addi@addi.com"
-    user_password = "alex's"
-    user_hashed_password = "hashed-alex's"
-    user_create_req = UserCreateReq(email=user_email, password=user_password)
-
     mock_db = AsyncMock()
-
     mock_db_get_user_by_email.return_value = None
-    mock_hash_password.return_value = user_hashed_password
+    mock_hash_password.return_value = MOCK_USER_PASSWORD_HASHED
     mock_db_create_user.return_value = {
-        "_id": user_id,
-        "email": user_email,
-        "hashed_password": user_hashed_password,
+        "_id": MOCK_USER_ID,
+        "email": MOCK_USER_EMAIL,
+        "hashed_password": MOCK_USER_PASSWORD_HASHED,
     }
+    mock_create_user_request = CreateUserRequest(
+        email=MOCK_USER_EMAIL, password=MOCK_USER_PASSWORD
+    )
 
-    result = await create_user_service(mock_db, user_create_req)
+    result = await create_user_service(mock_create_user_request, mock_db)
 
-    assert result.id == user_id
-    assert result.email == user_email
-    assert result.hashed_password == user_hashed_password
+    assert isinstance(result, CreateUserResponse)
+    assert result.user.id == MOCK_USER_ID
+    assert result.user.email == MOCK_USER_EMAIL
 
 
 @pytest.mark.asyncio
 @patch("app.service.user.db_get_user_by_email")
 async def test_create_user_service_failure(mock_db_get_user_by_email):
-    user_id = "1"
-    user_email = "addi@addi.com"
-    user_password = "alex's"
-    user_hashed_password = "hashed-alex's"
-    user_create_req = UserCreateReq(email=user_email, password=user_password)
-
     mock_db = AsyncMock()
-
     mock_db_get_user_by_email.return_value = {
-        "_id": user_id,
-        "email": user_email,
-        "hashed_password": user_hashed_password,
+        "_id": MOCK_USER_ID,
+        "email": MOCK_USER_EMAIL,
+        "hashed_password": MOCK_USER_PASSWORD_HASHED,
     }
+    mock_create_user_request = CreateUserRequest(
+        email=MOCK_USER_EMAIL, password=MOCK_USER_PASSWORD
+    )
 
-    with pytest.raises(ValueError) as exc_info:
-        await create_user_service(mock_db, user_create_req)
+    with pytest.raises(HTTPException) as exc_info:
+        await create_user_service(mock_create_user_request, mock_db)
 
-    assert str(exc_info.value) == f"User with email '{user_email}' already exists"
+    assert exc_info.value.status_code == 400
+    assert (
+        exc_info.value.detail
+        == f"A user has already been created using this email address: email={MOCK_USER_EMAIL}"
+    )
 
 
 @pytest.mark.asyncio
-@patch("app.service.user.db_get_user_by_email")
-async def test_get_user_service_success(mock_db_get_user_by_email):
-    user_id = "1"
-    user_email = "addi@addi.com"
-    user_hashed_password = "hashed-alex's"
-
+@patch("app.service.user.db_get_user_teams_by_id")
+@patch("app.service.user.db_get_user_by_id")
+async def test_get_current_user_teams_service_success(
+    mock_db_get_user_by_id, mock_db_get_user_teams_by_id
+):
     mock_db = AsyncMock()
-    mock_db_get_user_by_email.return_value = {
-        "_id": user_id,
-        "email": user_email,
-        "hashed_password": user_hashed_password,
+    mock_db_get_user_by_id.return_value = {
+        "_id": MOCK_USER_ID,
+        "email": MOCK_USER_EMAIL,
+        "hashed_password": MOCK_USER_PASSWORD_HASHED,
     }
+    mock_db_get_user_teams_by_id.return_value = [
+        {
+            "_id": MOCK_TEAM_ID,
+            "name": MOCK_TEAM_NAME,
+            "member_ids": [MOCK_USER_ID],
+            "exec_member_ids": [MOCK_USER_ID],
+            "project_ids": [MOCK_PROJECT_ID],
+        }
+    ]
 
-    result = await get_user_service(mock_db, user_email)
+    result = await get_current_user_teams_service(MOCK_USER_ID, mock_db)
 
-    assert isinstance(result, UserModel)
-    assert result.id == user_id
-    assert result.email == user_email
-    assert result.hashed_password == user_hashed_password
-
-
-@pytest.mark.asyncio
-@patch("app.service.user.db_get_user_by_email")
-async def test_get_user_service_failure(mock_db_get_user_by_email):
-    user_email = "addi@addi.com"
-
-    mock_db = AsyncMock()
-
-    mock_db_get_user_by_email.return_value = None
-
-    result = await get_user_service(mock_db, user_email)
-
-    assert result is None
+    assert isinstance(result, GetCurrentUserTeamsResponse)
+    assert isinstance(result.teams, list)
+    assert len(result.teams) == 1
+    assert result.teams[0].id == MOCK_TEAM_ID
+    assert result.teams[0].name == MOCK_TEAM_NAME
+    assert result.teams[0].member_ids == [MOCK_USER_ID]
+    assert result.teams[0].exec_member_ids == [MOCK_USER_ID]
+    assert result.teams[0].project_ids == [MOCK_PROJECT_ID]
 
 
 @pytest.mark.asyncio
 @patch("app.service.user.db_update_password")
 @patch("app.service.user.hash_password")
 @patch("app.service.user.verify_password")
-@patch("app.service.user.get_user_service")
-async def test_change_password_service_success(
-    mock_get_user_service,
+@patch("app.service.user.db_get_user_by_id")
+async def test_change_password_service(
+    mock_db_get_user_by_id,
     mock_verify_password,
     mock_hash_password,
     mock_db_update_password,
 ):
-    user_id = "1"
-    user_email = "addi@addi.com"
-    old_password = "old-alex's"
-    old_password_hashed = "hashed-old-alex's"
-    new_password = "new-alex's"
-
-    change_password_req = ChangePasswordReq(
-        old_password=old_password, new_password=new_password
-    )
-
     mock_db = AsyncMock()
-
-    mock_get_user_service.return_value = UserModel(
-        id=user_id, email=user_email, hashed_password=old_password_hashed
-    )
-
+    mock_db_get_user_by_id.return_value = {
+        "_id": MOCK_USER_ID,
+        "email": MOCK_USER_EMAIL,
+        "hashed_password": MOCK_USER_PASSWORD_HASHED,
+    }
     mock_verify_password.return_value = True
-
-    mock_hash_password.return_value = "hashed-new-alex's"
-
+    mock_hash_password.return_value = MOCK_USER_NEW_PASSWORD_HASHED
     mock_db_update_password.return_value = None
-
-    result = await change_password_service(mock_db, change_password_req, user_email)
-
-    assert isinstance(result, UserModel)
-    assert result.id == user_id
-    assert result.email == user_email
-    assert result.hashed_password == "hashed-new-alex's"
-
-
-@pytest.mark.asyncio
-@patch("app.service.user.verify_password")
-@patch("app.service.user.get_user_service")
-async def test_change_password_service_failure(
-    mock_get_user_service, mock_verify_password
-):
-    user_email = "addi@addi.com"
-    old_password = "old-alex's"
-    new_password = "new-alex's"
-
-    change_password_req = ChangePasswordReq(
-        old_password=old_password, new_password=new_password
+    mock_change_password_request = ChangePasswordRequest(
+        old_password=MOCK_USER_PASSWORD, new_password=MOCK_USER_NEW_PASSWORD
     )
 
-    mock_db = AsyncMock()
-
-    mock_get_user_service.return_value = UserModel(
-        id="1", email=user_email, hashed_password="hashed-" + old_password
+    result = await change_password_service(
+        MOCK_USER_ID, mock_change_password_request, mock_db
     )
 
-    mock_verify_password.return_value = False
-
-    with pytest.raises(ValueError) as exc_info:
-        await change_password_service(mock_db, change_password_req, user_email)
-
-    assert str(exc_info.value) == "Old password is incorrect"
+    assert isinstance(result, ChangePasswordResponse)

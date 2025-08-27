@@ -16,9 +16,9 @@ from pymongo.asynchronous.database import AsyncDatabase
 from app.core.constants import ALGORITHM, SECRET_KEY
 from app.core.security import create_token_pair, verify_password
 from app.db.client import get_db
-from app.schemas.token import TokenRes
-from app.schemas.user import UserModel, UserRes
-from app.service.user import get_user_service
+from app.schemas.token import TokenRes, UserRes
+from app.schemas.user import UserModel
+from app.service.user import get_hashed_password_service, get_user_service
 
 TOKEN_URL = "/api/auth/set-token"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL, auto_error=False)
@@ -134,7 +134,12 @@ async def get_current_user_from_token(
 
 async def authenticate_user(db: AsyncDatabase, email: str, password: str) -> UserModel:
     user = await get_user_service(db, email)
-    if user is None or not verify_password(password, user.hashed_password):
+    hashed_password = await get_hashed_password_service(email, db)
+    if (
+        user is None
+        or hashed_password is None
+        or not verify_password(password, hashed_password)
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
