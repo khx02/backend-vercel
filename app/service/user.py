@@ -93,3 +93,21 @@ async def change_password_service(
     await db_update_password(current_user_id, new_hashed_password, db)
 
     return ChangePasswordResponse()
+
+
+# Note: Do not use these functions outside of auth purposes
+async def get_user_service(db: AsyncDatabase, email: str) -> UserModel | None:
+    user_in_db = await db_get_user_by_email(email, db)
+    if user_in_db:
+        return UserModel(
+            id=str(user_in_db["_id"]),
+            email=user_in_db["email"],
+        )
+    return None
+
+
+async def get_hashed_password_service(email: str, db: AsyncDatabase) -> str | None:
+    user_in_db = await db_get_user_by_email(email, db)
+    if user_in_db:
+        return user_in_db["hashed_password"]
+    return None

@@ -21,8 +21,11 @@ from app.schemas.user import UserModel
 
 @pytest.mark.asyncio
 @patch("app.api.auth.get_user_service")
+@patch("app.api.auth.get_hashed_password_service")
 @patch("app.api.auth.verify_password")
-async def test_authenticate_user_success(mock_verify_password, mock_get_user_service):
+async def test_authenticate_user_success(
+    mock_verify_password, mock_get_hashed_password_service, mock_get_user_service
+):
     mock_db = AsyncMock()
     mock_email = "addi@addi.com"
     mock_password = "alex's"
@@ -30,6 +33,7 @@ async def test_authenticate_user_success(mock_verify_password, mock_get_user_ser
     mock_user = UserModel(id="1", email=mock_email)
     mock_get_user_service.return_value = mock_user
     mock_verify_password.return_value = True
+    mock_get_hashed_password_service.return_value = "hashed_password"
 
     result = await authenticate_user(mock_db, mock_email, mock_password)
     assert result.id == "1"
@@ -37,13 +41,17 @@ async def test_authenticate_user_success(mock_verify_password, mock_get_user_ser
 
 
 @pytest.mark.asyncio
+@patch("app.api.auth.get_hashed_password_service")
 @patch("app.api.auth.get_user_service")
-async def test_authenticate_user_failure(mock_get_user_service):
+async def test_authenticate_user_failure(
+    mock_get_hashed_password_service, mock_get_user_service
+):
     mock_db = AsyncMock()
     mock_email = "not-addi@not-addi.com"
     mock_password = "not-alex's"
 
     mock_get_user_service.return_value = None
+    mock_get_hashed_password_service.return_value = "hashed_password"
 
     with pytest.raises(HTTPException) as exc_info:
         await authenticate_user(mock_db, mock_email, mock_password)
