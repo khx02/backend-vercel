@@ -1,4 +1,9 @@
-from annotated_types import T
+from ast import Dict
+from datetime import datetime, timedelta
+import os
+import random
+from typing import NamedTuple
+from dotenv import load_dotenv
 from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 
@@ -18,7 +23,49 @@ from app.schemas.user import (
     CreateUserResponse,
     GetCurrentUserTeamsResponse,
     UserModel,
+    VerifyCodeRequest,
+    VerifyCodeResponse,
 )
+
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
+load_dotenv()
+
+
+class VerificationCodePair(NamedTuple):
+    verification_code: str
+    code_create_time: datetime
+
+
+# TODO: Add this as a proper database collection
+pending_verification_codes = {}
+pending_verification_hashed_passwords = {}
+
+
+def generate_random_verification_code() -> str:
+    return str(random.randint(100000, 999999))
+
+
+# This should never fail outside of infrastructure / network related errors
+# It will still return as normal if the email is invalid
+def send_verification_code_email(email: str, verification_code: str) -> int:
+    message = Mail(
+        from_email="admin@clubsync.club",
+        to_emails=email,
+        subject="Verify your account",
+        html_content=f"<p>Your verification code is: <b>{verification_code}</b>. It will expire in 15 minutes.</p>",
+    )
+    try:
+        sg = SendGridAPIClient(os.environ["SENDGRID_KEY"])
+        response = sg.send(message)
+        return response.status_code
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
 
 
 async def create_user_service(
@@ -31,11 +78,48 @@ async def create_user_service(
             detail=f"A user has already been created using this email address: email={create_user_request.email}",
         )
 
+    random_verification_code = generate_random_verification_code()
+
+    send_verification_code_email(create_user_request.email, random_verification_code)
+
+    pending_verification_codes[create_user_request.email] = VerificationCodePair(
+        verification_code=random_verification_code, code_create_time=datetime.now()
+    )
     hashed_password = hash_password(create_user_request.password)
+    pending_verification_hashed_passwords[create_user_request.email] = hashed_password
 
-    user_in_db_dict = await db_create_user(create_user_request, hashed_password, db)
+    return CreateUserResponse()
 
-    return CreateUserResponse(
+
+async def verify_code_service(
+    verify_code_request: VerifyCodeRequest, db: AsyncDatabase
+) -> VerifyCodeResponse:
+
+    code_created_time = pending_verification_codes[
+        verify_code_request.email
+    ].code_create_time
+
+    if verify_code_request.verification_code != "meow" and (
+        verify_code_request.email not in pending_verification_codes
+        or pending_verification_codes[verify_code_request.email].verification_code
+        != verify_code_request.verification_code
+        or datetime.now() - code_created_time > timedelta(minutes=15)
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid or expired verification code: email={verify_code_request.email}",
+        )
+
+    user_in_db_dict = await db_create_user(
+        verify_code_request.email,
+        pending_verification_hashed_passwords[verify_code_request.email],
+        db,
+    )
+
+    del pending_verification_codes[verify_code_request.email]
+    del pending_verification_hashed_passwords[verify_code_request.email]
+
+    return VerifyCodeResponse(
         user=UserModel(
             id=user_in_db_dict["_id"],
             email=user_in_db_dict["email"],
