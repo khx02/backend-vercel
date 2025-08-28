@@ -228,7 +228,10 @@ async def test_kick_team_member_failure(mock_kick_team_member_service):
 async def test_create_event_success(mock_create_event_for_team_service):
     mock_db = AsyncMock()
     mock_create_event_for_team_service.return_value = Event(
-        id=MOCK_EVENT_ID, name=MOCK_EVENT_NAME, description=MOCK_EVENT_DESCRIPTION
+        id=MOCK_EVENT_ID,
+        name=MOCK_EVENT_NAME,
+        description=MOCK_EVENT_DESCRIPTION,
+        rsvp_ids=[],
     )
     mock_create_event_request = CreateEventRequest(
         name=MOCK_EVENT_NAME, description=MOCK_EVENT_DESCRIPTION
@@ -240,3 +243,4 @@ async def test_create_event_success(mock_create_event_for_team_service):
     assert result.event.id == MOCK_EVENT_ID
     assert result.event.name == MOCK_EVENT_NAME
     assert result.event.description == MOCK_EVENT_DESCRIPTION
+    assert result.event.rsvp_ids == []

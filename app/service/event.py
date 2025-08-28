@@ -18,4 +18,5 @@ async def get_event_service(event_id: str, db: AsyncDatabase) -> Event:
         id=event_in_db_dict["_id"],
         name=event_in_db_dict["name"],
         description=event_in_db_dict["description"],
+        rsvp_ids=event_in_db_dict["rsvp_ids"],
     )

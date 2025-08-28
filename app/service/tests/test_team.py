@@ -260,6 +260,7 @@ async def test_create_event_for_team_service_success(mock_db_create_event_for_te
         "_id": MOCK_EVENT_ID,
         "name": MOCK_EVENT_NAME,
         "description": MOCK_EVENT_DESCRIPTION,
+        "rsvp_ids": [],
     }
     mock_create_event_request = CreateEventRequest(
         name=MOCK_EVENT_NAME,
@@ -274,3 +275,4 @@ async def test_create_event_for_team_service_success(mock_db_create_event_for_te
     assert result.id == MOCK_EVENT_ID
     assert result.name == MOCK_EVENT_NAME
     assert result.description == MOCK_EVENT_DESCRIPTION
+    assert result.rsvp_ids == []

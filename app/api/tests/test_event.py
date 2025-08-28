@@ -16,7 +16,10 @@ from app.test_shared.constants import (
 async def test_create_event_service_success(mock_get_event_service):
     mock_db = AsyncMock()
     mock_get_event_service.return_value = Event(
-        id=MOCK_EVENT_ID, name=MOCK_EVENT_NAME, description=MOCK_EVENT_DESCRIPTION
+        id=MOCK_EVENT_ID,
+        name=MOCK_EVENT_NAME,
+        description=MOCK_EVENT_DESCRIPTION,
+        rsvp_ids=[],
     )
 
     result = await get_event(MOCK_EVENT_ID, mock_db)
@@ -25,3 +28,4 @@ async def test_create_event_service_success(mock_get_event_service):
     assert result.event.id == MOCK_EVENT_ID
     assert result.event.name == MOCK_EVENT_NAME
     assert result.event.description == MOCK_EVENT_DESCRIPTION
+    assert result.event.rsvp_ids == []

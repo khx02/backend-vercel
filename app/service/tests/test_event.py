@@ -18,6 +18,7 @@ async def test_get_event_service_success(mock_db_get_event_or_none):
         "_id": MOCK_EVENT_ID,
         "name": MOCK_EVENT_NAME,
         "description": MOCK_EVENT_DESCRIPTION,
+        "rsvp_ids": [],
     }
 
     result = await get_event_service(MOCK_EVENT_ID, mock_db)
@@ -26,3 +27,4 @@ async def test_get_event_service_success(mock_db_get_event_or_none):
     assert result.id == MOCK_EVENT_ID
     assert result.name == MOCK_EVENT_NAME
     assert result.description == MOCK_EVENT_DESCRIPTION
+    assert result.rsvp_ids == []

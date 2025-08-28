@@ -210,4 +210,5 @@ async def create_event_for_team_service(
         id=event_in_db_dict["_id"],
         name=event_in_db_dict["name"],
         description=event_in_db_dict["description"],
+        rsvp_ids=event_in_db_dict["rsvp_ids"],
     )
