@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel, EmailStr, field_validator
 
 from app.schemas.team import TeamModel
@@ -12,6 +13,13 @@ def is_valid_password(password: str) -> str:
 class UserModel(BaseModel):
     id: str
     email: EmailStr
+
+
+class PendingVerification(BaseModel):
+    email: EmailStr
+    verification_code: str
+    hashed_password: str
+    created_at: datetime
 
 
 class CreateUserRequest(BaseModel):

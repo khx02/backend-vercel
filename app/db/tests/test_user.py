@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest.mock import AsyncMock
 
 from bson import ObjectId
@@ -5,7 +6,10 @@ import pytest
 
 from app.core.constants import TEAMS_COLLECTION
 from app.db.user import (
+    db_create_pending_verification,
     db_create_user,
+    db_delete_pending_verification,
+    db_get_pending_verification,
     db_get_user_by_email,
     db_get_user_by_id,
     db_get_user_teams_by_id,
@@ -102,6 +106,52 @@ async def test_db_get_user_by_email_success():
     assert result["_id"] == MOCK_USER_ID
     assert result["email"] == MOCK_USER_EMAIL
     assert result["hashed_password"] == MOCK_USER_PASSWORD_HASHED
+
+
+@pytest.mark.asyncio
+async def test_db_create_pending_verification_success():
+    mock_db = AsyncMock()
+    mock_pending_verification_collection = AsyncMock()
+    mock_db.__getitem__.return_value = mock_pending_verification_collection
+
+    result = await db_create_pending_verification(
+        MOCK_USER_EMAIL, MOCK_VERIFICATION_CODE, MOCK_USER_PASSWORD_HASHED, mock_db
+    )
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_db_get_pending_verification_success():
+    mock_db = AsyncMock()
+    mock_current_time = datetime.now()
+    mock_pending_verification_collection = AsyncMock()
+    mock_pending_verification_collection.find_one.return_value = {
+        "email": MOCK_USER_EMAIL,
+        "verification_code": MOCK_VERIFICATION_CODE,
+        "hashed_password": MOCK_USER_PASSWORD_HASHED,
+        "created_at": mock_current_time,
+    }
+    mock_db.__getitem__.return_value = mock_pending_verification_collection
+
+    result = await db_get_pending_verification(MOCK_USER_EMAIL, mock_db)
+
+    assert isinstance(result, dict)
+    assert result["email"] == MOCK_USER_EMAIL
+    assert result["verification_code"] == MOCK_VERIFICATION_CODE
+    assert result["hashed_password"] == MOCK_USER_PASSWORD_HASHED
+    assert result["created_at"] == mock_current_time
+
+
+@pytest.mark.asyncio
+async def test_db_delete_pending_verification_success():
+    mock_db = AsyncMock()
+    mock_pending_verification_collection = AsyncMock()
+    mock_db.__getitem__.return_value = mock_pending_verification_collection
+
+    result = await db_delete_pending_verification(MOCK_USER_EMAIL, mock_db)
+
+    assert result is None
 
 
 @pytest.mark.asyncio
