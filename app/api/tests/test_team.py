@@ -49,6 +49,7 @@ async def test_create_team_success(mock_create_team_service):
             member_ids=[MOCK_USER_ID],
             exec_member_ids=[MOCK_USER_ID],
             project_ids=[],
+            event_ids=[],
         )
     )
     create_team_request = CreateTeamRequest(name=MOCK_TEAM_NAME)
@@ -62,6 +63,7 @@ async def test_create_team_success(mock_create_team_service):
     assert result.team.member_ids == [MOCK_USER_ID]
     assert result.team.exec_member_ids == [MOCK_USER_ID]
     assert result.team.project_ids == []
+    assert result.team.event_ids == []
 
 
 @pytest.mark.asyncio

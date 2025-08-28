@@ -38,6 +38,7 @@ async def test_create_team_service_success(mock_db_create_team):
         "member_ids": [MOCK_USER_ID],
         "exec_member_ids": [MOCK_USER_ID],
         "project_ids": [],
+        "event_ids": [],
     }
 
     result = await create_team_service(MOCK_USER_ID, MOCK_TEAM_NAME, mock_db)
@@ -49,6 +50,7 @@ async def test_create_team_service_success(mock_db_create_team):
     assert result.team.member_ids == [MOCK_USER_ID]
     assert result.team.exec_member_ids == [MOCK_USER_ID]
     assert result.team.project_ids == []
+    assert result.team.event_ids == []
 
 
 @pytest.mark.asyncio
@@ -61,6 +63,7 @@ async def test_join_team_service_success(mock_db_get_team_by_id, mock_db_join_te
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID],
         "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [],
     }
     mock_db_join_team.return_value = None
 
@@ -91,6 +94,7 @@ async def test_join_team_service_failure_user_already_in_team(mock_db_get_team_b
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
         "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [],
     }
 
     with pytest.raises(HTTPException) as exc_info:
@@ -115,6 +119,7 @@ async def test_promote_team_member_service_success(
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
         "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [],
     }
     mock_db_promote_team_member.return_value = None
 
@@ -137,6 +142,7 @@ async def test_promote_team_member_service_failure_no_permission(
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
         "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [],
     }
     mock_db_promote_team_member.return_value = None
 
@@ -162,6 +168,7 @@ async def test_leave_team_service_success(mock_db_get_team_by_id, mock_db_leave_
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
         "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [],
     }
     mock_db_leave_team.return_value = None
 
@@ -179,6 +186,7 @@ async def test_leave_team_service_failure_last_exec(mock_db_get_team_by_id):
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
         "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [],
     }
 
     with pytest.raises(HTTPException) as exc_info:
@@ -203,6 +211,7 @@ async def test_kick_team_member_service_success(
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
         "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [],
     }
     mock_db_kick_team_member.return_value = None
 
@@ -222,6 +231,7 @@ async def test_kick_team_member_service_failure_kick_exec(mock_db_get_team_by_id
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
         "exec_member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
+        "event_ids": [],
     }
 
     with pytest.raises(HTTPException) as exc_info:

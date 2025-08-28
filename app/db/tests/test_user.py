@@ -15,7 +15,6 @@ from app.db.user import (
     db_get_user_teams_by_id,
     db_update_password,
 )
-from app.schemas.team import TeamModel
 from app.schemas.user import CreateUserRequest
 from app.test_shared.constants import *
 

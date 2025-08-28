@@ -16,7 +16,7 @@ async def require_standard_project_access(
     current_user: UserModel = Depends(get_current_user),
     db: AsyncDatabase = Depends(get_db),
 ) -> None:
-    user_teams = (await get_current_user_teams_service(current_user, db)).teams
+    user_teams = (await get_current_user_teams_service(current_user.id, db)).teams
 
     found_access = False
     for team in user_teams:
@@ -36,7 +36,7 @@ async def require_executive_project_access(
     current_user: UserModel = Depends(get_current_user),
     db: AsyncDatabase = Depends(get_db),
 ) -> None:
-    user_teams = (await get_current_user_teams_service(current_user, db)).teams
+    user_teams = (await get_current_user_teams_service(current_user.id, db)).teams
 
     found_access = False
     for team in user_teams:

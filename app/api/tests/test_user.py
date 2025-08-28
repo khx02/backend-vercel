@@ -74,6 +74,7 @@ async def test_get_current_user_teams_success(mock_get_current_user_teams_servic
                 member_ids=[MOCK_USER_ID],
                 exec_member_ids=[MOCK_USER_ID],
                 project_ids=[],
+                event_ids=[],
             )
         ]
     )

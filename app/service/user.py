@@ -151,6 +151,7 @@ async def get_current_user_teams_service(
                 member_ids=team["member_ids"],
                 exec_member_ids=team["exec_member_ids"],
                 project_ids=team["project_ids"],
+                event_ids=team["event_ids"],
             )
             for team in team_models_in_db
         ]

@@ -49,6 +49,29 @@ async def test_create_user_service_success(
 
 
 @pytest.mark.asyncio
+@patch("app.service.user.db_get_user_by_email")
+async def test_create_user_service_failure(mock_db_get_user_by_email):
+    mock_db = AsyncMock()
+    mock_db_get_user_by_email.return_value = {
+        "_id": MOCK_USER_ID,
+        "email": MOCK_USER_EMAIL,
+        "hashed_password": MOCK_USER_PASSWORD_HASHED,
+    }
+    mock_create_user_request = CreateUserRequest(
+        email=MOCK_USER_EMAIL, password=MOCK_USER_PASSWORD
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await create_user_service(mock_create_user_request, mock_db)
+
+    assert exc_info.value.status_code == 400
+    assert (
+        exc_info.value.detail
+        == f"A user has already been created using this email address: email={MOCK_USER_EMAIL}"
+    )
+
+
+@pytest.mark.asyncio
 @patch("app.service.user.db_delete_pending_verification")
 @patch("app.service.user.db_create_user")
 @patch("app.service.user.db_get_pending_verification")
@@ -82,29 +105,6 @@ async def test_verify_code_service_success(
 
 
 @pytest.mark.asyncio
-@patch("app.service.user.db_get_user_by_email")
-async def test_create_user_service_failure(mock_db_get_user_by_email):
-    mock_db = AsyncMock()
-    mock_db_get_user_by_email.return_value = {
-        "_id": MOCK_USER_ID,
-        "email": MOCK_USER_EMAIL,
-        "hashed_password": MOCK_USER_PASSWORD_HASHED,
-    }
-    mock_create_user_request = CreateUserRequest(
-        email=MOCK_USER_EMAIL, password=MOCK_USER_PASSWORD
-    )
-
-    with pytest.raises(HTTPException) as exc_info:
-        await create_user_service(mock_create_user_request, mock_db)
-
-    assert exc_info.value.status_code == 400
-    assert (
-        exc_info.value.detail
-        == f"A user has already been created using this email address: email={MOCK_USER_EMAIL}"
-    )
-
-
-@pytest.mark.asyncio
 @patch("app.service.user.db_get_user_teams_by_id")
 @patch("app.service.user.db_get_user_by_id")
 async def test_get_current_user_teams_service_success(
@@ -123,6 +123,7 @@ async def test_get_current_user_teams_service_success(
             "member_ids": [MOCK_USER_ID],
             "exec_member_ids": [MOCK_USER_ID],
             "project_ids": [MOCK_PROJECT_ID],
+            "event_ids": [],
         }
     ]
 
@@ -136,6 +137,7 @@ async def test_get_current_user_teams_service_success(
     assert result.teams[0].member_ids == [MOCK_USER_ID]
     assert result.teams[0].exec_member_ids == [MOCK_USER_ID]
     assert result.teams[0].project_ids == [MOCK_PROJECT_ID]
+    assert result.teams[0].event_ids == []
 
 
 @pytest.mark.asyncio
