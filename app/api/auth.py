@@ -168,7 +168,7 @@ async def login_for_token_access(
     )
 
 
-@router.post("/refresh_token", response_model=TokenRes)
+@router.post("/refresh-token", response_model=TokenRes)
 async def refresh_token(
     response: Response,
     refresh_token_cookie: Optional[str] = Cookie(alias="refresh_token"),
