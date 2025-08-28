@@ -1,10 +1,15 @@
+from datetime import datetime
 from typing import Any, Dict, List
 
 from bson import ObjectId
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.common import stringify_object_ids
-from app.core.constants import USERS_COLLECTION, TEAMS_COLLECTION
+from app.core.constants import (
+    USERS_COLLECTION,
+    TEAMS_COLLECTION,
+    VERIFICATION_CODES_COLLECTION,
+)
 from app.schemas.user import CreateUserRequest
 
 
@@ -38,6 +43,30 @@ async def db_get_user_by_id(user_id: str, db: AsyncDatabase) -> Dict[str, Any]:
 async def db_get_user_by_email(email: str, db: AsyncDatabase) -> Dict[str, Any]:
     user_dict = await db[USERS_COLLECTION].find_one({"email": email})
     return stringify_object_ids(user_dict)
+
+
+async def db_create_pending_verification(
+    email: str, verification_code: str, hashed_password: str, db: AsyncDatabase
+) -> None:
+    await db[VERIFICATION_CODES_COLLECTION].insert_one(
+        {
+            "email": email,
+            "verification_code": verification_code,
+            "hashed_password": hashed_password,
+            "created_at": datetime.now(),
+        }
+    )
+
+
+async def db_get_pending_verification(email: str, db: AsyncDatabase) -> Dict[str, Any]:
+    verification_dict = await db[VERIFICATION_CODES_COLLECTION].find_one(
+        {"email": email}
+    )
+    return stringify_object_ids(verification_dict)
+
+
+async def db_delete_pending_verification(email: str, db: AsyncDatabase) -> None:
+    await db[VERIFICATION_CODES_COLLECTION].delete_one({"email": email})
 
 
 # Special function for cookie based authentication, which requires a query for a user

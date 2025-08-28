@@ -1,4 +1,3 @@
-from ast import Dict
 from datetime import datetime, timedelta
 import os
 import random
@@ -7,9 +6,13 @@ from dotenv import load_dotenv
 from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 
+from app.core.constants import VERIFICATION_CODE_EXPIRE_MINUTES
 from app.core.security import hash_password, verify_password
 from app.db.user import (
+    db_create_pending_verification,
     db_create_user,
+    db_delete_pending_verification,
+    db_get_pending_verification,
     db_get_user_by_id,
     db_get_user_teams_by_id,
     db_get_user_by_email,
@@ -22,6 +25,7 @@ from app.schemas.user import (
     CreateUserRequest,
     CreateUserResponse,
     GetCurrentUserTeamsResponse,
+    PendingVerification,
     UserModel,
     VerifyCodeRequest,
     VerifyCodeResponse,
@@ -37,16 +41,6 @@ ssl._create_default_https_context = ssl._create_unverified_context
 load_dotenv()
 
 
-class VerificationCodePair(NamedTuple):
-    verification_code: str
-    code_create_time: datetime
-
-
-# TODO: Add this as a proper database collection
-pending_verification_codes = {}
-pending_verification_hashed_passwords = {}
-
-
 def generate_random_verification_code() -> str:
     return str(random.randint(100000, 999999))
 
@@ -58,7 +52,7 @@ def send_verification_code_email(email: str, verification_code: str) -> int:
         from_email="admin@clubsync.club",
         to_emails=email,
         subject="Verify your account",
-        html_content=f"<p>Your verification code is: <b>{verification_code}</b>. It will expire in 15 minutes.</p>",
+        html_content=f"<p>Your verification code is: <b>{verification_code}</b>. It will expire in {VERIFICATION_CODE_EXPIRE_MINUTES} minutes.</p>",
     )
     try:
         sg = SendGridAPIClient(os.environ["SENDGRID_KEY"])
@@ -82,11 +76,11 @@ async def create_user_service(
 
     send_verification_code_email(create_user_request.email, random_verification_code)
 
-    pending_verification_codes[create_user_request.email] = VerificationCodePair(
-        verification_code=random_verification_code, code_create_time=datetime.now()
-    )
     hashed_password = hash_password(create_user_request.password)
-    pending_verification_hashed_passwords[create_user_request.email] = hashed_password
+
+    await db_create_pending_verification(
+        create_user_request.email, random_verification_code, hashed_password, db
+    )
 
     return CreateUserResponse()
 
@@ -95,15 +89,26 @@ async def verify_code_service(
     verify_code_request: VerifyCodeRequest, db: AsyncDatabase
 ) -> VerifyCodeResponse:
 
-    code_created_time = pending_verification_codes[
-        verify_code_request.email
-    ].code_create_time
+    pending_verification_in_db_dict = await db_get_pending_verification(
+        verify_code_request.email, db
+    )
+    if not pending_verification_in_db_dict:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid or expired verification code: email={verify_code_request.email}",
+        )
+
+    pending_verification = PendingVerification(
+        email=pending_verification_in_db_dict["email"],
+        verification_code=pending_verification_in_db_dict["verification_code"],
+        created_at=pending_verification_in_db_dict["created_at"],
+        hashed_password=pending_verification_in_db_dict["hashed_password"],
+    )
 
     if verify_code_request.verification_code != "meow" and (
-        verify_code_request.email not in pending_verification_codes
-        or pending_verification_codes[verify_code_request.email].verification_code
-        != verify_code_request.verification_code
-        or datetime.now() - code_created_time > timedelta(minutes=15)
+        pending_verification.verification_code != verify_code_request.verification_code
+        or datetime.now() - pending_verification.created_at
+        > timedelta(minutes=VERIFICATION_CODE_EXPIRE_MINUTES)
     ):
         raise HTTPException(
             status_code=400,
@@ -112,12 +117,11 @@ async def verify_code_service(
 
     user_in_db_dict = await db_create_user(
         verify_code_request.email,
-        pending_verification_hashed_passwords[verify_code_request.email],
+        pending_verification.hashed_password,
         db,
     )
 
-    del pending_verification_codes[verify_code_request.email]
-    del pending_verification_hashed_passwords[verify_code_request.email]
+    await db_delete_pending_verification(verify_code_request.email, db)
 
     return VerifyCodeResponse(
         user=UserModel(

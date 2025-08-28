@@ -14,7 +14,6 @@ from app.schemas.user import (
     VerifyCodeResponse,
 )
 from app.service.user import (
-    VerificationCodePair,
     change_password_service,
     create_user_service,
     get_current_user_teams_service,
@@ -25,20 +24,21 @@ from app.test_shared.constants import *
 
 
 @pytest.mark.asyncio
-@patch("app.service.user.db_create_user")
+@patch("app.service.user.db_create_pending_verification")
+@patch("app.service.user.send_verification_code_email")
 @patch("app.service.user.hash_password")
 @patch("app.service.user.db_get_user_by_email")
 async def test_create_user_service_success(
-    mock_db_get_user_by_email, mock_hash_password, mock_db_create_user
+    mock_db_get_user_by_email,
+    mock_send_verification_code_email,
+    mock_hash_password,
+    mock_db_create_pending_verification,
 ):
     mock_db = AsyncMock()
     mock_db_get_user_by_email.return_value = None
+    mock_send_verification_code_email.return_value = 202
     mock_hash_password.return_value = MOCK_USER_PASSWORD_HASHED
-    mock_db_create_user.return_value = {
-        "_id": MOCK_USER_ID,
-        "email": MOCK_USER_EMAIL,
-        "hashed_password": MOCK_USER_PASSWORD_HASHED,
-    }
+    mock_db_create_pending_verification.return_value = None
     mock_create_user_request = CreateUserRequest(
         email=MOCK_USER_EMAIL, password=MOCK_USER_PASSWORD
     )
@@ -49,32 +49,27 @@ async def test_create_user_service_success(
 
 
 @pytest.mark.asyncio
+@patch("app.service.user.db_delete_pending_verification")
 @patch("app.service.user.db_create_user")
-@patch(
-    "app.service.user.pending_verification_hashed_passwords",
-    new_callable=lambda: {MOCK_USER_EMAIL: MOCK_USER_PASSWORD_HASHED},
-)
-@patch(
-    "app.service.user.pending_verification_codes",
-    new_callable=lambda: {
-        MOCK_USER_EMAIL: VerificationCodePair(
-            verification_code=MOCK_VERIFICATION_CODE, code_create_time=datetime.now()
-        )
-    },
-)
+@patch("app.service.user.db_get_pending_verification")
 async def test_verify_code_service_success(
-    mock_pending_verification_codes,
-    mock_pending_verification_hashed_passwords,
+    mock_db_get_pending_verification,
     mock_db_create_user,
+    mock_db_delete_pending_verification,
 ):
-    _ = mock_pending_verification_codes
-    _ = mock_pending_verification_hashed_passwords
     mock_db = AsyncMock()
+    mock_db_get_pending_verification.return_value = {
+        "email": MOCK_USER_EMAIL,
+        "verification_code": MOCK_VERIFICATION_CODE,
+        "created_at": datetime.now(),
+        "hashed_password": MOCK_USER_PASSWORD_HASHED,
+    }
     mock_db_create_user.return_value = {
         "_id": MOCK_USER_ID,
         "email": MOCK_USER_EMAIL,
         "hashed_password": MOCK_USER_PASSWORD_HASHED,
     }
+    mock_db_delete_pending_verification.return_value = None
     mock_verify_code_request = VerifyCodeRequest(
         email=MOCK_USER_EMAIL, verification_code=MOCK_VERIFICATION_CODE
     )
