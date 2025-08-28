@@ -10,11 +10,14 @@ from app.schemas.user import (
     CreateUserResponse,
     GetCurrentUserTeamsResponse,
     UserModel,
+    VerifyCodeRequest,
+    VerifyCodeResponse,
 )
 from app.service.user import (
     change_password_service,
     create_user_service,
     get_current_user_teams_service,
+    verify_code_service,
 )
 
 router = APIRouter()
@@ -25,6 +28,13 @@ async def create_user(
     create_user_request: CreateUserRequest, db: AsyncDatabase = Depends(get_db)
 ) -> CreateUserResponse:
     return await create_user_service(create_user_request, db)
+
+
+@router.post("/verify-code")
+async def verify_code(
+    verify_code_request: VerifyCodeRequest, db: AsyncDatabase = Depends(get_db)
+) -> VerifyCodeResponse:
+    return await verify_code_service(verify_code_request, db)
 
 
 @router.get("/get-current-user-teams")

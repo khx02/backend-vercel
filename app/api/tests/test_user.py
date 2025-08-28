@@ -2,7 +2,12 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.api.user import change_password, create_user, get_current_user_teams
+from app.api.user import (
+    change_password,
+    create_user,
+    get_current_user_teams,
+    verify_code,
+)
 from app.schemas.team import TeamModel
 from app.schemas.user import (
     ChangePasswordRequest,
@@ -11,6 +16,8 @@ from app.schemas.user import (
     CreateUserResponse,
     GetCurrentUserTeamsResponse,
     UserModel,
+    VerifyCodeRequest,
+    VerifyCodeResponse,
 )
 
 from app.test_shared.constants import *
@@ -23,30 +30,32 @@ async def test_create_user_success(mock_create_user_service):
     create_user_request = CreateUserRequest(
         email=MOCK_USER_EMAIL, password=MOCK_USER_PASSWORD
     )
-    mock_create_user_response = CreateUserResponse(
-        user=UserModel(
-            id=MOCK_USER_ID,
-            email=MOCK_USER_EMAIL,
-        )
-    )
+    mock_create_user_response = CreateUserResponse()
     mock_create_user_service.return_value = mock_create_user_response
 
     result = await create_user(create_user_request, mock_db)
 
     assert isinstance(result, CreateUserResponse)
-    assert result.user.id == MOCK_USER_ID
-    assert result.user.email == MOCK_USER_EMAIL
 
 
-"""
-@router.get("/get-current-user-teams")
-async def get_current_user_teams(
-    current_user: UserModel = Depends(get_current_user),
-    db: AsyncDatabase = Depends(get_db),
-) -> GetCurrentUserTeamsResponse:
-    return await get_current_user_teams_service(current_user.id, db)
+@pytest.mark.asyncio
+@patch("app.api.user.verify_code_service")
+async def test_verify_code_success(mock_verify_code_service):
+    mock_db = AsyncMock()
+    verify_code_request = VerifyCodeRequest(
+        email=MOCK_USER_EMAIL, verification_code=MOCK_VERIFICATION_CODE
+    )
+    mock_verify_code_response = VerifyCodeResponse(
+        user=UserModel(
+            id=MOCK_USER_ID,
+            email=MOCK_USER_EMAIL,
+        )
+    )
+    mock_verify_code_service.return_value = mock_verify_code_response
 
-"""
+    result = await verify_code(verify_code_request, mock_db)
+
+    assert isinstance(result, VerifyCodeResponse)
 
 
 @pytest.mark.asyncio

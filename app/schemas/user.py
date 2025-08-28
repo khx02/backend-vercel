@@ -24,6 +24,15 @@ class CreateUserRequest(BaseModel):
 
 
 class CreateUserResponse(BaseModel):
+    pass
+
+
+class VerifyCodeRequest(BaseModel):
+    email: EmailStr
+    verification_code: str
+
+
+class VerifyCodeResponse(BaseModel):
     user: UserModel
 
 

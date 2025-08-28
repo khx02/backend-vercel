@@ -28,9 +28,7 @@ async def test_db_create_user_success():
         email=MOCK_USER_EMAIL, password=MOCK_USER_PASSWORD
     )
 
-    result = await db_create_user(
-        mock_create_user_request, MOCK_USER_PASSWORD_HASHED, mock_db
-    )
+    result = await db_create_user(MOCK_USER_EMAIL, MOCK_USER_PASSWORD_HASHED, mock_db)
 
     assert isinstance(result, dict)
     assert result["_id"] == MOCK_INSERTED_ID

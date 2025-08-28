@@ -1,4 +1,4 @@
-from math import e
+from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 from fastapi import HTTPException
@@ -10,11 +10,15 @@ from app.schemas.user import (
     CreateUserRequest,
     CreateUserResponse,
     GetCurrentUserTeamsResponse,
+    VerifyCodeRequest,
+    VerifyCodeResponse,
 )
 from app.service.user import (
+    VerificationCodePair,
     change_password_service,
     create_user_service,
     get_current_user_teams_service,
+    verify_code_service,
 )
 
 from app.test_shared.constants import *
@@ -42,6 +46,42 @@ async def test_create_user_service_success(
     result = await create_user_service(mock_create_user_request, mock_db)
 
     assert isinstance(result, CreateUserResponse)
+
+
+@pytest.mark.asyncio
+@patch("app.service.user.db_create_user")
+@patch(
+    "app.service.user.pending_verification_hashed_passwords",
+    new_callable=lambda: {MOCK_USER_EMAIL: MOCK_USER_PASSWORD_HASHED},
+)
+@patch(
+    "app.service.user.pending_verification_codes",
+    new_callable=lambda: {
+        MOCK_USER_EMAIL: VerificationCodePair(
+            verification_code=MOCK_VERIFICATION_CODE, code_create_time=datetime.now()
+        )
+    },
+)
+async def test_verify_code_service_success(
+    mock_pending_verification_codes,
+    mock_pending_verification_hashed_passwords,
+    mock_db_create_user,
+):
+    _ = mock_pending_verification_codes
+    _ = mock_pending_verification_hashed_passwords
+    mock_db = AsyncMock()
+    mock_db_create_user.return_value = {
+        "_id": MOCK_USER_ID,
+        "email": MOCK_USER_EMAIL,
+        "hashed_password": MOCK_USER_PASSWORD_HASHED,
+    }
+    mock_verify_code_request = VerifyCodeRequest(
+        email=MOCK_USER_EMAIL, verification_code=MOCK_VERIFICATION_CODE
+    )
+
+    result = await verify_code_service(mock_verify_code_request, mock_db)
+
+    assert isinstance(result, VerifyCodeResponse)
     assert result.user.id == MOCK_USER_ID
     assert result.user.email == MOCK_USER_EMAIL
 

@@ -9,9 +9,9 @@ from app.schemas.user import CreateUserRequest
 
 
 async def db_create_user(
-    create_user_request: CreateUserRequest, hashed_password: str, db: AsyncDatabase
+    email: str, hashed_password: str, db: AsyncDatabase
 ) -> Dict[str, Any]:
-    user_dict = {"email": create_user_request.email, "hashed_password": hashed_password}
+    user_dict = {"email": email, "hashed_password": hashed_password}
 
     result = await db[USERS_COLLECTION].insert_one(user_dict)
     user_dict["_id"] = result.inserted_id
