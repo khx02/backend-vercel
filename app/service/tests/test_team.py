@@ -4,7 +4,9 @@ from bson import ObjectId
 from fastapi import HTTPException
 import pytest
 
+from app.schemas.event import Event
 from app.schemas.team import (
+    CreateEventRequest,
     CreateTeamResponse,
     JoinTeamResponse,
     KickTeamMemberResponse,
@@ -13,6 +15,7 @@ from app.schemas.team import (
     TeamModel,
 )
 from app.service.team import (
+    create_event_for_team_service,
     create_team_service,
     join_team_service,
     kick_team_member_service,
@@ -21,6 +24,9 @@ from app.service.team import (
 )
 
 from app.test_shared.constants import (
+    MOCK_EVENT_DESCRIPTION,
+    MOCK_EVENT_ID,
+    MOCK_EVENT_NAME,
     MOCK_USER_ID,
     MOCK_USER_2_ID,
     MOCK_TEAM_NAME,
@@ -244,3 +250,27 @@ async def test_kick_team_member_service_failure_kick_exec(mock_db_get_team_by_id
         exc_info.value.detail
         == f"Member is an executive and cannot be kicked: member_id={MOCK_USER_2_ID}, team_id={MOCK_TEAM_ID}"
     )
+
+
+@pytest.mark.asyncio
+@patch("app.service.team.db_create_event_for_team")
+async def test_create_event_for_team_service_success(mock_db_create_event_for_team):
+    mock_db = AsyncMock()
+    mock_db_create_event_for_team.return_value = {
+        "_id": MOCK_EVENT_ID,
+        "name": MOCK_EVENT_NAME,
+        "description": MOCK_EVENT_DESCRIPTION,
+    }
+    mock_create_event_request = CreateEventRequest(
+        name=MOCK_EVENT_NAME,
+        description=MOCK_EVENT_DESCRIPTION,
+    )
+
+    result = await create_event_for_team_service(
+        MOCK_TEAM_ID, mock_create_event_request, mock_db
+    )
+
+    assert isinstance(result, Event)
+    assert result.id == MOCK_EVENT_ID
+    assert result.name == MOCK_EVENT_NAME
+    assert result.description == MOCK_EVENT_DESCRIPTION

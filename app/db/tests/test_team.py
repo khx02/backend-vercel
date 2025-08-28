@@ -5,6 +5,7 @@ import pytest
 from bson import ObjectId
 
 from app.db.team import (
+    db_create_event_for_team,
     db_create_project,
     db_create_team,
     db_join_team,
@@ -14,8 +15,11 @@ from app.db.team import (
     db_kick_team_member,
 )
 
-from app.schemas.team import CreateProjectRequest
+from app.schemas.team import CreateEventRequest, CreateProjectRequest
 from app.test_shared.constants import (
+    MOCK_EVENT_DESCRIPTION,
+    MOCK_EVENT_ID,
+    MOCK_EVENT_NAME,
     MOCK_USER_ID,
     MOCK_USER_2_ID,
     MOCK_TEAM_NAME,
@@ -155,3 +159,22 @@ async def test_db_create_project_success():
     assert all(
         "id" in status and "name" in status for status in result["todo_statuses"]
     )
+
+@pytest.mark.asyncio
+async def test_db_create_event_for_team_success():
+    mock_db = AsyncMock()
+    mock_events_collection = AsyncMock()
+    mock_events_collection.insert_one.return_value = AsyncMock(
+        inserted_id=MOCK_EVENT_ID
+    )
+    mock_db.__getitem__.return_value = mock_events_collection
+    mock_create_event_request = CreateEventRequest(
+        name=MOCK_EVENT_NAME, description=MOCK_EVENT_DESCRIPTION
+    )
+
+    result = await db_create_event_for_team(MOCK_TEAM_ID, mock_create_event_request, mock_db)
+
+    assert isinstance(result, dict)
+    assert result["_id"] == MOCK_EVENT_ID
+    assert result["name"] == MOCK_EVENT_NAME
+    assert result["description"] == MOCK_EVENT_DESCRIPTION

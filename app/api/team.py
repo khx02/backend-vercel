@@ -4,6 +4,8 @@ from pymongo.asynchronous.database import AsyncDatabase
 from app.api.auth import get_current_user
 from app.db.client import get_db
 from app.schemas.team import (
+    CreateEventRequest,
+    CreateEventResponse,
     CreateProjectRequest,
     CreateProjectResponse,
     CreateTeamRequest,
@@ -19,6 +21,7 @@ from app.schemas.team import (
 )
 from app.schemas.user import UserModel
 from app.service.team import (
+    create_event_for_team_service,
     create_project_service,
     create_team_service,
     get_team_service,
@@ -98,3 +101,14 @@ async def create_project(
     db: AsyncDatabase = Depends(get_db),
 ) -> CreateProjectResponse:
     return await create_project_service(team_id, create_project_request, db)
+
+
+@router.post("/create-event/{team_id}")
+async def create_event(
+    team_id: str,
+    create_event_request: CreateEventRequest,
+    db: AsyncDatabase = Depends(get_db),
+) -> CreateEventResponse:
+    return CreateEventResponse(
+        event=await create_event_for_team_service(team_id, create_event_request, db)
+    )
