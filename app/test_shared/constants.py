@@ -31,3 +31,5 @@ MOCK_PROJECT_2_DESCRIPTION = "This is a mock project 2."
 MOCK_EVENT_ID = str(ObjectId())
 MOCK_EVENT_NAME = "Mock Event"
 MOCK_EVENT_DESCRIPTION = "This is a mock event."
+
+MOCK_RSVP_ID = str(ObjectId())

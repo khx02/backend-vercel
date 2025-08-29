@@ -16,6 +16,7 @@ async def db_create_team(
         "member_ids": [ObjectId(creator_id)],
         "exec_member_ids": [ObjectId(creator_id)],
         "project_ids": [],
+        "event_ids": [],
     }
 
     result = await db[TEAMS_COLLECTION].insert_one(team_dict)
@@ -110,6 +111,7 @@ async def db_create_event_for_team(
     event_dict = {
         "name": create_event_request.name,
         "description": create_event_request.description,
+        "rsvp_ids": [],
     }
 
     result = await db[EVENTS_COLLECTION].insert_one(event_dict)

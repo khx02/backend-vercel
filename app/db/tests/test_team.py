@@ -47,6 +47,7 @@ async def test_db_create_team_success():
     assert result["member_ids"] == [MOCK_USER_ID]
     assert result["exec_member_ids"] == [MOCK_USER_ID]
     assert result["project_ids"] == []
+    assert result["event_ids"] == []
 
 
 @pytest.mark.asyncio
@@ -160,6 +161,7 @@ async def test_db_create_project_success():
         "id" in status and "name" in status for status in result["todo_statuses"]
     )
 
+
 @pytest.mark.asyncio
 async def test_db_create_event_for_team_success():
     mock_db = AsyncMock()
@@ -172,9 +174,12 @@ async def test_db_create_event_for_team_success():
         name=MOCK_EVENT_NAME, description=MOCK_EVENT_DESCRIPTION
     )
 
-    result = await db_create_event_for_team(MOCK_TEAM_ID, mock_create_event_request, mock_db)
+    result = await db_create_event_for_team(
+        MOCK_TEAM_ID, mock_create_event_request, mock_db
+    )
 
     assert isinstance(result, dict)
     assert result["_id"] == MOCK_EVENT_ID
     assert result["name"] == MOCK_EVENT_NAME
     assert result["description"] == MOCK_EVENT_DESCRIPTION
+    assert result["rsvp_ids"] == []

@@ -3,7 +3,7 @@ from typing import List
 from pydantic import BaseModel, EmailStr
 
 
-class RSVPStatus(Enum):
+class RSVPStatus(str, Enum):
     PENDING = "pending"
     ACCEPTED = "accepted"
     DECLINED = "declined"

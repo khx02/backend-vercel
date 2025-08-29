@@ -34,7 +34,7 @@ from app.service.team import (
 router = APIRouter()
 
 
-@router.post("/create-team", response_model=TeamModel)
+@router.post("/create-team")
 async def create_team(
     create_team_request: CreateTeamRequest,
     current_user: UserModel = Depends(get_current_user),
