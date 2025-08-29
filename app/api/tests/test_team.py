@@ -5,13 +5,17 @@ import pytest
 from fastapi import HTTPException
 
 from app.api.team import (
+    create_event,
     create_team,
     join_team,
     kick_team_member,
     leave_team,
     promote_team_member,
 )
+from app.schemas.event import Event
 from app.schemas.team import (
+    CreateEventRequest,
+    CreateEventResponse,
     CreateTeamRequest,
     CreateTeamResponse,
     JoinTeamResponse,
@@ -25,6 +29,9 @@ from app.schemas.team import (
 from app.schemas.user import UserModel
 
 from app.test_shared.constants import (
+    MOCK_EVENT_DESCRIPTION,
+    MOCK_EVENT_ID,
+    MOCK_EVENT_NAME,
     MOCK_USER_ID,
     MOCK_USER_EMAIL,
     MOCK_USER_PASSWORD_HASHED,
@@ -49,6 +56,7 @@ async def test_create_team_success(mock_create_team_service):
             member_ids=[MOCK_USER_ID],
             exec_member_ids=[MOCK_USER_ID],
             project_ids=[],
+            event_ids=[],
         )
     )
     create_team_request = CreateTeamRequest(name=MOCK_TEAM_NAME)
@@ -62,6 +70,7 @@ async def test_create_team_success(mock_create_team_service):
     assert result.team.member_ids == [MOCK_USER_ID]
     assert result.team.exec_member_ids == [MOCK_USER_ID]
     assert result.team.project_ids == []
+    assert result.team.event_ids == []
 
 
 @pytest.mark.asyncio
@@ -212,3 +221,26 @@ async def test_kick_team_member_failure(mock_kick_team_member_service):
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == f"Team does not exist: team_id={MOCK_TEAM_ID}"
+
+
+@pytest.mark.asyncio
+@patch("app.api.team.create_event_for_team_service")
+async def test_create_event_success(mock_create_event_for_team_service):
+    mock_db = AsyncMock()
+    mock_create_event_for_team_service.return_value = Event(
+        id=MOCK_EVENT_ID,
+        name=MOCK_EVENT_NAME,
+        description=MOCK_EVENT_DESCRIPTION,
+        rsvp_ids=[],
+    )
+    mock_create_event_request = CreateEventRequest(
+        name=MOCK_EVENT_NAME, description=MOCK_EVENT_DESCRIPTION
+    )
+
+    result = await create_event(MOCK_TEAM_ID, mock_create_event_request, mock_db)
+
+    assert isinstance(result, CreateEventResponse)
+    assert result.event.id == MOCK_EVENT_ID
+    assert result.event.name == MOCK_EVENT_NAME
+    assert result.event.description == MOCK_EVENT_DESCRIPTION
+    assert result.event.rsvp_ids == []

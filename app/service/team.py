@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.db.team import (
+    db_create_event_for_team,
     db_create_team,
     db_join_team,
     db_create_project,
@@ -10,8 +11,10 @@ from app.db.team import (
     db_leave_team,
     db_kick_team_member,
 )
+from app.schemas.event import Event
 from app.schemas.project import Project
 from app.schemas.team import (
+    CreateEventRequest,
     CreateProjectRequest,
     CreateProjectResponse,
     CreateTeamResponse,
@@ -38,6 +41,7 @@ async def create_team_service(
             member_ids=team_in_db_dict["member_ids"],
             exec_member_ids=team_in_db_dict["exec_member_ids"],
             project_ids=team_in_db_dict["project_ids"],
+            event_ids=team_in_db_dict["event_ids"],
         )
     )
 
@@ -86,6 +90,7 @@ async def get_team_service(
             member_ids=existing_team["member_ids"],
             exec_member_ids=existing_team["exec_member_ids"],
             project_ids=existing_team["project_ids"],
+            event_ids=existing_team["event_ids"],
         )
     )
 
@@ -192,4 +197,18 @@ async def create_project_service(
             todo_statuses=project_in_db_dict["todo_statuses"],
             todo_ids=project_in_db_dict["todo_ids"],
         )
+    )
+
+
+async def create_event_for_team_service(
+    team_id: str, create_event_request: CreateEventRequest, db: AsyncDatabase
+) -> Event:
+
+    event_in_db_dict = await db_create_event_for_team(team_id, create_event_request, db)
+
+    return Event(
+        id=event_in_db_dict["_id"],
+        name=event_in_db_dict["name"],
+        description=event_in_db_dict["description"],
+        rsvp_ids=event_in_db_dict["rsvp_ids"],
     )

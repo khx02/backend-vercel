@@ -4,8 +4,8 @@ from bson import ObjectId
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.common import stringify_object_ids
-from app.core.constants import PROJECTS_COLLECTION, TEAMS_COLLECTION
-from app.schemas.team import CreateProjectRequest
+from app.core.constants import EVENTS_COLLECTION, PROJECTS_COLLECTION, TEAMS_COLLECTION
+from app.schemas.team import CreateEventRequest, CreateProjectRequest
 
 
 async def db_create_team(
@@ -16,6 +16,7 @@ async def db_create_team(
         "member_ids": [ObjectId(creator_id)],
         "exec_member_ids": [ObjectId(creator_id)],
         "project_ids": [],
+        "event_ids": [],
     }
 
     result = await db[TEAMS_COLLECTION].insert_one(team_dict)
@@ -102,3 +103,23 @@ async def db_get_project_ids_by_team_id(
         return team.get("project_ids", [])
     except Exception as e:
         return []
+
+
+async def db_create_event_for_team(
+    team_id: str, create_event_request: CreateEventRequest, db: AsyncDatabase
+) -> Dict[str, Any]:
+    event_dict = {
+        "name": create_event_request.name,
+        "description": create_event_request.description,
+        "rsvp_ids": [],
+    }
+
+    result = await db[EVENTS_COLLECTION].insert_one(event_dict)
+    event_dict["_id"] = result.inserted_id
+
+    await db[TEAMS_COLLECTION].update_one(
+        {"_id": ObjectId(team_id)},
+        {"$addToSet": {"event_ids": event_dict["_id"]}},
+    )
+
+    return stringify_object_ids(event_dict)

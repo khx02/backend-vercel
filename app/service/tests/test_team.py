@@ -4,7 +4,9 @@ from bson import ObjectId
 from fastapi import HTTPException
 import pytest
 
+from app.schemas.event import Event
 from app.schemas.team import (
+    CreateEventRequest,
     CreateTeamResponse,
     JoinTeamResponse,
     KickTeamMemberResponse,
@@ -13,6 +15,7 @@ from app.schemas.team import (
     TeamModel,
 )
 from app.service.team import (
+    create_event_for_team_service,
     create_team_service,
     join_team_service,
     kick_team_member_service,
@@ -21,6 +24,9 @@ from app.service.team import (
 )
 
 from app.test_shared.constants import (
+    MOCK_EVENT_DESCRIPTION,
+    MOCK_EVENT_ID,
+    MOCK_EVENT_NAME,
     MOCK_USER_ID,
     MOCK_USER_2_ID,
     MOCK_TEAM_NAME,
@@ -38,6 +44,7 @@ async def test_create_team_service_success(mock_db_create_team):
         "member_ids": [MOCK_USER_ID],
         "exec_member_ids": [MOCK_USER_ID],
         "project_ids": [],
+        "event_ids": [],
     }
 
     result = await create_team_service(MOCK_USER_ID, MOCK_TEAM_NAME, mock_db)
@@ -49,6 +56,7 @@ async def test_create_team_service_success(mock_db_create_team):
     assert result.team.member_ids == [MOCK_USER_ID]
     assert result.team.exec_member_ids == [MOCK_USER_ID]
     assert result.team.project_ids == []
+    assert result.team.event_ids == []
 
 
 @pytest.mark.asyncio
@@ -61,6 +69,7 @@ async def test_join_team_service_success(mock_db_get_team_by_id, mock_db_join_te
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID],
         "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [],
     }
     mock_db_join_team.return_value = None
 
@@ -91,6 +100,7 @@ async def test_join_team_service_failure_user_already_in_team(mock_db_get_team_b
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
         "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [],
     }
 
     with pytest.raises(HTTPException) as exc_info:
@@ -115,6 +125,7 @@ async def test_promote_team_member_service_success(
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
         "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [],
     }
     mock_db_promote_team_member.return_value = None
 
@@ -137,6 +148,7 @@ async def test_promote_team_member_service_failure_no_permission(
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
         "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [],
     }
     mock_db_promote_team_member.return_value = None
 
@@ -162,6 +174,7 @@ async def test_leave_team_service_success(mock_db_get_team_by_id, mock_db_leave_
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
         "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [],
     }
     mock_db_leave_team.return_value = None
 
@@ -179,6 +192,7 @@ async def test_leave_team_service_failure_last_exec(mock_db_get_team_by_id):
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
         "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [],
     }
 
     with pytest.raises(HTTPException) as exc_info:
@@ -203,6 +217,7 @@ async def test_kick_team_member_service_success(
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
         "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [],
     }
     mock_db_kick_team_member.return_value = None
 
@@ -222,6 +237,7 @@ async def test_kick_team_member_service_failure_kick_exec(mock_db_get_team_by_id
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
         "exec_member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
+        "event_ids": [],
     }
 
     with pytest.raises(HTTPException) as exc_info:
@@ -234,3 +250,29 @@ async def test_kick_team_member_service_failure_kick_exec(mock_db_get_team_by_id
         exc_info.value.detail
         == f"Member is an executive and cannot be kicked: member_id={MOCK_USER_2_ID}, team_id={MOCK_TEAM_ID}"
     )
+
+
+@pytest.mark.asyncio
+@patch("app.service.team.db_create_event_for_team")
+async def test_create_event_for_team_service_success(mock_db_create_event_for_team):
+    mock_db = AsyncMock()
+    mock_db_create_event_for_team.return_value = {
+        "_id": MOCK_EVENT_ID,
+        "name": MOCK_EVENT_NAME,
+        "description": MOCK_EVENT_DESCRIPTION,
+        "rsvp_ids": [],
+    }
+    mock_create_event_request = CreateEventRequest(
+        name=MOCK_EVENT_NAME,
+        description=MOCK_EVENT_DESCRIPTION,
+    )
+
+    result = await create_event_for_team_service(
+        MOCK_TEAM_ID, mock_create_event_request, mock_db
+    )
+
+    assert isinstance(result, Event)
+    assert result.id == MOCK_EVENT_ID
+    assert result.name == MOCK_EVENT_NAME
+    assert result.description == MOCK_EVENT_DESCRIPTION
+    assert result.rsvp_ids == []

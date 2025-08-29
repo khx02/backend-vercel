@@ -3,6 +3,7 @@ from typing import List
 from pydantic import BaseModel
 
 from app.schemas.project import Project
+from app.schemas.event import Event
 
 
 class TeamModel(BaseModel):
@@ -11,6 +12,7 @@ class TeamModel(BaseModel):
     member_ids: List[str]
     exec_member_ids: List[str]
     project_ids: List[str]
+    event_ids: List[str]
 
 
 class CreateTeamRequest(BaseModel):
@@ -68,3 +70,12 @@ class CreateProjectRequest(BaseModel):
 
 class CreateProjectResponse(BaseModel):
     project: Project
+
+
+class CreateEventRequest(BaseModel):
+    name: str
+    description: str
+
+
+class CreateEventResponse(BaseModel):
+    event: Event

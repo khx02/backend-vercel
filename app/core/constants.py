@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+BASE_URL = "http://localhost:8000/api"
+
 SECRET_KEY = os.environ["SECRET_KEY"]
 ALGORITHM = os.environ["ALGORITHM"]
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -15,4 +17,6 @@ TEAMS_COLLECTION = "teams"
 KANBANS_COLLECTION = "kanbans"
 PROJECTS_COLLECTION = "projects"
 TODOS_COLLECTION = "todos"
+EVENTS_COLLECTION = "events"
 VERIFICATION_CODES_COLLECTION = "verification_codes"
+RSVPS_COLLECTION = "rsvps"
