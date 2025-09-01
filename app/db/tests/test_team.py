@@ -1,5 +1,4 @@
 from unittest.mock import AsyncMock
-from pymongo.errors import PyMongoError
 
 import pytest
 from bson import ObjectId

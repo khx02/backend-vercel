@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.api.auth import get_current_user
@@ -17,7 +17,6 @@ from app.schemas.team import (
     LeaveTeamResponse,
     PromoteTeamMemberRequest,
     PromoteTeamMemberResponse,
-    TeamModel,
 )
 from app.schemas.user import UserModel
 from app.service.team import (

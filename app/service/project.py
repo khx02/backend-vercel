@@ -31,7 +31,6 @@ from app.db.project import (
 )
 from app.db.project import db_get_project
 
-from bson import ObjectId
 
 from app.schemas.todo import Todo
 

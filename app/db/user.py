@@ -10,7 +10,6 @@ from app.core.constants import (
     TEAMS_COLLECTION,
     VERIFICATION_CODES_COLLECTION,
 )
-from app.schemas.user import CreateUserRequest
 
 
 async def db_create_user(

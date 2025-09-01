@@ -1,9 +1,6 @@
 from fastapi import Depends, HTTPException
 from app.api.auth import get_current_user
 from app.db.client import get_db
-from app.db.team import db_get_project_ids_by_team_id
-from app.db.user import db_get_user_teams_by_id
-from app.schemas.team import TeamModel
 from app.schemas.user import UserModel
 
 from pymongo.asynchronous.database import AsyncDatabase

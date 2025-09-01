@@ -10,7 +10,7 @@ from fastapi import (
     Response,
     status,
 )
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, utils
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.constants import ALGORITHM, SECRET_KEY
