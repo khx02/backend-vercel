@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 import os
 import random
-from typing import NamedTuple
 from dotenv import load_dotenv
 from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase

@@ -1,6 +1,5 @@
 from unittest.mock import AsyncMock, patch
 
-from bson import ObjectId
 from fastapi import HTTPException
 import pytest
 

@@ -104,7 +104,6 @@ async def test_db_delete_todo_success():
         return mock_projects_collection
 
     mock_db.__getitem__.side_effect = getitem
-    import asyncio
 
     await db_delete_todo(project_id, todo_id, mock_db)
 

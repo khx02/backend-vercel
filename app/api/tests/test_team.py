@@ -1,6 +1,5 @@
 from unittest.mock import AsyncMock, patch
 
-from bson import ObjectId
 import pytest
 from fastapi import HTTPException
 
@@ -34,7 +33,6 @@ from app.test_shared.constants import (
     MOCK_EVENT_NAME,
     MOCK_USER_ID,
     MOCK_USER_EMAIL,
-    MOCK_USER_PASSWORD_HASHED,
     MOCK_USER_2_ID,
     MOCK_TEAM_NAME,
     MOCK_TEAM_ID,

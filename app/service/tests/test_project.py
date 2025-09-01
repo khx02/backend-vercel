@@ -7,11 +7,9 @@ from app.schemas.project import (
     DeleteTodoStatusRequest,
     GetProjectResponse,
     GetTodoItemsResponse,
-    Project,
     ReorderTodoStatusesRequest,
     UpdateTodoRequest,
 )
-from app.schemas.todo import Todo
 from app.service.project import (
     get_project_service,
     add_todo_service,

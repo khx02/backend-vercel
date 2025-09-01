@@ -1,7 +1,5 @@
-from email import message
 import os
 from fastapi import HTTPException
-from httpx import get
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.db.event import (

@@ -1,5 +1,4 @@
-import re
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.db.client import get_db
