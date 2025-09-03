@@ -3,12 +3,14 @@ from unittest.mock import AsyncMock
 import pytest
 from bson import ObjectId
 
-from app.core.constants import PROJECTS_COLLECTION, TEAMS_COLLECTION
+from app.core.constants import EVENTS_COLLECTION, PROJECTS_COLLECTION, TEAMS_COLLECTION
 from app.db.team import (
     db_create_event_for_team,
     db_create_project,
     db_create_team,
+    db_delete_event,
     db_delete_project,
+    db_get_event_by_id,
     db_get_project_by_id,
     db_join_team,
     db_get_team_by_id,
@@ -231,3 +233,40 @@ async def test_db_create_event_for_team_success():
     assert result["name"] == MOCK_EVENT_NAME
     assert result["description"] == MOCK_EVENT_DESCRIPTION
     assert result["rsvp_ids"] == []
+
+
+@pytest.mark.asyncio
+async def test_db_get_event_by_id_success():
+    mock_db = AsyncMock()
+    mock_events_collection = AsyncMock()
+    mock_db.__getitem__.return_value = mock_events_collection
+    mock_events_collection.find_one.return_value = {
+        "_id": ObjectId(MOCK_EVENT_ID),
+        "name": MOCK_EVENT_NAME,
+        "description": MOCK_EVENT_DESCRIPTION,
+        "rsvp_ids": [],
+    }
+
+    result = await db_get_event_by_id(MOCK_EVENT_ID, mock_db)
+
+    assert isinstance(result, dict)
+    assert result["_id"] == MOCK_EVENT_ID
+    assert result["name"] == MOCK_EVENT_NAME
+    assert result["description"] == MOCK_EVENT_DESCRIPTION
+    assert result["rsvp_ids"] == []
+
+
+@pytest.mark.asyncio
+async def test_db_delete_event_success():
+    mock_db = AsyncMock()
+    mock_events_collection = AsyncMock()
+    mock_teams_collection = AsyncMock()
+
+    mock_db.__getitem__.side_effect = lambda name: {
+        EVENTS_COLLECTION: mock_events_collection,
+        TEAMS_COLLECTION: mock_teams_collection,
+    }.get(name)
+
+    result = await db_delete_event(MOCK_TEAM_ID, MOCK_EVENT_ID, mock_db)
+
+    assert result is None

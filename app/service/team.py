@@ -4,7 +4,9 @@ from pymongo.asynchronous.database import AsyncDatabase
 from app.db.team import (
     db_create_event_for_team,
     db_create_team,
+    db_delete_event,
     db_delete_project,
+    db_get_event_by_id,
     db_get_project_by_id,
     db_join_team,
     db_create_project,
@@ -242,3 +244,30 @@ async def create_event_for_team_service(
         description=event_in_db_dict["description"],
         rsvp_ids=event_in_db_dict["rsvp_ids"],
     )
+
+
+async def delete_event_service(
+    team_id: str, event_id: str, user_id: str, db: AsyncDatabase
+) -> None:
+    existing_team = await db_get_team_by_id(team_id, db)
+    if not existing_team:
+        raise HTTPException(
+            status_code=404, detail=f"Team does not exist: team_id={team_id}"
+        )
+
+    if (
+        user_id not in existing_team["exec_member_ids"]
+    ):  # Implicitly checks for existing in team
+        raise HTTPException(
+            status_code=403,
+            detail=f"User does not have permission to delete event: user_id={user_id}, event_id={event_id}",
+        )
+
+    existing_event = await db_get_event_by_id(event_id, db)
+    if not existing_event or event_id not in existing_team["event_ids"]:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Event does not exist: event_id={event_id}, team_id={team_id}",
+        )
+
+    await db_delete_event(team_id, event_id, db)

@@ -19,6 +19,7 @@ from app.schemas.team import (
 from app.service.team import (
     create_event_for_team_service,
     create_team_service,
+    delete_event_service,
     delete_project_service,
     join_team_service,
     kick_team_member_service,
@@ -318,3 +319,32 @@ async def test_create_event_for_team_service_success(mock_db_create_event_for_te
     assert result.name == MOCK_EVENT_NAME
     assert result.description == MOCK_EVENT_DESCRIPTION
     assert result.rsvp_ids == []
+
+@pytest.mark.asyncio
+@patch("app.service.team.db_delete_event")
+@patch("app.service.team.db_get_event_by_id")
+@patch("app.service.team.db_get_team_by_id")
+async def test_delete_event_service_success(
+    mock_db_get_team_by_id, mock_db_get_event_by_id, mock_db_delete_event
+):
+    mock_db = AsyncMock()
+    mock_db_get_team_by_id.return_value = {
+        "_id": MOCK_TEAM_ID,
+        "name": MOCK_TEAM_NAME,
+        "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
+        "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [MOCK_EVENT_ID],
+    }
+    mock_db_get_event_by_id.return_value = {
+        "_id": MOCK_EVENT_ID,
+        "name": MOCK_EVENT_NAME,
+        "description": MOCK_EVENT_DESCRIPTION,
+        "rsvp_ids": [],
+    }
+    mock_db_delete_event.return_value = None
+
+    result = await delete_event_service(
+        MOCK_TEAM_ID, MOCK_EVENT_ID, MOCK_USER_ID, mock_db
+    )
+
+    assert result is None

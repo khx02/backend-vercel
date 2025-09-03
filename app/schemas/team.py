@@ -87,3 +87,11 @@ class CreateEventRequest(BaseModel):
 
 class CreateEventResponse(BaseModel):
     event: Event
+
+
+class DeleteEventRequest(BaseModel):
+    event_id: str
+
+
+class DeleteEventResponse(BaseModel):
+    pass
