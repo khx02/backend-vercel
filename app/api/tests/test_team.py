@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from app.api.team import (
     create_event,
     create_team,
+    delete_project,
     join_team,
     kick_team_member,
     leave_team,
@@ -17,6 +18,8 @@ from app.schemas.team import (
     CreateEventResponse,
     CreateTeamRequest,
     CreateTeamResponse,
+    DeleteProjectRequest,
+    DeleteProjectResponse,
     JoinTeamResponse,
     KickTeamMemberRequest,
     KickTeamMemberResponse,
@@ -31,6 +34,7 @@ from app.test_shared.constants import (
     MOCK_EVENT_DESCRIPTION,
     MOCK_EVENT_ID,
     MOCK_EVENT_NAME,
+    MOCK_PROJECT_ID,
     MOCK_USER_ID,
     MOCK_USER_EMAIL,
     MOCK_USER_2_ID,
@@ -219,6 +223,24 @@ async def test_kick_team_member_failure(mock_kick_team_member_service):
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == f"Team does not exist: team_id={MOCK_TEAM_ID}"
+
+
+@pytest.mark.asyncio
+@patch("app.api.team.delete_project_service")
+async def test_delete_project_success(mock_delete_project_service):
+    mock_db = AsyncMock()
+    mock_delete_project_service.return_value = None
+    mock_current_user = UserModel(
+        id=MOCK_USER_ID,
+        email=MOCK_USER_EMAIL,
+    )
+    mock_delete_project_request = DeleteProjectRequest(project_id=MOCK_PROJECT_ID)
+
+    result = await delete_project(
+        MOCK_TEAM_ID, mock_delete_project_request, mock_current_user, mock_db
+    )
+
+    assert isinstance(result, DeleteProjectResponse)
 
 
 @pytest.mark.asyncio

@@ -4,6 +4,8 @@ from pymongo.asynchronous.database import AsyncDatabase
 from app.db.team import (
     db_create_event_for_team,
     db_create_team,
+    db_delete_project,
+    db_get_project_by_id,
     db_join_team,
     db_create_project,
     db_get_team_by_id,
@@ -18,6 +20,7 @@ from app.schemas.team import (
     CreateProjectRequest,
     CreateProjectResponse,
     CreateTeamResponse,
+    DeleteProjectResponse,
     GetTeamResponse,
     JoinTeamResponse,
     KickTeamMemberResponse,
@@ -198,6 +201,33 @@ async def create_project_service(
             todo_ids=project_in_db_dict["todo_ids"],
         )
     )
+
+
+async def delete_project_service(
+    team_id: str, project_id: str, user_id: str, db: AsyncDatabase
+) -> None:
+    existing_team = await db_get_team_by_id(team_id, db)
+    if not existing_team:
+        raise HTTPException(
+            status_code=404, detail=f"Team does not exist: team_id={team_id}"
+        )
+
+    if (
+        user_id not in existing_team["exec_member_ids"]
+    ):  # Implicitly checks for existing in team
+        raise HTTPException(
+            status_code=403,
+            detail=f"User does not have permission to delete project: user_id={user_id}, project_id={project_id}",
+        )
+
+    existing_project = await db_get_project_by_id(project_id, db)
+    if not existing_project or project_id not in existing_team["project_ids"]:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Project does not exist: project_id={project_id}, team_id={team_id}",
+        )
+
+    await db_delete_project(project_id, db)
 
 
 async def create_event_for_team_service(

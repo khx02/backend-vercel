@@ -10,6 +10,8 @@ from app.schemas.team import (
     CreateProjectResponse,
     CreateTeamRequest,
     CreateTeamResponse,
+    DeleteProjectRequest,
+    DeleteProjectResponse,
     GetTeamResponse,
     JoinTeamResponse,
     KickTeamMemberRequest,
@@ -23,6 +25,7 @@ from app.service.team import (
     create_event_for_team_service,
     create_project_service,
     create_team_service,
+    delete_project_service,
     get_team_service,
     join_team_service,
     kick_team_member_service,
@@ -100,6 +103,21 @@ async def create_project(
     db: AsyncDatabase = Depends(get_db),
 ) -> CreateProjectResponse:
     return await create_project_service(team_id, create_project_request, db)
+
+
+@router.delete("/delete-project/{team_id}")
+async def delete_project(
+    team_id: str,
+    delete_project_request: DeleteProjectRequest,
+    current_user: UserModel = Depends(get_current_user),
+    db: AsyncDatabase = Depends(get_db),
+) -> DeleteProjectResponse:
+
+    await delete_project_service(
+        team_id, delete_project_request.project_id, current_user.id, db
+    )
+
+    return DeleteProjectResponse()
 
 
 @router.post("/create-event/{team_id}")

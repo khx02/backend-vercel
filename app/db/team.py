@@ -92,6 +92,11 @@ async def db_create_project(
     return stringify_object_ids(project_dict)
 
 
+async def db_get_project_by_id(project_id: str, db: AsyncDatabase) -> Dict[str, Any]:
+    project_dict = await db[PROJECTS_COLLECTION].find_one({"_id": ObjectId(project_id)})
+    return stringify_object_ids(project_dict)
+
+
 async def db_get_project_ids_by_team_id(
     team_id: str, db: AsyncDatabase
 ) -> List[Dict[str, Any]]:
@@ -103,6 +108,14 @@ async def db_get_project_ids_by_team_id(
         return team.get("project_ids", [])
     except Exception as e:
         return []
+
+
+async def db_delete_project(project_id: str, db: AsyncDatabase) -> None:
+    await db[PROJECTS_COLLECTION].delete_one({"_id": ObjectId(project_id)})
+    await db[TEAMS_COLLECTION].update_many(
+        {"project_ids": ObjectId(project_id)},
+        {"$pull": {"project_ids": ObjectId(project_id)}},
+    )
 
 
 async def db_create_event_for_team(
