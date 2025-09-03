@@ -6,6 +6,8 @@ from fastapi import HTTPException
 from app.api.team import (
     create_event,
     create_team,
+    delete_event,
+    delete_project,
     join_team,
     kick_team_member,
     leave_team,
@@ -17,6 +19,10 @@ from app.schemas.team import (
     CreateEventResponse,
     CreateTeamRequest,
     CreateTeamResponse,
+    DeleteEventRequest,
+    DeleteEventResponse,
+    DeleteProjectRequest,
+    DeleteProjectResponse,
     JoinTeamResponse,
     KickTeamMemberRequest,
     KickTeamMemberResponse,
@@ -31,6 +37,7 @@ from app.test_shared.constants import (
     MOCK_EVENT_DESCRIPTION,
     MOCK_EVENT_ID,
     MOCK_EVENT_NAME,
+    MOCK_PROJECT_ID,
     MOCK_USER_ID,
     MOCK_USER_EMAIL,
     MOCK_USER_2_ID,
@@ -222,6 +229,24 @@ async def test_kick_team_member_failure(mock_kick_team_member_service):
 
 
 @pytest.mark.asyncio
+@patch("app.api.team.delete_project_service")
+async def test_delete_project_success(mock_delete_project_service):
+    mock_db = AsyncMock()
+    mock_delete_project_service.return_value = None
+    mock_current_user = UserModel(
+        id=MOCK_USER_ID,
+        email=MOCK_USER_EMAIL,
+    )
+    mock_delete_project_request = DeleteProjectRequest(project_id=MOCK_PROJECT_ID)
+
+    result = await delete_project(
+        MOCK_TEAM_ID, mock_delete_project_request, mock_current_user, mock_db
+    )
+
+    assert isinstance(result, DeleteProjectResponse)
+
+
+@pytest.mark.asyncio
 @patch("app.api.team.create_event_for_team_service")
 async def test_create_event_success(mock_create_event_for_team_service):
     mock_db = AsyncMock()
@@ -242,3 +267,19 @@ async def test_create_event_success(mock_create_event_for_team_service):
     assert result.event.name == MOCK_EVENT_NAME
     assert result.event.description == MOCK_EVENT_DESCRIPTION
     assert result.event.rsvp_ids == []
+
+
+@pytest.mark.asyncio
+@patch("app.api.team.delete_event_service")
+async def test_delete_event_success(mock_delete_event_service):
+    mock_db = AsyncMock()
+    mock_current_user = UserModel(
+        id=MOCK_USER_ID,
+        email=MOCK_USER_EMAIL,
+    )
+    mock_delete_event_service.return_value = None
+    mock_delete_event_request = DeleteEventRequest(event_id=MOCK_EVENT_ID)
+
+    result = await delete_event(MOCK_TEAM_ID, mock_delete_event_request, mock_current_user, mock_db)
+
+    assert isinstance(result, DeleteEventResponse)

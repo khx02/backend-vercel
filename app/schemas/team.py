@@ -72,6 +72,14 @@ class CreateProjectResponse(BaseModel):
     project: Project
 
 
+class DeleteProjectRequest(BaseModel):
+    project_id: str
+
+
+class DeleteProjectResponse(BaseModel):
+    pass
+
+
 class CreateEventRequest(BaseModel):
     name: str
     description: str
@@ -79,3 +87,11 @@ class CreateEventRequest(BaseModel):
 
 class CreateEventResponse(BaseModel):
     event: Event
+
+
+class DeleteEventRequest(BaseModel):
+    event_id: str
+
+
+class DeleteEventResponse(BaseModel):
+    pass

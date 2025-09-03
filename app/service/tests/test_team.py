@@ -1,5 +1,7 @@
+from re import M
 from unittest.mock import AsyncMock, patch
 
+from bson import ObjectId
 from fastapi import HTTPException
 import pytest
 
@@ -7,6 +9,7 @@ from app.schemas.event import Event
 from app.schemas.team import (
     CreateEventRequest,
     CreateTeamResponse,
+    DeleteProjectResponse,
     JoinTeamResponse,
     KickTeamMemberResponse,
     LeaveTeamResponse,
@@ -16,6 +19,8 @@ from app.schemas.team import (
 from app.service.team import (
     create_event_for_team_service,
     create_team_service,
+    delete_event_service,
+    delete_project_service,
     join_team_service,
     kick_team_member_service,
     leave_team_service,
@@ -26,6 +31,9 @@ from app.test_shared.constants import (
     MOCK_EVENT_DESCRIPTION,
     MOCK_EVENT_ID,
     MOCK_EVENT_NAME,
+    MOCK_PROJECT_DESCRIPTION,
+    MOCK_PROJECT_ID,
+    MOCK_PROJECT_NAME,
     MOCK_USER_ID,
     MOCK_USER_2_ID,
     MOCK_TEAM_NAME,
@@ -252,6 +260,42 @@ async def test_kick_team_member_service_failure_kick_exec(mock_db_get_team_by_id
 
 
 @pytest.mark.asyncio
+@patch("app.service.team.db_delete_project")
+@patch("app.service.team.db_get_project_by_id")
+@patch("app.service.team.db_get_team_by_id")
+async def test_delete_project_service_success(
+    mock_db_get_team_by_id, mock_db_get_project_by_id, mock_db_delete_project
+):
+    mock_db = AsyncMock()
+    mock_db_get_team_by_id.return_value = {
+        "_id": MOCK_TEAM_ID,
+        "name": MOCK_TEAM_NAME,
+        "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
+        "exec_member_ids": [MOCK_USER_ID],
+        "project_ids": [MOCK_PROJECT_ID],
+        "event_ids": [],
+    }
+    mock_db_get_project_by_id.return_value = {
+        "_id": MOCK_PROJECT_ID,
+        "name": MOCK_PROJECT_NAME,
+        "description": MOCK_PROJECT_DESCRIPTION,
+        "todo_statuses": [
+            {"id": ObjectId(), "name": "To Do"},
+            {"id": ObjectId(), "name": "In Progress"},
+            {"id": ObjectId(), "name": "Done"},
+        ],
+        "todo_ids": [],
+    }
+    mock_db_delete_project.return_value = None
+
+    result = await delete_project_service(
+        MOCK_TEAM_ID, MOCK_PROJECT_ID, MOCK_USER_ID, mock_db
+    )
+
+    assert result is None
+
+
+@pytest.mark.asyncio
 @patch("app.service.team.db_create_event_for_team")
 async def test_create_event_for_team_service_success(mock_db_create_event_for_team):
     mock_db = AsyncMock()
@@ -275,3 +319,32 @@ async def test_create_event_for_team_service_success(mock_db_create_event_for_te
     assert result.name == MOCK_EVENT_NAME
     assert result.description == MOCK_EVENT_DESCRIPTION
     assert result.rsvp_ids == []
+
+@pytest.mark.asyncio
+@patch("app.service.team.db_delete_event")
+@patch("app.service.team.db_get_event_by_id")
+@patch("app.service.team.db_get_team_by_id")
+async def test_delete_event_service_success(
+    mock_db_get_team_by_id, mock_db_get_event_by_id, mock_db_delete_event
+):
+    mock_db = AsyncMock()
+    mock_db_get_team_by_id.return_value = {
+        "_id": MOCK_TEAM_ID,
+        "name": MOCK_TEAM_NAME,
+        "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
+        "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [MOCK_EVENT_ID],
+    }
+    mock_db_get_event_by_id.return_value = {
+        "_id": MOCK_EVENT_ID,
+        "name": MOCK_EVENT_NAME,
+        "description": MOCK_EVENT_DESCRIPTION,
+        "rsvp_ids": [],
+    }
+    mock_db_delete_event.return_value = None
+
+    result = await delete_event_service(
+        MOCK_TEAM_ID, MOCK_EVENT_ID, MOCK_USER_ID, mock_db
+    )
+
+    assert result is None
