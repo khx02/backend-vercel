@@ -50,9 +50,10 @@ async def reply_rsvp(
 
     return ReplyRSVPResponse()
 
+
 @router.get("/get-event-rsvps/{event_id}")
-async def get_event_rsvps(event_id: str, db: AsyncDatabase = Depends(get_db)) -> GetEventRSVPsResponse:
+async def get_event_rsvps(
+    event_id: str, db: AsyncDatabase = Depends(get_db)
+) -> GetEventRSVPsResponse:
 
-    rsvps = await get_event_rsvps_service(event_id, db)
-
-    return GetEventRSVPsResponse(rsvps=rsvps)
+    return GetEventRSVPsResponse(rsvps=await get_event_rsvps_service(event_id, db))
