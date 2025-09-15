@@ -78,32 +78,6 @@ async def test_reply_rsvp_service(mock_db_record_rsvp_response):
     assert result is None
 
 
-"""
-async def get_event_rsvps_service(event_id: str, db: AsyncDatabase) -> List[RSVP]:
-
-    event_in_db_dict = await db_get_event_or_none(event_id, db)
-    if event_in_db_dict is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Could not find an event for this id: id={event_id}",
-        )
-
-    rsvp_ids = event_in_db_dict["rsvp_ids"]
-    rsvps_in_db_dict_list = await db_get_rsvps_by_ids(rsvp_ids, db)
-
-    rsvps = [
-        RSVP(
-            id=rsvp_in_db_dict["_id"],
-            email=rsvp_in_db_dict["email"],
-            rsvp_status=RSVPStatus(rsvp_in_db_dict["status"]),
-        )
-        for rsvp_in_db_dict in rsvps_in_db_dict_list
-    ]
-
-    return rsvps
-"""
-
-
 @pytest.mark.asyncio
 @patch("app.service.event.db_get_rsvps_by_ids")
 @patch("app.service.event.db_get_event_or_none")
@@ -142,46 +116,13 @@ async def test_get_event_rsvps_service_success(
     assert result[1].email == MOCK_USER_2_EMAIL
     assert result[1].rsvp_status == RSVPStatus.PENDING
 
-"""
-
-async def get_team_events_service(
-    team_id: str, user_id: str, db: AsyncDatabase
-) -> List[Event]:
-
-    existing_team = await db_get_team_by_id(team_id, db)
-    if not existing_team:
-        raise HTTPException(
-            status_code=404, detail=f"Team does not exist: team_id={team_id}"
-        )
-
-    if (
-        user_id not in existing_team["member_ids"]
-    ):  # Implicitly checks for existing in team
-        raise HTTPException(
-            status_code=403,
-            detail=f"User does not have permission to view events: user_id={user_id}, team_id={team_id}",
-        )
-
-    event_ids = existing_team["event_ids"]
-
-    events = [
-        Event(
-            id=event_in_db_dict["_id"],
-            name=event_in_db_dict["name"],
-            description=event_in_db_dict["description"],
-            rsvp_ids=event_in_db_dict["rsvp_ids"],
-        )
-        for event_in_db_dict in await db_get_events_by_ids(event_ids, db)
-    ]
-
-    return events
-
-"""
 
 @pytest.mark.asyncio
 @patch("app.service.team.db_get_team_by_id")
 @patch("app.service.team.db_get_events_by_ids")
-async def test_get_team_events_service_success(mock_db_get_events_by_ids, mock_db_get_team_by_id):
+async def test_get_team_events_service_success(
+    mock_db_get_events_by_ids, mock_db_get_team_by_id
+):
     mock_db = AsyncMock()
     mock_db_get_team_by_id.return_value = {
         "_id": MOCK_EVENT_ID,
@@ -207,5 +148,3 @@ async def test_get_team_events_service_success(mock_db_get_events_by_ids, mock_d
     assert result[0].name == MOCK_EVENT_NAME
     assert result[0].description == MOCK_EVENT_DESCRIPTION
     assert result[0].rsvp_ids == []
-
-    

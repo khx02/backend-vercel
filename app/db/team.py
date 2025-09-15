@@ -108,7 +108,7 @@ async def db_get_project_ids_by_team_id(
             return []
 
         return team.get("project_ids", [])
-    except Exception as e:
+    except Exception:
         return []
 
 

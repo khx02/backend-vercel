@@ -1,7 +1,7 @@
 import os
 from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
-from typing import Dict, List
+from typing import List
 
 from app.db.event import (
     db_create_rsvp_invite,
