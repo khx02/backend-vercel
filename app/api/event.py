@@ -3,6 +3,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from app.db.client import get_db
 from app.schemas.event import (
+    GetEventRSVPsResponse,
     GetEventResponse,
     RSVPStatus,
     ReplyRSVPResponse,
@@ -10,6 +11,7 @@ from app.schemas.event import (
     SendRSVPEmailResponse,
 )
 from app.service.event import (
+    get_event_rsvps_service,
     get_event_service,
     reply_rsvp_service,
     send_rsvp_email_service,
@@ -47,3 +49,10 @@ async def reply_rsvp(
     await reply_rsvp_service(rsvp_id, rsvp_status, db)
 
     return ReplyRSVPResponse()
+
+@router.get("/get-event-rsvps/{event_id}")
+async def get_event_rsvps(event_id: str, db: AsyncDatabase = Depends(get_db)) -> GetEventRSVPsResponse:
+
+    rsvps = await get_event_rsvps_service(event_id, db)
+
+    return GetEventRSVPsResponse(rsvps=rsvps)

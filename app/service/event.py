@@ -1,13 +1,15 @@
 import os
 from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
+from typing import Dict, List
 
 from app.db.event import (
     db_create_rsvp_invite,
     db_get_event_or_none,
+    db_get_rsvps_by_ids,
     db_record_rsvp_response,
 )
-from app.schemas.event import Event, RSVPStatus
+from app.schemas.event import RSVP, Event, RSVPStatus
 
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -70,3 +72,27 @@ async def reply_rsvp_service(
 ) -> None:
 
     await db_record_rsvp_response(rsvp_id, rsvp_status, db)
+
+
+async def get_event_rsvps_service(event_id: str, db: AsyncDatabase) -> List[RSVP]:
+
+    event_in_db_dict = await db_get_event_or_none(event_id, db)
+    if event_in_db_dict is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Could not find an event for this id: id={event_id}",
+        )
+
+    rsvp_ids = event_in_db_dict["rsvp_ids"]
+    rsvps_in_db_dict_list = await db_get_rsvps_by_ids(rsvp_ids, db)
+
+    rsvps = [
+        RSVP(
+            id=rsvp_in_db_dict["_id"],
+            email=rsvp_in_db_dict["email"],
+            rsvp_status=RSVPStatus(rsvp_in_db_dict["status"]),
+        )
+        for rsvp_in_db_dict in rsvps_in_db_dict_list
+    ]
+
+    return rsvps
