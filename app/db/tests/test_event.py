@@ -6,6 +6,7 @@ from app import db
 from app.db.event import (
     db_create_rsvp_invite,
     db_get_event_or_none,
+    db_get_events_by_ids,
     db_get_rsvps_by_ids,
     db_record_rsvp_response,
 )
@@ -99,4 +100,49 @@ async def test_db_get_rsvps_by_ids_success():
         "_id": MOCK_RSVP_ID,
         "rsvp_status": MOCK_RSVP_STATUS,
         "email": MOCK_USER_EMAIL,
+    }
+
+"""
+async def db_get_events_by_ids(
+    event_ids: List[str], db: AsyncDatabase
+) -> List[Dict[str, Any]]:
+
+    object_id_list = [ObjectId(event_id) for event_id in event_ids]
+    results = (
+        await db[EVENTS_COLLECTION].find({"_id": {"$in": object_id_list}}).to_list()
+    )
+    return [stringify_object_ids(result) for result in results]
+"""
+
+@pytest.mark.asyncio
+async def test_db_get_events_by_ids_success():
+    mock_db = AsyncMock()
+    mock_events_collection = MagicMock()
+
+    mock_db.__getitem__.return_value = mock_events_collection
+
+    mock_cursor = MagicMock()
+    mock_cursor.to_list = AsyncMock(
+        return_value=[
+            {
+                "_id": ObjectId(MOCK_EVENT_ID),
+                "name": MOCK_EVENT_NAME,
+                "description": MOCK_EVENT_DESCRIPTION,
+                "rsvp_ids": [],
+            }
+        ]
+    )
+
+    mock_events_collection.find.return_value = mock_cursor
+
+    result = await db_get_events_by_ids([MOCK_EVENT_ID], mock_db)
+
+    assert isinstance(result, list)
+    assert len(result) == 1
+    assert isinstance(result[0], dict)
+    assert result[0] == {
+        "_id": MOCK_EVENT_ID,
+        "name": MOCK_EVENT_NAME,
+        "description": MOCK_EVENT_DESCRIPTION,
+        "rsvp_ids": [],
     }

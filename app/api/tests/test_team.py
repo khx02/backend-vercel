@@ -8,6 +8,7 @@ from app.api.team import (
     create_team,
     delete_event,
     delete_project,
+    get_team_events,
     join_team,
     kick_team_member,
     leave_team,
@@ -23,6 +24,7 @@ from app.schemas.team import (
     DeleteEventResponse,
     DeleteProjectRequest,
     DeleteProjectResponse,
+    GetTeamEventsResponse,
     JoinTeamResponse,
     KickTeamMemberRequest,
     KickTeamMemberResponse,
@@ -280,6 +282,35 @@ async def test_delete_event_success(mock_delete_event_service):
     mock_delete_event_service.return_value = None
     mock_delete_event_request = DeleteEventRequest(event_id=MOCK_EVENT_ID)
 
-    result = await delete_event(MOCK_TEAM_ID, mock_delete_event_request, mock_current_user, mock_db)
+    result = await delete_event(
+        MOCK_TEAM_ID, mock_delete_event_request, mock_current_user, mock_db
+    )
 
     assert isinstance(result, DeleteEventResponse)
+
+
+@pytest.mark.asyncio
+@patch("app.api.team.get_team_events_service")
+async def test_get_team_events_success(mock_get_team_events_service):
+    mock_db = AsyncMock()
+    mock_current_user = UserModel(
+        id=MOCK_USER_ID,
+        email=MOCK_USER_EMAIL,
+    )
+    mock_get_team_events_service.return_value = [
+        Event(
+            id=MOCK_EVENT_ID,
+            name=MOCK_EVENT_NAME,
+            description=MOCK_EVENT_DESCRIPTION,
+            rsvp_ids=[],
+        )
+    ]
+
+    result = await get_team_events(MOCK_TEAM_ID, mock_current_user, mock_db)
+
+    assert isinstance(result, GetTeamEventsResponse)
+    assert len(result.events) == 1
+    assert result.events[0].id == MOCK_EVENT_ID
+    assert result.events[0].name == MOCK_EVENT_NAME
+    assert result.events[0].description == MOCK_EVENT_DESCRIPTION
+    assert result.events[0].rsvp_ids == []

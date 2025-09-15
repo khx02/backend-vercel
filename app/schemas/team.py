@@ -95,3 +95,11 @@ class DeleteEventRequest(BaseModel):
 
 class DeleteEventResponse(BaseModel):
     pass
+
+
+class GetTeamEventsRequest(BaseModel):
+    pass
+
+
+class GetTeamEventsResponse(BaseModel):
+    events: List[Event]

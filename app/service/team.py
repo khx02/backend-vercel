@@ -1,6 +1,9 @@
 from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 
+from typing import List
+
+from app.db.event import db_get_events_by_ids
 from app.db.team import (
     db_create_event_for_team,
     db_create_team,
@@ -271,3 +274,36 @@ async def delete_event_service(
         )
 
     await db_delete_event(team_id, event_id, db)
+
+
+async def get_team_events_service(
+    team_id: str, user_id: str, db: AsyncDatabase
+) -> List[Event]:
+
+    existing_team = await db_get_team_by_id(team_id, db)
+    if not existing_team:
+        raise HTTPException(
+            status_code=404, detail=f"Team does not exist: team_id={team_id}"
+        )
+
+    if (
+        user_id not in existing_team["member_ids"]
+    ):  # Implicitly checks for existing in team
+        raise HTTPException(
+            status_code=403,
+            detail=f"User does not have permission to view events: user_id={user_id}, team_id={team_id}",
+        )
+
+    event_ids = existing_team["event_ids"]
+
+    events = [
+        Event(
+            id=event_in_db_dict["_id"],
+            name=event_in_db_dict["name"],
+            description=event_in_db_dict["description"],
+            rsvp_ids=event_in_db_dict["rsvp_ids"],
+        )
+        for event_in_db_dict in await db_get_events_by_ids(event_ids, db)
+    ]
+
+    return events

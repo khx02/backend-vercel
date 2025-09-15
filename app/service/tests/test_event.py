@@ -8,6 +8,7 @@ from app.service.event import (
     reply_rsvp_service,
     send_rsvp_email_service,
 )
+from app.service.team import get_team_events_service
 from app.test_shared.constants import (
     MOCK_EVENT_DESCRIPTION,
     MOCK_EVENT_ID,
@@ -140,3 +141,71 @@ async def test_get_event_rsvps_service_success(
     assert result[1].id == MOCK_RSVP_2_ID
     assert result[1].email == MOCK_USER_2_EMAIL
     assert result[1].rsvp_status == RSVPStatus.PENDING
+
+"""
+
+async def get_team_events_service(
+    team_id: str, user_id: str, db: AsyncDatabase
+) -> List[Event]:
+
+    existing_team = await db_get_team_by_id(team_id, db)
+    if not existing_team:
+        raise HTTPException(
+            status_code=404, detail=f"Team does not exist: team_id={team_id}"
+        )
+
+    if (
+        user_id not in existing_team["member_ids"]
+    ):  # Implicitly checks for existing in team
+        raise HTTPException(
+            status_code=403,
+            detail=f"User does not have permission to view events: user_id={user_id}, team_id={team_id}",
+        )
+
+    event_ids = existing_team["event_ids"]
+
+    events = [
+        Event(
+            id=event_in_db_dict["_id"],
+            name=event_in_db_dict["name"],
+            description=event_in_db_dict["description"],
+            rsvp_ids=event_in_db_dict["rsvp_ids"],
+        )
+        for event_in_db_dict in await db_get_events_by_ids(event_ids, db)
+    ]
+
+    return events
+
+"""
+
+@pytest.mark.asyncio
+@patch("app.service.team.db_get_team_by_id")
+@patch("app.service.team.db_get_events_by_ids")
+async def test_get_team_events_service_success(mock_db_get_events_by_ids, mock_db_get_team_by_id):
+    mock_db = AsyncMock()
+    mock_db_get_team_by_id.return_value = {
+        "_id": MOCK_EVENT_ID,
+        "name": MOCK_EVENT_NAME,
+        "description": MOCK_EVENT_DESCRIPTION,
+        "rsvp_ids": [],
+        "event_ids": [MOCK_EVENT_ID],
+        "member_ids": [MOCK_USER_EMAIL],
+    }
+    mock_db_get_events_by_ids.return_value = [
+        {
+            "_id": MOCK_EVENT_ID,
+            "name": MOCK_EVENT_NAME,
+            "description": MOCK_EVENT_DESCRIPTION,
+            "rsvp_ids": [],
+        }
+    ]
+    result = await get_team_events_service(MOCK_EVENT_ID, MOCK_USER_EMAIL, mock_db)
+
+    assert isinstance(result, list)
+    assert len(result) == 1
+    assert result[0].id == MOCK_EVENT_ID
+    assert result[0].name == MOCK_EVENT_NAME
+    assert result[0].description == MOCK_EVENT_DESCRIPTION
+    assert result[0].rsvp_ids == []
+
+    
