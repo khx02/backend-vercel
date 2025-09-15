@@ -11,6 +11,7 @@ class RSVPStatus(str, Enum):
 
 class RSVP(BaseModel):
     id: str
+    email: EmailStr
     rsvp_status: RSVPStatus
 
 

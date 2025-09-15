@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 from bson import ObjectId
 from pymongo.asynchronous.database import AsyncDatabase
 
@@ -30,3 +30,14 @@ async def db_record_rsvp_response(
         {"_id": ObjectId(rsvp_id)},
         {"$set": {"status": rsvp_status}},
     )
+
+
+async def db_get_rsvps_by_ids(
+    rsvp_ids: List[str], db: AsyncDatabase
+) -> List[Dict[str, Any]]:
+
+    object_id_list = [ObjectId(rsvp_id) for rsvp_id in rsvp_ids]
+    results = (
+        await db[RSVPS_COLLECTION].find({"_id": {"$in": object_id_list}}).to_list()
+    )
+    return [stringify_object_ids(result) for result in results]
