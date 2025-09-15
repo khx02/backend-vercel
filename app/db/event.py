@@ -42,6 +42,7 @@ async def db_get_rsvps_by_ids(
     )
     return [stringify_object_ids(result) for result in results]
 
+
 async def db_get_events_by_ids(
     event_ids: List[str], db: AsyncDatabase
 ) -> List[Dict[str, Any]]:

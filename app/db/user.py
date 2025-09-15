@@ -59,8 +59,7 @@ async def db_create_pending_verification(
 
 async def db_get_pending_verification(email: str, db: AsyncDatabase) -> Dict[str, Any]:
     verification_dict = await db[VERIFICATION_CODES_COLLECTION].find_one(
-        {"email": email},
-        sort=[("created_at", -1)]
+        {"email": email}, sort=[("created_at", -1)]
     )
     return stringify_object_ids(verification_dict)
 

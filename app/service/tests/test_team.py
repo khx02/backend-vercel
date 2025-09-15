@@ -1,4 +1,3 @@
-from re import M
 from unittest.mock import AsyncMock, patch
 
 from bson import ObjectId
@@ -319,6 +318,7 @@ async def test_create_event_for_team_service_success(mock_db_create_event_for_te
     assert result.name == MOCK_EVENT_NAME
     assert result.description == MOCK_EVENT_DESCRIPTION
     assert result.rsvp_ids == []
+
 
 @pytest.mark.asyncio
 @patch("app.service.team.db_delete_event")

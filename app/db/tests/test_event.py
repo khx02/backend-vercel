@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock, mock_open
+from unittest.mock import AsyncMock, MagicMock
 from bson import ObjectId
 import pytest
 
@@ -102,17 +102,6 @@ async def test_db_get_rsvps_by_ids_success():
         "email": MOCK_USER_EMAIL,
     }
 
-"""
-async def db_get_events_by_ids(
-    event_ids: List[str], db: AsyncDatabase
-) -> List[Dict[str, Any]]:
-
-    object_id_list = [ObjectId(event_id) for event_id in event_ids]
-    results = (
-        await db[EVENTS_COLLECTION].find({"_id": {"$in": object_id_list}}).to_list()
-    )
-    return [stringify_object_ids(result) for result in results]
-"""
 
 @pytest.mark.asyncio
 async def test_db_get_events_by_ids_success():
