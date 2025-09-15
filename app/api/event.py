@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends
+from fastapi.responses import RedirectResponse
 from pymongo.asynchronous.database import AsyncDatabase
 
+from app.core.constants import FRONTEND_URL
 from app.db.client import get_db
 from app.schemas.event import (
     GetEventRSVPsResponse,
     GetEventResponse,
     RSVPStatus,
-    ReplyRSVPResponse,
     SendRSVPEmailRequest,
     SendRSVPEmailResponse,
 )
@@ -44,11 +45,11 @@ async def reply_rsvp(
     rsvp_id: str,
     rsvp_status: RSVPStatus,
     db: AsyncDatabase = Depends(get_db),
-) -> ReplyRSVPResponse:
+) -> RedirectResponse:
 
     await reply_rsvp_service(rsvp_id, rsvp_status, db)
 
-    return ReplyRSVPResponse()
+    return RedirectResponse(url=FRONTEND_URL, status_code=301)
 
 
 @router.get("/get-event-rsvps/{event_id}")

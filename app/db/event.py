@@ -37,6 +37,7 @@ async def db_get_rsvps_by_ids(
 ) -> List[Dict[str, Any]]:
 
     object_id_list = [ObjectId(rsvp_id) for rsvp_id in rsvp_ids]
-    cursor = db[RSVPS_COLLECTION].find({"_id": {"$in": object_id_list}})
-    results = await cursor.to_list(length=len(rsvp_ids))
+    results = (
+        await db[RSVPS_COLLECTION].find({"_id": {"$in": object_id_list}}).to_list()
+    )
     return [stringify_object_ids(result) for result in results]

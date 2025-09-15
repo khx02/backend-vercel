@@ -1,10 +1,12 @@
 from unittest.mock import AsyncMock, patch
 
+from fastapi.responses import RedirectResponse
 import pytest
 
-from app.api.event import get_event, reply_rsvp, send_rsvp_email
+from app.api.event import get_event, get_event_rsvps, reply_rsvp, send_rsvp_email
 from app.schemas.event import (
     Event,
+    GetEventRSVPsResponse,
     GetEventResponse,
     ReplyRSVPResponse,
     SendRSVPEmailRequest,
@@ -58,4 +60,16 @@ async def test_reply_rsvp_service_success(mock_reply_rsvp_service):
 
     result = await reply_rsvp(mock_reply_rsvp_service, mock_db)
 
-    assert isinstance(result, ReplyRSVPResponse)
+    assert isinstance(result, RedirectResponse)
+
+
+@pytest.mark.asyncio
+@patch("app.api.event.get_event_rsvps_service")
+async def test_get_event_rsvps_service_success(mock_get_event_rsvps_service):
+    mock_db = AsyncMock()
+    mock_get_event_rsvps_service.return_value = []
+
+    result = await get_event_rsvps(MOCK_EVENT_ID, mock_db)
+
+    assert isinstance(result, GetEventRSVPsResponse)
+    assert result.rsvps == []

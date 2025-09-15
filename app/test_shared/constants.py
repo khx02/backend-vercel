@@ -11,6 +11,7 @@ MOCK_USER_NEW_PASSWORD = "new-addiii"
 MOCK_USER_NEW_PASSWORD_HASHED = "hashed-new-addiii"
 
 MOCK_USER_2_ID = str(ObjectId())
+MOCK_USER_2_EMAIL = "alex@alex.com"
 
 MOCK_TEAM_NAME = "Mock Team"
 MOCK_TEAM_ID = str(ObjectId())
@@ -33,3 +34,6 @@ MOCK_EVENT_NAME = "Mock Event"
 MOCK_EVENT_DESCRIPTION = "This is a mock event."
 
 MOCK_RSVP_ID = str(ObjectId())
+MOCK_RSVP_STATUS = "accepted"
+
+MOCK_RSVP_2_ID = str(ObjectId())

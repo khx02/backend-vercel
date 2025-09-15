@@ -1,39 +1,22 @@
-"""
-@pytest.mark.asyncio
-async def test_db_create_team_success():
-    mock_db = AsyncMock()
-    mock_teams_collection = AsyncMock()
-    mock_teams_collection.insert_one.return_value = AsyncMock(
-        inserted_id=ObjectId(MOCK_INSERTED_ID)
-    )
-    mock_db.__getitem__.return_value = mock_teams_collection
-
-    result = await db_create_team(MOCK_USER_ID, MOCK_TEAM_NAME, mock_db)
-
-    assert isinstance(result, dict)
-    assert result["_id"] == MOCK_INSERTED_ID
-    assert result["name"] == MOCK_TEAM_NAME
-    assert result["member_ids"] == [MOCK_USER_ID]
-    assert result["exec_member_ids"] == [MOCK_USER_ID]
-    assert result["project_ids"] == []
-
-"""
-
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock, mock_open
 from bson import ObjectId
 import pytest
 
+from app import db
 from app.db.event import (
     db_create_rsvp_invite,
     db_get_event_or_none,
+    db_get_rsvps_by_ids,
     db_record_rsvp_response,
 )
-from app.schemas.event import RSVPStatus
+from app.schemas.event import RSVP, RSVPStatus
 from app.test_shared.constants import (
     MOCK_EVENT_DESCRIPTION,
     MOCK_EVENT_ID,
     MOCK_EVENT_NAME,
     MOCK_INSERTED_ID,
+    MOCK_RSVP_ID,
+    MOCK_RSVP_STATUS,
     MOCK_USER_EMAIL,
 )
 
@@ -85,3 +68,35 @@ async def test_db_record_rsvp_response_success():
     )
 
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_db_get_rsvps_by_ids_success():
+    mock_db = AsyncMock()
+    mock_rsvps_collection = MagicMock()
+
+    mock_db.__getitem__.return_value = mock_rsvps_collection
+
+    mock_cursor = MagicMock()
+    mock_cursor.to_list = AsyncMock(
+        return_value=[
+            {
+                "_id": ObjectId(MOCK_RSVP_ID),
+                "rsvp_status": MOCK_RSVP_STATUS,
+                "email": MOCK_USER_EMAIL,
+            }
+        ]
+    )
+
+    mock_rsvps_collection.find.return_value = mock_cursor
+
+    result = await db_get_rsvps_by_ids([MOCK_RSVP_ID], mock_db)
+
+    assert isinstance(result, list)
+    assert len(result) == 1
+    assert isinstance(result[0], dict)
+    assert result[0] == {
+        "_id": MOCK_RSVP_ID,
+        "rsvp_status": MOCK_RSVP_STATUS,
+        "email": MOCK_USER_EMAIL,
+    }
