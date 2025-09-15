@@ -41,3 +41,13 @@ async def db_get_rsvps_by_ids(
         await db[RSVPS_COLLECTION].find({"_id": {"$in": object_id_list}}).to_list()
     )
     return [stringify_object_ids(result) for result in results]
+
+async def db_get_events_by_ids(
+    event_ids: List[str], db: AsyncDatabase
+) -> List[Dict[str, Any]]:
+
+    object_id_list = [ObjectId(event_id) for event_id in event_ids]
+    results = (
+        await db[EVENTS_COLLECTION].find({"_id": {"$in": object_id_list}}).to_list()
+    )
+    return [stringify_object_ids(result) for result in results]

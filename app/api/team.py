@@ -14,6 +14,7 @@ from app.schemas.team import (
     DeleteEventResponse,
     DeleteProjectRequest,
     DeleteProjectResponse,
+    GetTeamEventsResponse,
     GetTeamResponse,
     JoinTeamResponse,
     KickTeamMemberRequest,
@@ -29,6 +30,7 @@ from app.service.team import (
     create_team_service,
     delete_event_service,
     delete_project_service,
+    get_team_events_service,
     get_team_service,
     join_team_service,
     kick_team_member_service,
@@ -145,3 +147,15 @@ async def delete_event(
         team_id, delete_event_request.event_id, current_user.id, db
     )
     return DeleteEventResponse()
+
+
+@router.post("/get-team-events/{team_id}")
+async def get_team_events(
+    team_id: str,
+    current_user: UserModel = Depends(get_current_user),
+    db: AsyncDatabase = Depends(get_db),
+) -> GetTeamEventsResponse:
+
+    return GetTeamEventsResponse(
+        events=await get_team_events_service(team_id, current_user.id, db)
+    )
