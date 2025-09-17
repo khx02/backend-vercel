@@ -20,6 +20,7 @@ class Event(BaseModel):
     name: str
     description: str
     rsvp_ids: List[str]
+    public: bool
 
 
 # Pass event_id through path
@@ -58,3 +59,13 @@ class GetEventRSVPsRequest(BaseModel):
 
 class GetEventRSVPsResponse(BaseModel):
     rsvps: List[RSVP]
+
+
+class UpdateEventDetailsRequest(BaseModel):
+    name: str
+    description: str
+    public: bool
+
+
+class UpdateEventDetailsResponse(BaseModel):
+    event: Event
