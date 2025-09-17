@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, Depends
 from pymongo.asynchronous.database import AsyncDatabase
 
@@ -137,3 +138,16 @@ async def reorder_todo_statuses(
     return await reorder_todo_statuses_service(
         project_id, reorder_todo_statuses_request, db
     )
+
+
+from app.schemas.project import AssignTodoRequest, AssignTodoResponse
+from app.service.project import assign_todo_service
+@router.post("/assign-todo/{project_id}")
+async def assign_todo(
+    project_id: str,
+    assign_todo_request: AssignTodoRequest,
+    _: None = Depends(require_executive_project_access),
+    db: AsyncDatabase = Depends(get_db),
+) -> AssignTodoResponse:
+    await assign_todo_service(project_id, assign_todo_request, db)
+    return AssignTodoResponse()

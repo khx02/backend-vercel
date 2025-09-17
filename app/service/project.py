@@ -1,3 +1,4 @@
+
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.schemas.project import (
@@ -93,6 +94,7 @@ async def get_todo_items_service(
                 description=todo["description"],
                 status_id=todo["status_id"],
                 owner_id=todo["owner_id"],
+                assignee_id=todo.get("assignee_id"),
             )
             for todo in todo_items_in_db_list
         ]
@@ -159,3 +161,16 @@ async def reorder_todo_statuses_service(
     await db_reorder_todo_statuses(project_id, new_statuses, db)
 
     return ReorderTodoStatusesResponse()
+
+from app.schemas.project import AssignTodoRequest, AssignTodoResponse
+from app.db.project import db_update_todo
+async def assign_todo_service(project_id: str, assign_todo_request: AssignTodoRequest, db: AsyncDatabase) -> None:
+    # Only update assignee_id
+    class PartialUpdate:
+        todo_id: str = assign_todo_request.todo_id
+        name: str = ""
+        description: str = ""
+        status_id: str = ""
+        owner_id: str = ""
+        assignee_id: str = assign_todo_request.assignee_id
+    await db_update_todo(project_id, PartialUpdate(), db)
