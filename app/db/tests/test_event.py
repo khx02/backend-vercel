@@ -9,6 +9,7 @@ from app.db.event import (
     db_get_events_by_ids,
     db_get_rsvps_by_ids,
     db_record_rsvp_response,
+    db_update_event_details,
 )
 from app.schemas.event import RSVP, RSVPStatus
 from app.test_shared.constants import (
@@ -16,6 +17,8 @@ from app.test_shared.constants import (
     MOCK_EVENT_ID,
     MOCK_EVENT_NAME,
     MOCK_INSERTED_ID,
+    MOCK_NEW_EVENT_DESCRIPTION,
+    MOCK_NEW_EVENT_NAME,
     MOCK_RSVP_ID,
     MOCK_RSVP_STATUS,
     MOCK_USER_EMAIL,
@@ -135,3 +138,24 @@ async def test_db_get_events_by_ids_success():
         "description": MOCK_EVENT_DESCRIPTION,
         "rsvp_ids": [],
     }
+
+
+@pytest.mark.asyncio
+async def test_db_update_event_details_success():
+    mock_db = AsyncMock()
+    mock_events_collection = AsyncMock()
+    mock_events_collection.update_one.return_value = None
+    mock_db.__getitem__.return_value = mock_events_collection
+    mock_update_event_details_request = {
+        "name": MOCK_NEW_EVENT_NAME,
+        "description": MOCK_NEW_EVENT_DESCRIPTION,
+        "public": True,
+    }
+
+    result = await db_update_event_details(
+        MOCK_EVENT_ID,
+        mock_update_event_details_request,
+        mock_db,
+    )
+
+    assert result is None

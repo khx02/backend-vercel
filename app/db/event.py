@@ -52,3 +52,15 @@ async def db_get_events_by_ids(
         await db[EVENTS_COLLECTION].find({"_id": {"$in": object_id_list}}).to_list()
     )
     return [stringify_object_ids(result) for result in results]
+
+
+async def db_update_event_details(
+    event_id: str,
+    new_event_details: Dict[str, Any],
+    db: AsyncDatabase,
+) -> None:
+
+    await db[EVENTS_COLLECTION].update_one(
+        {"_id": ObjectId(event_id)},
+        {"$set": new_event_details},
+    )

@@ -37,3 +37,6 @@ MOCK_RSVP_ID = str(ObjectId())
 MOCK_RSVP_STATUS = "accepted"
 
 MOCK_RSVP_2_ID = str(ObjectId())
+
+MOCK_NEW_EVENT_NAME = "New Mock Event"
+MOCK_NEW_EVENT_DESCRIPTION = "This is a new mock event."
