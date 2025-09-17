@@ -3,7 +3,13 @@ from unittest.mock import AsyncMock, patch
 from fastapi.responses import RedirectResponse
 import pytest
 
-from app.api.event import get_event, get_event_rsvps, reply_rsvp, send_rsvp_email
+from app.api.event import (
+    get_event,
+    get_event_rsvps,
+    reply_rsvp,
+    send_rsvp_email,
+    update_event_details,
+)
 from app.schemas.event import (
     Event,
     GetEventRSVPsResponse,
@@ -11,6 +17,8 @@ from app.schemas.event import (
     ReplyRSVPResponse,
     SendRSVPEmailRequest,
     SendRSVPEmailResponse,
+    UpdateEventDetailsRequest,
+    UpdateEventDetailsResponse,
 )
 from app.test_shared.constants import (
     MOCK_EVENT_DESCRIPTION,
@@ -73,3 +81,19 @@ async def test_get_event_rsvps_service_success(mock_get_event_rsvps_service):
 
     assert isinstance(result, GetEventRSVPsResponse)
     assert result.rsvps == []
+
+
+@pytest.mark.asyncio
+@patch("app.api.event.update_event_details_service")
+async def test_update_event_details_service_success(mock_update_event_details_service):
+    mock_db = AsyncMock()
+    mock_update_event_details_service.return_value = None
+    mock_update_event_details_request = UpdateEventDetailsRequest(
+        name=MOCK_EVENT_NAME, description=MOCK_EVENT_DESCRIPTION, public=True
+    )
+
+    result = await update_event_details(
+        MOCK_EVENT_ID, mock_update_event_details_request, mock_db
+    )
+
+    assert isinstance(result, UpdateEventDetailsResponse)
