@@ -10,12 +10,15 @@ from app.schemas.event import (
     RSVPStatus,
     SendRSVPEmailRequest,
     SendRSVPEmailResponse,
+    UpdateEventDetailsRequest,
+    UpdateEventDetailsResponse,
 )
 from app.service.event import (
     get_event_rsvps_service,
     get_event_service,
     reply_rsvp_service,
     send_rsvp_email_service,
+    update_event_details_service,
 )
 
 router = APIRouter()
@@ -58,3 +61,15 @@ async def get_event_rsvps(
 ) -> GetEventRSVPsResponse:
 
     return GetEventRSVPsResponse(rsvps=await get_event_rsvps_service(event_id, db))
+
+
+@router.post("/update-event-details/{event_id}")
+async def update_event_details(
+    event_id: str,
+    update_event_details_request: UpdateEventDetailsRequest,
+    db: AsyncDatabase = Depends(get_db),
+):
+
+    await update_event_details_service(event_id, update_event_details_request, db)
+
+    return UpdateEventDetailsResponse()

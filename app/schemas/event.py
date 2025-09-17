@@ -20,7 +20,7 @@ class Event(BaseModel):
     name: str
     description: str
     rsvp_ids: List[str]
-    public: bool
+    public: bool = False
 
 
 # Pass event_id through path
@@ -68,4 +68,4 @@ class UpdateEventDetailsRequest(BaseModel):
 
 
 class UpdateEventDetailsResponse(BaseModel):
-    event: Event
+    pass
