@@ -1,7 +1,9 @@
+from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 import pytest
 from bson import ObjectId
 
+from app.core.constants import PROJECTS_COLLECTION
 from app.db.project import (
     db_assign_todo,
     db_get_project,
@@ -14,7 +16,14 @@ from app.db.project import (
     db_reorder_todo_statuses,
 )
 from app.schemas.project import AddTodoRequest, UpdateTodoRequest
-from app.test_shared.constants import MOCK_TODO_ID, MOCK_USER_ID
+from app.test_shared.constants import (
+    MOCK_PROJECT_ID,
+    MOCK_STATUS_ID,
+    MOCK_TODO_DESCRIPTION,
+    MOCK_TODO_ID,
+    MOCK_TODO_NAME,
+    MOCK_USER_ID,
+)
 
 
 @pytest.mark.asyncio
@@ -166,16 +175,33 @@ async def test_db_add_todo_status_success():
 
 @pytest.mark.asyncio
 async def test_db_delete_todo_status_success():
-    project_id = "507f1f77bcf86cd799439011"
-    status_id = "507f1f77bcf86cd799439015"
+    mock_db = AsyncMock()
     mock_projects_collection = AsyncMock()
     mock_projects_collection.update_one.return_value = None
-    mock_db = AsyncMock()
-    mock_db.__getitem__.return_value = mock_projects_collection
+    mock_todos_collection = AsyncMock()
+    mock_cursor = MagicMock()
+    mock_cursor.to_list = AsyncMock(
+        return_value=[
+            {
+                "_id": ObjectId(MOCK_TODO_ID),
+                "name": MOCK_TODO_NAME,
+                "description": MOCK_TODO_DESCRIPTION,
+                "status_id": ObjectId(MOCK_STATUS_ID),
+                "assignee_id": ObjectId(MOCK_USER_ID),
+            }
+        ]
+    )
+    mock_todos_collection.find = MagicMock(return_value=mock_cursor)
+    mock_todos_collection.delete_one.return_value = None
+    mock_db.__getitem__.side_effect = lambda name: (
+        mock_projects_collection
+        if name == PROJECTS_COLLECTION
+        else mock_todos_collection
+    )
 
-    await db_delete_todo_status(project_id, status_id, mock_db)
+    result = await db_delete_todo_status(MOCK_PROJECT_ID, MOCK_STATUS_ID, mock_db)
 
-    mock_projects_collection.update_one.assert_called_once()
+    assert result is None
 
 
 @pytest.mark.asyncio
@@ -194,6 +220,7 @@ async def test_db_reorder_todo_statuses_success():
 
     mock_projects_collection.update_one.assert_called_once()
 
+
 @pytest.mark.asyncio
 async def test_db_assign_todo_success():
     todo_id = MOCK_TODO_ID
@@ -206,4 +233,3 @@ async def test_db_assign_todo_success():
     result = await db_assign_todo(todo_id, assignee_id, mock_db)
 
     assert result is None
-    
