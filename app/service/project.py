@@ -203,8 +203,8 @@ async def delete_todo_status_service(
         raise HTTPException(
             status_code=404, detail=f"Project does not exist: project_id={project_id}"
         )
-
-    # TODO: Prevent deleting the last todo status
+    
+    # Prevent deleting the last todo status in a project
     if len(project_in_db_dict["todo_statuses"]) == 1:
         raise HTTPException(
             status_code=400,
