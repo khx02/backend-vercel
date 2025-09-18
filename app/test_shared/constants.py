@@ -37,3 +37,5 @@ MOCK_RSVP_ID = str(ObjectId())
 MOCK_RSVP_STATUS = "accepted"
 
 MOCK_RSVP_2_ID = str(ObjectId())
+
+MOCK_TODO_ID = str(ObjectId())

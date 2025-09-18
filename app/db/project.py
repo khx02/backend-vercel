@@ -119,3 +119,11 @@ async def db_reorder_todo_statuses(
         {"_id": ObjectId(project_id)},
         {"$set": {"todo_statuses": new_statuses}},
     )
+
+
+async def db_assign_todo(todo_id: str, assignee_id: str, db: AsyncDatabase) -> None:
+
+    await db[TODOS_COLLECTION].update_one(
+        {"_id": ObjectId(todo_id)},
+        {"$set": {"assignee_id": ObjectId(assignee_id)}},
+    )

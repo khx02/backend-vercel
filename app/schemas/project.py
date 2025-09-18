@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel
 
 from typing import List
@@ -112,6 +111,7 @@ class ReorderTodoStatusesResponse(BaseModel):
 class AssignTodoRequest(BaseModel):
     todo_id: str
     assignee_id: str
+
 
 class AssignTodoResponse(BaseModel):
     pass

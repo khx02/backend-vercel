@@ -1,4 +1,4 @@
-
+from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.schemas.project import (
@@ -23,6 +23,7 @@ from app.schemas.project import (
 from app.db.project import (
     db_add_todo,
     db_add_todo_status,
+    db_assign_todo,
     db_delete_todo,
     db_delete_todo_status,
     db_get_todo_items,
@@ -162,15 +163,30 @@ async def reorder_todo_statuses_service(
 
     return ReorderTodoStatusesResponse()
 
-from app.schemas.project import AssignTodoRequest, AssignTodoResponse
-from app.db.project import db_update_todo
-async def assign_todo_service(project_id: str, assign_todo_request: AssignTodoRequest, db: AsyncDatabase) -> None:
-    # Only update assignee_id
-    class PartialUpdate:
-        todo_id: str = assign_todo_request.todo_id
-        name: str = ""
-        description: str = ""
-        status_id: str = ""
-        owner_id: str = ""
-        assignee_id: str = assign_todo_request.assignee_id
-    await db_update_todo(project_id, PartialUpdate(), db)
+
+async def assign_todo_service(
+    project_id: str,
+    todo_id: str,
+    assignee_id: str,
+    db: AsyncDatabase,
+) -> None:
+
+    # Check if project exists
+    project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
+    # Check if todo exists
+    if todo_id not in project_in_db_dict["todo_ids"]:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Todo does not exist in project: todo_id={todo_id}, project_id={project_id}",
+        )
+
+    # Check if assignee exists in project team
+    # TODO: Implement db function for getting team by project_id
+    # Then, check if assignee_id in team member ids
+
+    await db_assign_todo(todo_id, assignee_id, db)
