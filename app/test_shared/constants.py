@@ -39,6 +39,13 @@ MOCK_RSVP_STATUS = "accepted"
 MOCK_RSVP_2_ID = str(ObjectId())
 
 MOCK_TODO_ID = str(ObjectId())
+MOCK_TODO_NAME = "Mock Todo"
+MOCK_TODO_DESCRIPTION = "This is a mock todo."
 
 MOCK_NEW_EVENT_NAME = "New Mock Event"
 MOCK_NEW_EVENT_DESCRIPTION = "This is a new mock event."
+
+MOCK_STATUS_ID = str(ObjectId())
+MOCK_TODO_STATUS_NAME = "To Do"
+MOCK_STATUS_2_ID = str(ObjectId())
+MOCK_TODO_STATUS_2_NAME = "In Progress"

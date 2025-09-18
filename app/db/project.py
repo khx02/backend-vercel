@@ -3,7 +3,7 @@ from bson import ObjectId
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.common import stringify_object_ids
-from app.core.constants import PROJECTS_COLLECTION, TODOS_COLLECTION
+from app.core.constants import PROJECTS_COLLECTION, TEAMS_COLLECTION, TODOS_COLLECTION
 from app.schemas.project import AddTodoRequest, UpdateTodoRequest
 
 
@@ -109,6 +109,21 @@ async def db_delete_todo_status(
         {"$pull": {"todo_statuses": {"id": ObjectId(status_id)}}},
     )
 
+    # Find all todos with matching status_ids
+    # Delete them from the TODOS_COLLECTION table and remove their IDs from the project
+    todos_to_delete = (
+        await db[TODOS_COLLECTION]
+        .find({"status_id": ObjectId(status_id)})
+        .to_list(None)
+    )
+    todo_ids_to_delete = [todo["_id"] for todo in todos_to_delete]
+    if todo_ids_to_delete:
+        await db[TODOS_COLLECTION].delete_many({"_id": {"$in": todo_ids_to_delete}})
+        await db[PROJECTS_COLLECTION].update_one(
+            {"_id": ObjectId(project_id)},
+            {"$pull": {"todo_ids": {"$in": todo_ids_to_delete}}},
+        )
+
 
 async def db_reorder_todo_statuses(
     project_id: str, new_statuses: List[Dict[str, Any]], db: AsyncDatabase
@@ -131,3 +146,10 @@ async def db_assign_todo(todo_id: str, assignee_id: str, db: AsyncDatabase) -> N
         {"_id": ObjectId(todo_id)},
         {"$set": {"assignee_id": ObjectId(assignee_id)}},
     )
+
+
+async def db_get_team_by_project_id(
+    project_id: str, db: AsyncDatabase
+) -> Dict[str, Any] | None:
+    team = await db[TEAMS_COLLECTION].find_one({"project_ids": ObjectId(project_id)})
+    return stringify_object_ids(team)

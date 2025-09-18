@@ -26,6 +26,7 @@ from app.db.project import (
     db_assign_todo,
     db_delete_todo,
     db_delete_todo_status,
+    db_get_team_by_project_id,
     db_get_todo_items,
     db_reorder_todo_items,
     db_reorder_todo_statuses,
@@ -40,6 +41,10 @@ from app.schemas.todo import Todo
 async def get_project_service(project_id: str, db: AsyncDatabase) -> GetProjectResponse:
 
     project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
 
     return GetProjectResponse(
         project=Project(
@@ -56,10 +61,16 @@ async def add_todo_service(
     project_id: str, todo_request: AddTodoRequest, db: AsyncDatabase
 ) -> AddTodoResponse:
 
+    # Check if project exists
+    project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
     # Assign to the first status_id in the project if status_id is not passed in
     if todo_request.status_id is None:
         # Get the project's current statuses
-        project_in_db_dict = await db_get_project(project_id, db)
         if project_in_db_dict["todo_statuses"]:
             todo_request.status_id = project_in_db_dict["todo_statuses"][0]["id"]
 
@@ -72,6 +83,21 @@ async def update_todo_service(
     project_id: str, update_todo_request: UpdateTodoRequest, db: AsyncDatabase
 ) -> UpdateTodoResponse:
 
+    # Check if project exists
+    project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
+    # Check if status_id exists in project
+    status_ids = [str(status["id"]) for status in project_in_db_dict["todo_statuses"]]
+    if update_todo_request.status_id not in status_ids:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status_id: {update_todo_request.status_id}",
+        )
+
     await db_update_todo(project_id, update_todo_request, db)
 
     return UpdateTodoResponse()
@@ -83,6 +109,20 @@ async def delete_todo_service(
     db: AsyncDatabase,
 ) -> DeleteTodoResponse:
 
+    # Check if project exists
+    project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
+    # Check if todo exists
+    if delete_todo_request.todo_id not in project_in_db_dict["todo_ids"]:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Todo does not exist in project: todo_id={delete_todo_request.todo_id}, project_id={project_id}",
+        )
+
     await db_delete_todo(project_id, delete_todo_request.todo_id, db)
 
     return DeleteTodoResponse()
@@ -91,6 +131,13 @@ async def delete_todo_service(
 async def get_todo_items_service(
     project_id: str, db: AsyncDatabase
 ) -> GetTodoItemsResponse:
+
+    # Check if project exists
+    project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
 
     todo_items_in_db_list = await db_get_todo_items(project_id, db)
 
@@ -133,6 +180,13 @@ async def add_todo_status_service(
     project_id: str, todo_status_request: AddTodoStatusRequest, db: AsyncDatabase
 ) -> AddTodoStatusResponse:
 
+    # Check if project exists
+    project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
     await db_add_todo_status(project_id, todo_status_request.name, db)
 
     return AddTodoStatusResponse()
@@ -144,8 +198,19 @@ async def delete_todo_status_service(
     db: AsyncDatabase,
 ) -> DeleteTodoStatusResponse:
 
-    # TODO: Prevent deleting the last todo status
-    # TODO: Warn that all todos under this status will also be deleted (and delete them)
+    # Check if project exists
+    project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
+    # Prevent deleting the last todo status in a project
+    if len(project_in_db_dict["todo_statuses"]) == 1:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete the last todo status in the project: project_id={project_id}",
+        )
 
     await db_delete_todo_status(project_id, delete_todo_status_request.status_id, db)
 
@@ -162,6 +227,19 @@ async def reorder_todo_statuses_service(
 
     # Get the project's current statuses
     project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
+    existing_status_ids = [
+        str(status["id"]) for status in project_in_db_dict["todo_statuses"]
+    ]
+    if sorted(new_status_ids) != sorted(existing_status_ids):
+        raise HTTPException(
+            status_code=400,
+            detail=f"new_status_ids must contain all existing status ids exactly once: existing_status_ids={existing_status_ids}, new_status_ids={new_status_ids}",
+        )
 
     new_statuses = sorted(
         project_in_db_dict["todo_statuses"],
@@ -195,7 +273,17 @@ async def assign_todo_service(
         )
 
     # Check if assignee exists in project team
-    # TODO: Implement db function for getting team by project_id
-    # Then, check if assignee_id in team member ids
+    team_in_db_dict = await db_get_team_by_project_id(project_id, db)
+    if not team_in_db_dict:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Project's team does not exist: project_id={project_id}",
+        )
+
+    if assignee_id not in team_in_db_dict["member_ids"]:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Assignee does not exist in project team: assignee_id={assignee_id}, project_id={project_id}",
+        )
 
     await db_assign_todo(todo_id, assignee_id, db)
