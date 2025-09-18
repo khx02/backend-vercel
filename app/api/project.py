@@ -63,7 +63,6 @@ async def add_todo(
     return await add_todo_service(project_id, todo_request, db)
 
 
-# TODO: Ensure that todo status falls within the existing status ids
 @router.post("/update-todo/{project_id}")
 async def update_todo(
     project_id: str,

@@ -26,6 +26,7 @@ from app.db.project import (
     db_assign_todo,
     db_delete_todo,
     db_delete_todo_status,
+    db_get_team_by_project_id,
     db_get_todo_items,
     db_reorder_todo_items,
     db_reorder_todo_statuses,
@@ -272,7 +273,17 @@ async def assign_todo_service(
         )
 
     # Check if assignee exists in project team
-    # TODO: Implement db function for getting team by project_id
-    # Then, check if assignee_id in team member ids
+    team_in_db_dict = await db_get_team_by_project_id(project_id, db)
+    if not team_in_db_dict:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Project's team does not exist: project_id={project_id}",
+        )
+
+    if assignee_id not in team_in_db_dict["member_ids"]:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Assignee does not exist in project team: assignee_id={assignee_id}, project_id={project_id}",
+        )
 
     await db_assign_todo(todo_id, assignee_id, db)

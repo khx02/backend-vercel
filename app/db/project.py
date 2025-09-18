@@ -3,7 +3,7 @@ from bson import ObjectId
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.core.common import stringify_object_ids
-from app.core.constants import PROJECTS_COLLECTION, TODOS_COLLECTION
+from app.core.constants import PROJECTS_COLLECTION, TEAMS_COLLECTION, TODOS_COLLECTION
 from app.schemas.project import AddTodoRequest, UpdateTodoRequest
 
 
@@ -146,3 +146,10 @@ async def db_assign_todo(todo_id: str, assignee_id: str, db: AsyncDatabase) -> N
         {"_id": ObjectId(todo_id)},
         {"$set": {"assignee_id": ObjectId(assignee_id)}},
     )
+
+
+async def db_get_team_by_project_id(
+    project_id: str, db: AsyncDatabase
+) -> Dict[str, Any] | None:
+    team = await db[TEAMS_COLLECTION].find_one({"project_ids": ObjectId(project_id)})
+    return stringify_object_ids(team)
