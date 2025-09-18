@@ -40,6 +40,10 @@ from app.schemas.todo import Todo
 async def get_project_service(project_id: str, db: AsyncDatabase) -> GetProjectResponse:
 
     project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
 
     return GetProjectResponse(
         project=Project(
