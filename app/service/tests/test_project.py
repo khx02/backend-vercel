@@ -49,7 +49,7 @@ async def test_add_todo_service_success(mock_db_add_todo):
     project_id = "proj1"
     mock_db = AsyncMock()
     todo_req = AddTodoRequest(
-        name="Todo", description="Desc", status_id="status1", owner_id="owner1"
+        name="Todo", description="Desc", status_id="status1", assignee_id="owner1"
     )
     mock_db_add_todo.return_value = None
     result = await add_todo_service(project_id, todo_req, mock_db)
@@ -66,7 +66,7 @@ async def test_update_todo_service_success(mock_db_update_todo):
         name="Updated",
         description="Desc",
         status_id="status1",
-        owner_id="owner1",
+        assignee_id="owner1",
     )
     mock_db_update_todo.return_value = None
     result = await update_todo_service(project_id, update_req, mock_db)
@@ -95,7 +95,7 @@ async def test_get_todo_items_service_success(mock_db_get_todo_items):
             "name": "Todo",
             "description": "Desc",
             "status_id": "status1",
-            "owner_id": "owner1",
+            "assignee_id": "owner1",
         }
     ]
     result = await get_todo_items_service(project_id, mock_db)

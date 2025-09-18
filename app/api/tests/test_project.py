@@ -77,7 +77,7 @@ async def test_add_todo_service_success(mock_add_todo_service):
         name="Todo",
         description="Desc",
         status_id=MOCK_USER_ID,
-        owner_id=MOCK_USER_2_ID,
+        assignee_id=MOCK_USER_2_ID,
     )
 
     result = await add_todo(MOCK_PROJECT_ID, todo_request, db=mock_db)
@@ -95,7 +95,7 @@ async def test_update_todo_service_success(mock_update_todo_service):
         name="Updated",
         description="Desc",
         status_id=MOCK_USER_ID,
-        owner_id=MOCK_USER_2_ID,
+        assignee_id=MOCK_USER_2_ID,
     )
 
     result = await update_todo(MOCK_PROJECT_ID, update_todo_request, db=mock_db)

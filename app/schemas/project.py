@@ -31,8 +31,8 @@ class GetProjectResponse(BaseModel):
 class AddTodoRequest(BaseModel):
     name: str
     description: str
-    status_id: str
-    owner_id: str
+    status_id: str | None = None
+    assignee_id: str | None = None
 
 
 class AddTodoResponse(BaseModel):
@@ -45,7 +45,7 @@ class UpdateTodoRequest(BaseModel):
     name: str
     description: str
     status_id: str
-    owner_id: str
+    assignee_id: str
 
 
 class UpdateTodoResponse(BaseModel):

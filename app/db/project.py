@@ -23,7 +23,11 @@ async def db_add_todo(
         "name": add_todo_request.name,
         "description": add_todo_request.description,
         "status_id": ObjectId(add_todo_request.status_id),
-        "owner_id": ObjectId(add_todo_request.owner_id),
+        "assignee_id": (
+            ObjectId(add_todo_request.assignee_id)
+            if add_todo_request.assignee_id
+            else None
+        ),
     }
     result = await db[TODOS_COLLECTION].insert_one(todo_dict)
 
@@ -45,7 +49,7 @@ async def db_update_todo(
                 "name": update_todo_request.name,
                 "description": update_todo_request.description,
                 "status_id": ObjectId(update_todo_request.status_id),
-                "owner_id": ObjectId(update_todo_request.owner_id),
+                "assignee_id": ObjectId(update_todo_request.assignee_id),
             }
         },
     )

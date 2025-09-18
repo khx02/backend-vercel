@@ -56,6 +56,13 @@ async def add_todo_service(
     project_id: str, todo_request: AddTodoRequest, db: AsyncDatabase
 ) -> AddTodoResponse:
 
+    # Assign to the first status_id in the project if status_id is not passed in
+    if todo_request.status_id is None:
+        # Get the project's current statuses
+        project_in_db_dict = await db_get_project(project_id, db)
+        if project_in_db_dict["todo_statuses"]:
+            todo_request.status_id = project_in_db_dict["todo_statuses"][0]["id"]
+
     await db_add_todo(project_id, todo_request, db)
 
     return AddTodoResponse()
@@ -94,8 +101,7 @@ async def get_todo_items_service(
                 name=todo["name"],
                 description=todo["description"],
                 status_id=todo["status_id"],
-                owner_id=todo["owner_id"],
-                assignee_id=todo.get("assignee_id"),
+                assignee_id=todo["assignee_id"],
             )
             for todo in todo_items_in_db_list
         ]
@@ -137,6 +143,9 @@ async def delete_todo_status_service(
     delete_todo_status_request: DeleteTodoStatusRequest,
     db: AsyncDatabase,
 ) -> DeleteTodoStatusResponse:
+
+    # TODO: Prevent deleting the last todo status
+    # TODO: Warn that all todos under this status will also be deleted (and delete them)
 
     await db_delete_todo_status(project_id, delete_todo_status_request.status_id, db)
 
