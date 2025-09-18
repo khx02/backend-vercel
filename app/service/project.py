@@ -72,6 +72,21 @@ async def update_todo_service(
     project_id: str, update_todo_request: UpdateTodoRequest, db: AsyncDatabase
 ) -> UpdateTodoResponse:
 
+    # Check if project exists
+    project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
+    # Check if status_id exists in project's statuses
+    status_ids = [str(status["id"]) for status in project_in_db_dict["todo_statuses"]]
+    if update_todo_request.status_id not in status_ids:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status_id: {update_todo_request.status_id}",
+        )
+
     await db_update_todo(project_id, update_todo_request, db)
 
     return UpdateTodoResponse()
