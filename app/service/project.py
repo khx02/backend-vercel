@@ -203,7 +203,7 @@ async def delete_todo_status_service(
         raise HTTPException(
             status_code=404, detail=f"Project does not exist: project_id={project_id}"
         )
-    
+
     # Prevent deleting the last todo status in a project
     if len(project_in_db_dict["todo_statuses"]) == 1:
         raise HTTPException(
@@ -222,7 +222,6 @@ async def reorder_todo_statuses_service(
     db: AsyncDatabase,
 ) -> ReorderTodoStatusesResponse:
 
-    # TODO: Validate new_status_ids contains all existing status ids exactly once
     new_status_ids = reorder_todo_statuses_request.new_status_ids
 
     # Get the project's current statuses
@@ -230,6 +229,15 @@ async def reorder_todo_statuses_service(
     if not project_in_db_dict:
         raise HTTPException(
             status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
+    existing_status_ids = [
+        str(status["id"]) for status in project_in_db_dict["todo_statuses"]
+    ]
+    if sorted(new_status_ids) != sorted(existing_status_ids):
+        raise HTTPException(
+            status_code=400,
+            detail=f"new_status_ids must contain all existing status ids exactly once: existing_status_ids={existing_status_ids}, new_status_ids={new_status_ids}",
         )
 
     new_statuses = sorted(
