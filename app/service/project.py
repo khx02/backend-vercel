@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.schemas.project import (
@@ -22,6 +23,7 @@ from app.schemas.project import (
 from app.db.project import (
     db_add_todo,
     db_add_todo_status,
+    db_assign_todo,
     db_delete_todo,
     db_delete_todo_status,
     db_get_todo_items,
@@ -53,6 +55,13 @@ async def get_project_service(project_id: str, db: AsyncDatabase) -> GetProjectR
 async def add_todo_service(
     project_id: str, todo_request: AddTodoRequest, db: AsyncDatabase
 ) -> AddTodoResponse:
+
+    # Assign to the first status_id in the project if status_id is not passed in
+    if todo_request.status_id is None:
+        # Get the project's current statuses
+        project_in_db_dict = await db_get_project(project_id, db)
+        if project_in_db_dict["todo_statuses"]:
+            todo_request.status_id = project_in_db_dict["todo_statuses"][0]["id"]
 
     await db_add_todo(project_id, todo_request, db)
 
@@ -92,7 +101,7 @@ async def get_todo_items_service(
                 name=todo["name"],
                 description=todo["description"],
                 status_id=todo["status_id"],
-                owner_id=todo["owner_id"],
+                assignee_id=todo["assignee_id"],
             )
             for todo in todo_items_in_db_list
         ]
@@ -135,6 +144,9 @@ async def delete_todo_status_service(
     db: AsyncDatabase,
 ) -> DeleteTodoStatusResponse:
 
+    # TODO: Prevent deleting the last todo status
+    # TODO: Warn that all todos under this status will also be deleted (and delete them)
+
     await db_delete_todo_status(project_id, delete_todo_status_request.status_id, db)
 
     return DeleteTodoStatusResponse()
@@ -159,3 +171,31 @@ async def reorder_todo_statuses_service(
     await db_reorder_todo_statuses(project_id, new_statuses, db)
 
     return ReorderTodoStatusesResponse()
+
+
+async def assign_todo_service(
+    project_id: str,
+    todo_id: str,
+    assignee_id: str,
+    db: AsyncDatabase,
+) -> None:
+
+    # Check if project exists
+    project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
+    # Check if todo exists
+    if todo_id not in project_in_db_dict["todo_ids"]:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Todo does not exist in project: todo_id={todo_id}, project_id={project_id}",
+        )
+
+    # Check if assignee exists in project team
+    # TODO: Implement db function for getting team by project_id
+    # Then, check if assignee_id in team member ids
+
+    await db_assign_todo(todo_id, assignee_id, db)

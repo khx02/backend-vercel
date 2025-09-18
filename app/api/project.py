@@ -11,6 +11,8 @@ from app.schemas.project import (
     AddTodoResponse,
     AddTodoStatusRequest,
     AddTodoStatusResponse,
+    AssignTodoRequest,
+    AssignTodoResponse,
     DeleteTodoRequest,
     DeleteTodoResponse,
     DeleteTodoStatusRequest,
@@ -27,6 +29,7 @@ from app.schemas.project import (
 from app.service.project import (
     add_todo_service,
     add_todo_status_service,
+    assign_todo_service,
     delete_todo_service,
     delete_todo_status_service,
     get_project_service,
@@ -137,3 +140,18 @@ async def reorder_todo_statuses(
     return await reorder_todo_statuses_service(
         project_id, reorder_todo_statuses_request, db
     )
+
+
+@router.post("/assign-todo/{project_id}")
+async def assign_todo(
+    project_id: str,
+    assign_todo_request: AssignTodoRequest,
+    _: None = Depends(require_executive_project_access),
+    db: AsyncDatabase = Depends(get_db),
+) -> AssignTodoResponse:
+
+    await assign_todo_service(
+        project_id, assign_todo_request.todo_id, assign_todo_request.assignee_id, db
+    )
+
+    return AssignTodoResponse()

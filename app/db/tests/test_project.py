@@ -3,6 +3,7 @@ import pytest
 from bson import ObjectId
 
 from app.db.project import (
+    db_assign_todo,
     db_get_project,
     db_add_todo,
     db_update_todo,
@@ -13,6 +14,7 @@ from app.db.project import (
     db_reorder_todo_statuses,
 )
 from app.schemas.project import AddTodoRequest, UpdateTodoRequest
+from app.test_shared.constants import MOCK_TODO_ID, MOCK_USER_ID
 
 
 @pytest.mark.asyncio
@@ -47,7 +49,7 @@ async def test_db_add_todo_success():
         name="Todo",
         description="Desc",
         status_id="507f1f77bcf86cd799439012",
-        owner_id="507f1f77bcf86cd799439013",
+        assignee_id="507f1f77bcf86cd799439013",
     )
     mock_todos_collection = AsyncMock()
     mock_projects_collection = AsyncMock()
@@ -77,7 +79,7 @@ async def test_db_update_todo_success():
         name="Updated",
         description="Desc",
         status_id="507f1f77bcf86cd799439012",
-        owner_id="507f1f77bcf86cd799439013",
+        assignee_id="507f1f77bcf86cd799439013",
     )
     mock_todos_collection = AsyncMock()
     mock_db = AsyncMock()
@@ -130,7 +132,7 @@ async def test_db_get_todo_items_success():
                 "name": "Todo",
                 "description": "Desc",
                 "status_id": ObjectId("507f1f77bcf86cd799439012"),
-                "owner_id": ObjectId("507f1f77bcf86cd799439013"),
+                "assignee_id": ObjectId("507f1f77bcf86cd799439013"),
             }
         ]
     )
@@ -191,3 +193,17 @@ async def test_db_reorder_todo_statuses_success():
     await db_reorder_todo_statuses(project_id, new_statuses, mock_db)
 
     mock_projects_collection.update_one.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_db_assign_todo_success():
+    todo_id = MOCK_TODO_ID
+    assignee_id = MOCK_USER_ID
+    mock_todos_collection = AsyncMock()
+    mock_todos_collection.update_one.return_value = None
+    mock_db = AsyncMock()
+    mock_db.__getitem__.return_value = mock_todos_collection
+
+    result = await db_assign_todo(todo_id, assignee_id, mock_db)
+
+    assert result is None
+    
