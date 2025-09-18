@@ -197,8 +197,19 @@ async def delete_todo_status_service(
     db: AsyncDatabase,
 ) -> DeleteTodoStatusResponse:
 
+    # Check if project exists
+    project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
     # TODO: Prevent deleting the last todo status
-    # TODO: Warn that all todos under this status will also be deleted (and delete them)
+    if len(project_in_db_dict["todo_statuses"]) == 1:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete the last todo status in the project: project_id={project_id}",
+        )
 
     await db_delete_todo_status(project_id, delete_todo_status_request.status_id, db)
 
