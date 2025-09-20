@@ -51,6 +51,7 @@ async def test_get_current_user_teams_service_success():
         return_value=[
             {
                 "_id": ObjectId(MOCK_TEAM_ID),
+                "short_id": MOCK_TEAM_SHORT_ID,
                 "name": MOCK_TEAM_NAME,
                 "member_ids": [ObjectId(MOCK_USER_ID)],
                 "exec_member_ids": [ObjectId(MOCK_USER_ID)],
@@ -58,6 +59,7 @@ async def test_get_current_user_teams_service_success():
             },
             {
                 "_id": ObjectId(MOCK_TEAM_2_ID),
+                "short_id": MOCK_TEAM_2_SHORT_ID,
                 "name": MOCK_TEAM_2_NAME,
                 "member_ids": [ObjectId(MOCK_USER_2_ID)],
                 "exec_member_ids": [ObjectId(MOCK_USER_2_ID)],

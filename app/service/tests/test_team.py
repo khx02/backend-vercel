@@ -33,6 +33,7 @@ from app.test_shared.constants import (
     MOCK_PROJECT_DESCRIPTION,
     MOCK_PROJECT_ID,
     MOCK_PROJECT_NAME,
+    MOCK_TEAM_SHORT_ID,
     MOCK_USER_ID,
     MOCK_USER_2_ID,
     MOCK_TEAM_NAME,
@@ -42,10 +43,15 @@ from app.test_shared.constants import (
 
 @pytest.mark.asyncio
 @patch("app.service.team.db_create_team")
-async def test_create_team_service_success(mock_db_create_team):
+@patch("app.service.team.db_get_team_by_short_id")
+async def test_create_team_service_success(
+    mock_db_get_team_by_short_id, mock_db_create_team
+):
     mock_db = AsyncMock()
+    mock_db_get_team_by_short_id.return_value = None
     mock_db_create_team.return_value = {
-        "_id": "team-1",
+        "_id": MOCK_TEAM_ID,
+        "short_id": MOCK_TEAM_SHORT_ID,
         "name": MOCK_TEAM_NAME,
         "member_ids": [MOCK_USER_ID],
         "exec_member_ids": [MOCK_USER_ID],
@@ -57,7 +63,8 @@ async def test_create_team_service_success(mock_db_create_team):
 
     assert isinstance(result, CreateTeamResponse)
     assert isinstance(result.team, TeamModel)
-    assert result.team.id == "team-1"
+    assert result.team.id == MOCK_TEAM_ID
+    assert result.team.short_id == MOCK_TEAM_SHORT_ID
     assert result.team.name == MOCK_TEAM_NAME
     assert result.team.member_ids == [MOCK_USER_ID]
     assert result.team.exec_member_ids == [MOCK_USER_ID]

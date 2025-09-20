@@ -157,6 +157,7 @@ async def get_current_user_teams_service(
         teams=[
             TeamModel(
                 id=str(team["_id"]),
+                short_id=team["short_id"],
                 name=team["name"],
                 member_ids=team["member_ids"],
                 exec_member_ids=team["exec_member_ids"],
