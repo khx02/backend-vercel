@@ -32,6 +32,7 @@ class CreateUserRequest(BaseModel):
     password: str
     first_name: str
     last_name: str
+    send_email: bool = True
 
     @field_validator("password")
     def validate_password(cls, password: str) -> str:

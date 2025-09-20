@@ -5,7 +5,7 @@ import requests
 import random
 import string
 
-from unittest.mock import patch
+from yaml import SequenceEndEvent
 
 from app.test_shared.constants import (
     MOCK_PROJECT_DESCRIPTION,
@@ -83,6 +83,7 @@ def register_all_users_module(users: Dict[str, Dict[str, str]]) -> None:
                 "password": password,
                 "first_name": first_name,
                 "last_name": last_name,
+                "send_email": False,
             },
         )
 
@@ -219,35 +220,6 @@ def create_team_project_and_todos_module(user: Dict[str, str]) -> None:
         add_todo_item(session, project_id, todo)
 
 
-"""
-POST
-/api/projects/assign-todo/{project_id}
-Assign Todo
-
-
-Parameters
-Try it out
-Name	Description
-project_id *
-string
-(path)
-project_id
-access_token
-string | (string | null)
-(cookie)
-access_token
-Request body
-
-application/json
-Example Value
-Schema
-{
-  "todo_id": "string",
-  "assignee_id": "string"
-}
-"""
-
-
 def assign_todos_to_members_module(users: Dict[str, Dict[str, str]]) -> None:
 
     # Assign todo 1 to member1 and so on
@@ -301,10 +273,7 @@ def assign_todos_to_members_module(users: Dict[str, Dict[str, str]]) -> None:
 
 
 @pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in Github Actions.")
-@patch("app.service.user.send_verification_code_email")
-def test_end_to_end(mock_send_verification_code_email):
-
-    mock_send_verification_code_email.return_value = None
+def test_end_to_end():
 
     print("Beginning end-to-end test...")
     print(f"SESSION_STRING: {SESSION_STRING}")
