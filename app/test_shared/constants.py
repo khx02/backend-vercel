@@ -17,9 +17,11 @@ MOCK_USER_2_EMAIL = "alex@alex.com"
 
 MOCK_TEAM_NAME = "Mock Team"
 MOCK_TEAM_ID = str(ObjectId())
+MOCK_TEAM_SHORT_ID = "abcdef"
 
 MOCK_TEAM_2_NAME = "Mock Team 2"
 MOCK_TEAM_2_ID = str(ObjectId())
+MOCK_TEAM_2_SHORT_ID = "ghijkl"
 
 MOCK_INSERTED_ID = str(ObjectId())
 

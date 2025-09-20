@@ -93,6 +93,7 @@ async def test_get_current_user_teams_success(mock_get_current_user_teams_servic
         teams=[
             TeamModel(
                 id=MOCK_TEAM_ID,
+                short_id=MOCK_TEAM_SHORT_ID,
                 name=MOCK_TEAM_NAME,
                 member_ids=[MOCK_USER_ID],
                 exec_member_ids=[MOCK_USER_ID],

@@ -8,6 +8,7 @@ from app.schemas.event import Event
 
 class TeamModel(BaseModel):
     id: str
+    short_id: str  # 6 char lower alpha short id
     name: str
     member_ids: List[str]
     exec_member_ids: List[str]

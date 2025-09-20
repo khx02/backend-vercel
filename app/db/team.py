@@ -36,6 +36,13 @@ async def db_get_team_by_id(team_id: str, db: AsyncDatabase) -> Dict[str, Any]:
     return stringify_object_ids(team_dict)
 
 
+async def db_get_team_by_short_id(
+    short_id: str, db: AsyncDatabase
+) -> Dict[str, Any] | None:
+    team_dict = await db[TEAMS_COLLECTION].find_one({"short_id": short_id})
+    return stringify_object_ids(team_dict) if team_dict else None
+
+
 async def db_promote_team_member(
     team_id: str, promote_member_id: str, db: AsyncDatabase
 ) -> None:
