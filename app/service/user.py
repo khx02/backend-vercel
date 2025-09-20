@@ -78,7 +78,12 @@ async def create_user_service(
     hashed_password = hash_password(create_user_request.password)
 
     await db_create_pending_verification(
-        create_user_request.email, random_verification_code, hashed_password, db
+        create_user_request.email,
+        random_verification_code,
+        hashed_password,
+        create_user_request.first_name,
+        create_user_request.last_name,
+        db,
     )
 
     return CreateUserResponse()
@@ -102,6 +107,8 @@ async def verify_code_service(
         verification_code=pending_verification_in_db_dict["verification_code"],
         created_at=pending_verification_in_db_dict["created_at"],
         hashed_password=pending_verification_in_db_dict["hashed_password"],
+        first_name=pending_verification_in_db_dict["first_name"],
+        last_name=pending_verification_in_db_dict["last_name"],
     )
 
     if verify_code_request.verification_code != "meow" and (
@@ -117,6 +124,8 @@ async def verify_code_service(
     user_in_db_dict = await db_create_user(
         verify_code_request.email,
         pending_verification.hashed_password,
+        pending_verification.first_name,
+        pending_verification.last_name,
         db,
     )
 
@@ -126,6 +135,8 @@ async def verify_code_service(
         user=UserModel(
             id=user_in_db_dict["_id"],
             email=user_in_db_dict["email"],
+            first_name=user_in_db_dict["first_name"],
+            last_name=user_in_db_dict["last_name"],
         )
     )
 

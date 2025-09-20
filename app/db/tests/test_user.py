@@ -27,16 +27,21 @@ async def test_db_create_user_success():
         inserted_id=ObjectId(MOCK_INSERTED_ID)
     )
     mock_db.__getitem__.return_value = mock_users_collection
-    mock_create_user_request = CreateUserRequest(
-        email=MOCK_USER_EMAIL, password=MOCK_USER_PASSWORD
-    )
 
-    result = await db_create_user(MOCK_USER_EMAIL, MOCK_USER_PASSWORD_HASHED, mock_db)
+    result = await db_create_user(
+        MOCK_USER_EMAIL,
+        MOCK_USER_PASSWORD_HASHED,
+        MOCK_USER_FIRST_NAME,
+        MOCK_USER_LAST_NAME,
+        mock_db,
+    )
 
     assert isinstance(result, dict)
     assert result["_id"] == MOCK_INSERTED_ID
     assert result["email"] == MOCK_USER_EMAIL
     assert result["hashed_password"] == MOCK_USER_PASSWORD_HASHED
+    assert result["first_name"] == MOCK_USER_FIRST_NAME
+    assert result["last_name"] == MOCK_USER_LAST_NAME
 
 
 @pytest.mark.asyncio
@@ -114,7 +119,12 @@ async def test_db_create_pending_verification_success():
     mock_db.__getitem__.return_value = mock_pending_verification_collection
 
     result = await db_create_pending_verification(
-        MOCK_USER_EMAIL, MOCK_VERIFICATION_CODE, MOCK_USER_PASSWORD_HASHED, mock_db
+        MOCK_USER_EMAIL,
+        MOCK_VERIFICATION_CODE,
+        MOCK_USER_PASSWORD_HASHED,
+        MOCK_USER_FIRST_NAME,
+        MOCK_USER_LAST_NAME,
+        mock_db,
     )
 
     assert result is None
