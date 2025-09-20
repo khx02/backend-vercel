@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException
-from app.api.auth import get_current_user
+from app.api.auth import get_current_user_info
 from app.db.client import get_db
 from app.schemas.user import UserModel
 
@@ -10,7 +10,7 @@ from app.service.user import get_current_user_teams_service
 
 async def require_standard_project_access(
     project_id: str,
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user_info),
     db: AsyncDatabase = Depends(get_db),
 ) -> None:
     user_teams = (await get_current_user_teams_service(current_user.id, db)).teams
@@ -30,7 +30,7 @@ async def require_standard_project_access(
 
 async def require_executive_project_access(
     project_id: str,
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user_info),
     db: AsyncDatabase = Depends(get_db),
 ) -> None:
     user_teams = (await get_current_user_teams_service(current_user.id, db)).teams

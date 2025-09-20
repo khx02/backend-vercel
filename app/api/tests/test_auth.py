@@ -8,9 +8,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.api.auth import (
     authenticate_user,
     clear_auth_cookies,
-    get_current_user,
-    get_current_user_from_cookie,
-    get_current_user_from_token,
+    get_current_user_info,
+    get_current_user_info_from_cookie,
+    get_current_user_info_from_token,
     login_for_token_access,
     refresh_token,
     set_auth_cookies,
@@ -237,7 +237,7 @@ async def test_get_current_user_cookie_available_success(
     mock_user = UserModel(id="1", email="addi@addi.com")
     mock_get_current_user_from_cookie.return_value = mock_user
 
-    result = await get_current_user()
+    result = await get_current_user_info()
 
     assert result.id == "1"
     assert result.email == "addi@addi.com"
@@ -255,7 +255,7 @@ async def test_get_current_user_token_available_success(
     )
     mock_get_current_user_from_token.return_value = mock_user
 
-    result = await get_current_user()
+    result = await get_current_user_info()
 
     assert result.id == "1"
     assert result.email == "addi@addi.com"
@@ -275,7 +275,7 @@ async def test_get_current_user_cookie_token_not_available_failure(
     )
 
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user()
+        await get_current_user_info()
 
     assert exc_info.value.status_code == 401
     assert (
@@ -296,7 +296,7 @@ async def test_get_current_user_from_cookie_success(mock_decode, mock_get_user_s
     mock_user = UserModel(id="1", email="test@example.com")
     mock_get_user_service.return_value = mock_user
 
-    result = await get_current_user_from_cookie(access_token, mock_db)
+    result = await get_current_user_info_from_cookie(access_token, mock_db)
 
     assert result.email == "test@example.com"
     assert result.id == "1"
@@ -308,7 +308,7 @@ async def test_get_current_user_from_cookie_no_token():
     mock_db = AsyncMock()
 
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user_from_cookie(None, mock_db)
+        await get_current_user_info_from_cookie(None, mock_db)
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "Not authenticated"
@@ -326,7 +326,7 @@ async def test_get_current_user_from_token_success(mock_decode, mock_get_user_se
     mock_user = UserModel(id="1", email="addi@addi.com")
     mock_get_user_service.return_value = mock_user
 
-    result = await get_current_user_from_token(mock_token, mock_db)
+    result = await get_current_user_info_from_token(mock_token, mock_db)
 
     assert result.id == "1"
     assert result.email == "addi@addi.com"
@@ -341,7 +341,7 @@ async def test_get_current_user_from_token_failure(mock_decode):
     mock_decode.return_value = {}
 
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user_from_token(mock_token, mock_db)
+        await get_current_user_info_from_token(mock_token, mock_db)
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "Could not validate credentials"
@@ -358,7 +358,7 @@ async def test_get_current_user_from_cookie_invalid_token(mock_decode):
     mock_decode.side_effect = jwt.InvalidTokenError("Invalid token")
 
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user_from_cookie(access_token, mock_db)
+        await get_current_user_info_from_cookie(access_token, mock_db)
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "Invalid token"
@@ -377,7 +377,7 @@ async def test_get_current_user_from_cookie_no_email(
     mock_decode.return_value = {}  # No 'sub' field
 
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user_from_cookie(access_token, mock_db)
+        await get_current_user_info_from_cookie(access_token, mock_db)
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "Invalid token"
@@ -397,7 +397,7 @@ async def test_get_current_user_from_cookie_user_not_found(
     mock_get_user_service.return_value = None
 
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user_from_cookie(access_token, mock_db)
+        await get_current_user_info_from_cookie(access_token, mock_db)
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "User not found"

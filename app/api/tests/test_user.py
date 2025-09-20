@@ -28,7 +28,10 @@ from app.test_shared.constants import *
 async def test_create_user_success(mock_create_user_service):
     mock_db = AsyncMock()
     create_user_request = CreateUserRequest(
-        email=MOCK_USER_EMAIL, password=MOCK_USER_PASSWORD
+        email=MOCK_USER_EMAIL,
+        password=MOCK_USER_PASSWORD,
+        first_name=MOCK_USER_FIRST_NAME,
+        last_name=MOCK_USER_LAST_NAME,
     )
     mock_create_user_response = CreateUserResponse()
     mock_create_user_service.return_value = mock_create_user_response
