@@ -32,6 +32,14 @@ class JoinTeamResponse(BaseModel):
     pass
 
 
+class JoinTeamByShortIdRequest(BaseModel):
+    pass
+
+
+class JoinTeamByShortIdResponse(BaseModel):
+    pass
+
+
 class GetTeamRequest(BaseModel):
     pass
 

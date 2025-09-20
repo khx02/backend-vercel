@@ -14,6 +14,7 @@ from app.db.team import (
     db_get_event_by_id,
     db_get_project_by_id,
     db_get_team_by_short_id,
+    db_get_team_id_by_short_id,
     db_join_team,
     db_create_project,
     db_get_team_by_id,
@@ -81,6 +82,20 @@ async def join_team_service(
     await db_join_team(team_id, user_id, db)
 
     return JoinTeamResponse()
+
+
+async def join_team_by_short_id_service(
+    team_short_id: str, user_id: str, db: AsyncDatabase
+) -> None:
+
+    team_long_id = await db_get_team_id_by_short_id(team_short_id, db)
+    if not team_long_id:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Team does not exist: team_short_id={team_short_id}",
+        )
+
+    await join_team_service(team_long_id, user_id, db)
 
 
 async def get_team_service(
