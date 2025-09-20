@@ -40,6 +40,7 @@ from app.test_shared.constants import (
     MOCK_EVENT_ID,
     MOCK_EVENT_NAME,
     MOCK_PROJECT_ID,
+    MOCK_TEAM_SHORT_ID,
     MOCK_USER_ID,
     MOCK_USER_EMAIL,
     MOCK_USER_2_ID,
@@ -58,7 +59,8 @@ async def test_create_team_success(mock_create_team_service):
     )
     mock_create_team_service.return_value = CreateTeamResponse(
         team=TeamModel(
-            id="team-1",
+            id=MOCK_TEAM_ID,
+            short_id=MOCK_TEAM_SHORT_ID,
             name=MOCK_TEAM_NAME,
             member_ids=[MOCK_USER_ID],
             exec_member_ids=[MOCK_USER_ID],
@@ -72,7 +74,8 @@ async def test_create_team_success(mock_create_team_service):
 
     assert isinstance(result, CreateTeamResponse)
     assert isinstance(result.team, TeamModel)
-    assert result.team.id == "team-1"
+    assert result.team.id == MOCK_TEAM_ID
+    assert result.team.short_id == MOCK_TEAM_SHORT_ID
     assert result.team.name == MOCK_TEAM_NAME
     assert result.team.member_ids == [MOCK_USER_ID]
     assert result.team.exec_member_ids == [MOCK_USER_ID]

@@ -1,3 +1,5 @@
+import random
+import string
 from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 
@@ -11,6 +13,8 @@ from app.db.team import (
     db_delete_project,
     db_get_event_by_id,
     db_get_project_by_id,
+    db_get_team_by_short_id,
+    db_get_team_id_by_short_id,
     db_join_team,
     db_create_project,
     db_get_team_by_id,
@@ -40,11 +44,16 @@ async def create_team_service(
     creator_id: str, team_name: str, db: AsyncDatabase
 ) -> CreateTeamResponse:
 
+    short_id = "".join(random.choices(string.ascii_lowercase, k=6))
+    while await db_get_team_by_short_id(short_id, db) is not None:
+        short_id = "".join(random.choices(string.ascii_lowercase, k=6))
+
     team_in_db_dict = await db_create_team(creator_id, team_name, db)
 
     return CreateTeamResponse(
         team=TeamModel(
             id=team_in_db_dict["_id"],
+            short_id=team_in_db_dict["short_id"],
             name=team_in_db_dict["name"],
             member_ids=team_in_db_dict["member_ids"],
             exec_member_ids=team_in_db_dict["exec_member_ids"],
@@ -75,6 +84,20 @@ async def join_team_service(
     return JoinTeamResponse()
 
 
+async def join_team_by_short_id_service(
+    team_short_id: str, user_id: str, db: AsyncDatabase
+) -> None:
+
+    team_long_id = await db_get_team_id_by_short_id(team_short_id, db)
+    if not team_long_id:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Team does not exist: team_short_id={team_short_id}",
+        )
+
+    await join_team_service(team_long_id, user_id, db)
+
+
 async def get_team_service(
     team_id: str, current_user: UserModel, db: AsyncDatabase
 ) -> GetTeamResponse:
@@ -94,6 +117,7 @@ async def get_team_service(
     return GetTeamResponse(
         team=TeamModel(
             id=existing_team["_id"],
+            short_id=existing_team["short_id"],
             name=existing_team["name"],
             member_ids=existing_team["member_ids"],
             exec_member_ids=existing_team["exec_member_ids"],

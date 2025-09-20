@@ -129,6 +129,7 @@ async def test_get_current_user_teams_service_success(
     mock_db_get_user_teams_by_id.return_value = [
         {
             "_id": MOCK_TEAM_ID,
+            "short_id": MOCK_TEAM_SHORT_ID,
             "name": MOCK_TEAM_NAME,
             "member_ids": [MOCK_USER_ID],
             "exec_member_ids": [MOCK_USER_ID],
