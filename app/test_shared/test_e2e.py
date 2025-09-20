@@ -1,11 +1,10 @@
-from typing import Any, Dict
+from typing import Dict
 import requests
 import random
 import string
 
 from unittest.mock import patch
 
-from app.api.project import assign_todo
 from app.test_shared.constants import (
     MOCK_PROJECT_DESCRIPTION,
     MOCK_PROJECT_NAME,
@@ -13,7 +12,6 @@ from app.test_shared.constants import (
     MOCK_TODO_DESCRIPTION,
     MOCK_TODO_NAME,
 )
-from dev_scripts.original_e2e import login
 
 BASE_URL = "http://localhost:8000/api"
 SESSION_STRING = "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
