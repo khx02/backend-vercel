@@ -16,6 +16,7 @@ from app.schemas.team import (
     DeleteProjectResponse,
     GetTeamEventsResponse,
     GetTeamResponse,
+    JoinTeamByShortIdResponse,
     JoinTeamResponse,
     KickTeamMemberRequest,
     KickTeamMemberResponse,
@@ -32,6 +33,7 @@ from app.service.team import (
     delete_project_service,
     get_team_events_service,
     get_team_service,
+    join_team_by_short_id_service,
     join_team_service,
     kick_team_member_service,
     leave_team_service,
@@ -57,6 +59,17 @@ async def join_team(
     db: AsyncDatabase = Depends(get_db),
 ) -> JoinTeamResponse:
     return await join_team_service(team_id, current_user.id, db)
+
+
+@router.post("/join-team-by-short-id/{team_short_id}")
+async def join_team_by_short_id(
+    team_short_id: str,
+    current_user: UserModel = Depends(get_current_user_info),
+    db: AsyncDatabase = Depends(get_db),
+) -> JoinTeamByShortIdResponse:
+    await join_team_by_short_id_service(team_short_id, current_user.id, db)
+
+    return JoinTeamByShortIdResponse()
 
 
 @router.get("/get-team/{team_id}")
