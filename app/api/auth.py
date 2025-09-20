@@ -59,17 +59,17 @@ def clear_auth_cookies(response: Response) -> None:
 
 # ---------- shared deps ----------
 # This basically runs both the token and the cookie one, prioritising the cookie one
-async def get_current_user(
+async def get_current_user_info(
     db: AsyncDatabase = Depends(get_db),
     cookie: Annotated[Optional[str], Cookie(alias="access_token")] = None,
     access_token: Annotated[Optional[str], Depends(oauth2_scheme)] = None,
 ) -> UserModel:
     try:
-        cookie_user = await get_current_user_from_cookie(cookie, db)
+        cookie_user = await get_current_user_info_from_cookie(cookie, db)
         return cookie_user
     except Exception as cookie_e:
         try:
-            token_user = await get_current_user_from_token(access_token, db)
+            token_user = await get_current_user_info_from_token(access_token, db)
             return token_user
         except Exception as token_e:
             raise HTTPException(
@@ -79,7 +79,7 @@ async def get_current_user(
 
 
 # Cookie-based dependency for /me
-async def get_current_user_from_cookie(
+async def get_current_user_info_from_cookie(
     cookie: Annotated[Optional[str], Cookie(alias="access_token")] = None,
     db: AsyncDatabase = Depends(get_db),
 ) -> UserModel:
@@ -108,7 +108,7 @@ async def get_current_user_from_cookie(
 
 
 # Dev only function as tokens should never be returned to production users
-async def get_current_user_from_token(
+async def get_current_user_info_from_token(
     access_token: Optional[str],
     db: Annotated[AsyncDatabase, Depends(get_db)],
 ) -> UserModel:
@@ -211,7 +211,7 @@ async def refresh_token(
 
 @router.get("/me", response_model=UserRes)
 async def read_me(
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user_info),
 ) -> UserRes:
     return UserRes(email=current_user.email)
 

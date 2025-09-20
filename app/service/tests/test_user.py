@@ -40,7 +40,10 @@ async def test_create_user_service_success(
     mock_hash_password.return_value = MOCK_USER_PASSWORD_HASHED
     mock_db_create_pending_verification.return_value = None
     mock_create_user_request = CreateUserRequest(
-        email=MOCK_USER_EMAIL, password=MOCK_USER_PASSWORD
+        email=MOCK_USER_EMAIL,
+        password=MOCK_USER_PASSWORD,
+        first_name=MOCK_USER_FIRST_NAME,
+        last_name=MOCK_USER_LAST_NAME,
     )
 
     result = await create_user_service(mock_create_user_request, mock_db)
@@ -58,7 +61,10 @@ async def test_create_user_service_failure(mock_db_get_user_by_email):
         "hashed_password": MOCK_USER_PASSWORD_HASHED,
     }
     mock_create_user_request = CreateUserRequest(
-        email=MOCK_USER_EMAIL, password=MOCK_USER_PASSWORD
+        email=MOCK_USER_EMAIL,
+        password=MOCK_USER_PASSWORD,
+        first_name=MOCK_USER_FIRST_NAME,
+        last_name=MOCK_USER_LAST_NAME,
     )
 
     with pytest.raises(HTTPException) as exc_info:
