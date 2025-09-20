@@ -23,6 +23,8 @@ class PendingVerification(BaseModel):
     verification_code: str
     hashed_password: str
     created_at: datetime
+    first_name: str
+    last_name: str
 
 
 class CreateUserRequest(BaseModel):

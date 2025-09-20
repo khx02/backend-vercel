@@ -92,11 +92,15 @@ async def test_verify_code_service_success(
         "verification_code": MOCK_VERIFICATION_CODE,
         "created_at": datetime.now(),
         "hashed_password": MOCK_USER_PASSWORD_HASHED,
+        "first_name": MOCK_USER_FIRST_NAME,
+        "last_name": MOCK_USER_LAST_NAME,
     }
     mock_db_create_user.return_value = {
         "_id": MOCK_USER_ID,
         "email": MOCK_USER_EMAIL,
         "hashed_password": MOCK_USER_PASSWORD_HASHED,
+        "first_name": MOCK_USER_FIRST_NAME,
+        "last_name": MOCK_USER_LAST_NAME,
     }
     mock_db_delete_pending_verification.return_value = None
     mock_verify_code_request = VerifyCodeRequest(
