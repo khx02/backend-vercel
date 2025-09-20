@@ -1,3 +1,5 @@
+import os
+import pytest
 from typing import Dict
 import requests
 import random
@@ -12,6 +14,8 @@ from app.test_shared.constants import (
     MOCK_TODO_DESCRIPTION,
     MOCK_TODO_NAME,
 )
+
+IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 
 BASE_URL = "http://localhost:8000/api"
 SESSION_STRING = "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
@@ -296,6 +300,7 @@ def assign_todos_to_members_module(users: Dict[str, Dict[str, str]]) -> None:
     )
 
 
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in Github Actions.")
 @patch("app.service.user.send_verification_code_email")
 def test_end_to_end(mock_send_verification_code_email):
 
