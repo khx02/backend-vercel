@@ -73,7 +73,10 @@ async def create_user_service(
 
     random_verification_code = generate_random_verification_code()
 
-    send_verification_code_email(create_user_request.email, random_verification_code)
+    if create_user_request.send_email:
+        send_verification_code_email(
+            create_user_request.email, random_verification_code
+        )
 
     hashed_password = hash_password(create_user_request.password)
 

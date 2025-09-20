@@ -9,9 +9,10 @@ from app.schemas.team import CreateEventRequest, CreateProjectRequest
 
 
 async def db_create_team(
-    creator_id: str, team_name: str, db: AsyncDatabase
+    creator_id: str, short_id: str, team_name: str, db: AsyncDatabase
 ) -> Dict[str, Any]:
     team_dict = {
+        "short_id": short_id,
         "name": team_name,
         "member_ids": [ObjectId(creator_id)],
         "exec_member_ids": [ObjectId(creator_id)],

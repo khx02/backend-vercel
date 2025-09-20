@@ -25,6 +25,7 @@ from app.test_shared.constants import (
     MOCK_EVENT_ID,
     MOCK_EVENT_NAME,
     MOCK_PROJECT_ID,
+    MOCK_TEAM_SHORT_ID,
     MOCK_USER_ID,
     MOCK_USER_2_ID,
     MOCK_TEAM_NAME,
@@ -44,10 +45,13 @@ async def test_db_create_team_success():
     )
     mock_db.__getitem__.return_value = mock_teams_collection
 
-    result = await db_create_team(MOCK_USER_ID, MOCK_TEAM_NAME, mock_db)
+    result = await db_create_team(
+        MOCK_USER_ID, MOCK_TEAM_SHORT_ID, MOCK_TEAM_NAME, mock_db
+    )
 
     assert isinstance(result, dict)
     assert result["_id"] == MOCK_INSERTED_ID
+    assert result["short_id"] == MOCK_TEAM_SHORT_ID
     assert result["name"] == MOCK_TEAM_NAME
     assert result["member_ids"] == [MOCK_USER_ID]
     assert result["exec_member_ids"] == [MOCK_USER_ID]
