@@ -5,7 +5,14 @@ import string
 
 from unittest.mock import patch
 
-from app.test_shared.constants import MOCK_TEAM_NAME
+from app.api.project import assign_todo
+from app.test_shared.constants import (
+    MOCK_PROJECT_DESCRIPTION,
+    MOCK_PROJECT_NAME,
+    MOCK_TEAM_NAME,
+    MOCK_TODO_DESCRIPTION,
+    MOCK_TODO_NAME,
+)
 from dev_scripts.original_e2e import login
 
 BASE_URL = "http://localhost:8000/api"
@@ -112,32 +119,183 @@ def create_team_module(user: Dict[str, str]) -> None:
     )
 
 
-def get_team_and_invite_other_users_module(
-    exec_user: Dict[str, str], member_users: list[Dict[str, str]]
-) -> None:
+def others_join_team_module(users: Dict[str, Dict[str, str]]) -> None:
 
-    def get_team_for_session(session: requests.Session) -> Any:
-        response = session.get(f"{BASE_URL}/teams/get-current-user-teams")
-        assert response.status_code == 200, f"Get team failed: {response.text}"
-        teams = response.json().get("teams")
-        assert teams and len(teams) > 0, "No teams found"
-        return teams[0]
+    def join_team(session: requests.Session, team_short_id: str) -> None:
+        response = session.post(
+            f"{BASE_URL}/teams/join-team-by-short-id/{team_short_id}"
+        )
+        assert response.status_code == 200, f"Join team failed: {response.text}"
 
-    def invite_user_to_team(
-        session: requests.Session, team_id: str, email: str
+    # First, the exec will get the team short ID and tell others via other means
+    exec_session = login_session(users["exec"]["email"], users["exec"]["password"])
+    resp = exec_session.get(f"{BASE_URL}/users/get-current-user-teams")
+    assert resp.status_code == 200, f"Get exec teams failed: {resp.text}"
+
+    team_short_id = resp.json()["teams"][0]["short_id"]
+
+    for member in ["member1", "member2", "member3"]:
+        member_session = login_session(
+            users[member]["email"], users[member]["password"]
+        )
+        join_team(member_session, team_short_id)
+
+
+def promote_member_1_to_exec_module(users: Dict[str, Dict[str, str]]) -> None:
+
+    def promote_member(session: requests.Session, team_id: str, user_id: str) -> None:
+        response = session.post(
+            f"{BASE_URL}/teams/promote-team-member/{team_id}",
+            json={"member_id": user_id},
+        )
+        assert response.status_code == 200, f"Promote member failed: {response.text}"
+
+    # Exec member will log in and get team ID
+    exec_session = login_session(users["exec"]["email"], users["exec"]["password"])
+    resp = exec_session.get(f"{BASE_URL}/users/get-current-user-teams")
+    assert resp.status_code == 200, f"Get exec teams failed: {resp.text}"
+
+    team_id = resp.json()["teams"][0]["id"]
+
+    # Get member1 user ID
+    member1_session = login_session(
+        users["member1"]["email"], users["member1"]["password"]
+    )
+    resp = member1_session.get(f"{BASE_URL}/users/get-current-user")
+    assert resp.status_code == 200, f"Get member1 info failed: {resp.text}"
+    member1_user_id = resp.json()["user"]["id"]
+
+    # Exec member will execute promotion
+    promote_member(exec_session, team_id, member1_user_id)
+
+
+def create_team_project_and_todos_module(user: Dict[str, str]) -> None:
+
+    def add_todo_item(
+        session: requests.Session, project_id: str, todo_data: Dict[str, str]
     ) -> None:
         response = session.post(
-            f"{BASE_URL}/teams/invite-user",
-            json={"team_id": team_id, "email": email},
+            f"{BASE_URL}/projects/add-todo/{project_id}",
+            json=todo_data,
         )
-        assert response.status_code == 200, f"Invite user failed: {response.text}"
+        assert response.status_code == 200, f"Add todo failed: {response.text}"
 
-    exec_session = login_session(exec_user["email"], exec_user["password"])
-    team = get_team_for_session(exec_session)
-    team_id = team["id"]
+    # Get the user's team
+    session = login_session(user["email"], user["password"])
+    resp = session.get(f"{BASE_URL}/users/get-current-user-teams")
+    assert resp.status_code == 200, f"Get user teams failed: {resp.text}"
+    team_id = resp.json()["teams"][0]["id"]
 
-    for member in member_users:
-        invite_user_to_team(exec_session, team_id, member["email"])
+    # Create a project for the team
+    response = session.post(
+        f"{BASE_URL}/teams/create-project/{team_id}",
+        json={
+            "name": f"{MOCK_PROJECT_NAME} {SESSION_STRING}",
+            "description": f"{MOCK_PROJECT_DESCRIPTION} {SESSION_STRING}",
+        },
+    )
+    assert response.status_code == 200, f"Create project failed: {response.text}"
+    project_id = response.json()["project"]["id"]
+
+    # Create three todo items
+    todos = [
+        {
+            "name": f"1 {MOCK_TODO_NAME}",
+            "description": f"1 {MOCK_TODO_DESCRIPTION} {SESSION_STRING}",
+        },
+        {
+            "name": f"2 {MOCK_TODO_NAME}",
+            "description": f"2 {MOCK_TODO_DESCRIPTION} {SESSION_STRING}",
+        },
+        {
+            "name": f"3 {MOCK_TODO_NAME}",
+            "description": f"3 {MOCK_TODO_DESCRIPTION} {SESSION_STRING}",
+        },
+    ]
+
+    for todo in todos:
+        add_todo_item(session, project_id, todo)
+
+
+"""
+POST
+/api/projects/assign-todo/{project_id}
+Assign Todo
+
+
+Parameters
+Try it out
+Name	Description
+project_id *
+string
+(path)
+project_id
+access_token
+string | (string | null)
+(cookie)
+access_token
+Request body
+
+application/json
+Example Value
+Schema
+{
+  "todo_id": "string",
+  "assignee_id": "string"
+}
+"""
+
+
+def assign_todos_to_members_module(users: Dict[str, Dict[str, str]]) -> None:
+
+    # Assign todo 1 to member1 and so on
+    def assign_todo_to_member(
+        session: requests.Session, project_id: str, todo_id: str, assignee_id: str
+    ) -> None:
+        response = session.post(
+            f"{BASE_URL}/projects/assign-todo/{project_id}",
+            json={"todo_id": todo_id, "assignee_id": assignee_id},
+        )
+        assert response.status_code == 200, f"Assign todo failed: {response.text}"
+
+    # Get the exec user's team
+    exec_session = login_session(users["exec"]["email"], users["exec"]["password"])
+    resp = exec_session.get(f"{BASE_URL}/users/get-current-user-teams")
+    assert resp.status_code == 200, f"Get exec teams failed: {resp.text}"
+
+    team_id = resp.json()["teams"][0]["id"]
+
+    # Get the team's project
+    resp = exec_session.get(f"{BASE_URL}/teams/get-team/{team_id}")
+    assert resp.status_code == 200, f"Get team failed: {resp.text}"
+
+    project_id = resp.json()["team"]["project_ids"][0]
+
+    # Get the project's todo items
+    resp = exec_session.get(f"{BASE_URL}/projects/get-todo-items/{project_id}")
+    assert resp.status_code == 200, f"Get project todos failed: {resp.text}"
+    todos = resp.json()["todos"]
+
+    # Get member user IDs
+    member_user_ids = {}
+    for member in ["member1", "member2", "member3"]:
+        member_session = login_session(
+            users[member]["email"], users[member]["password"]
+        )
+        resp = member_session.get(f"{BASE_URL}/users/get-current-user")
+        assert resp.status_code == 200, f"Get {member} info failed: {resp.text}"
+        member_user_ids[member] = resp.json()["user"]["id"]
+
+    # Assign todos to members
+    assign_todo_to_member(
+        exec_session, project_id, todos[0]["id"], member_user_ids["member1"]
+    )
+    assign_todo_to_member(
+        exec_session, project_id, todos[1]["id"], member_user_ids["member2"]
+    )
+    assign_todo_to_member(
+        exec_session, project_id, todos[2]["id"], member_user_ids["member3"]
+    )
 
 
 @patch("app.service.user.send_verification_code_email")
@@ -160,11 +318,16 @@ def test_end_to_end(mock_send_verification_code_email):
     create_team_module(users["exec"])
     print("Create team module completed successfully")
 
-    
+    others_join_team_module(users)
+    print("Other users join team module completed successfully")
 
-    assert 1 == 2
+    promote_member_1_to_exec_module(users)
+    print("Promote member 1 to exec module completed successfully")
 
-    # get_team_and_invite_other_users_module(
-    #     users["exec"], [users["member1"], users["member2"], users["member3"]]
-    # )
-    # print("Get team and invite other users module completed successfully")
+    create_team_project_and_todos_module(users["exec"])
+    print("Create team project and todos module completed successfully")
+
+    assign_todos_to_members_module(users)
+    print("Assign todos to members module completed successfully")
+
+    print("End-to-end test completed successfully")

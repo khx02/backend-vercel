@@ -48,7 +48,7 @@ async def create_team_service(
     while await db_get_team_by_short_id(short_id, db) is not None:
         short_id = "".join(random.choices(string.ascii_lowercase, k=6))
 
-    team_in_db_dict = await db_create_team(creator_id, team_name, db)
+    team_in_db_dict = await db_create_team(creator_id, short_id, team_name, db)
 
     return CreateTeamResponse(
         team=TeamModel(
