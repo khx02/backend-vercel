@@ -1,3 +1,4 @@
+from calendar import firstweekday
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, field_validator
 
@@ -13,6 +14,8 @@ def is_valid_password(password: str) -> str:
 class UserModel(BaseModel):
     id: str
     email: EmailStr
+    first_name: str = ""
+    last_name: str = ""
 
 
 class PendingVerification(BaseModel):
@@ -20,11 +23,15 @@ class PendingVerification(BaseModel):
     verification_code: str
     hashed_password: str
     created_at: datetime
+    first_name: str
+    last_name: str
 
 
 class CreateUserRequest(BaseModel):
     email: EmailStr
     password: str
+    first_name: str
+    last_name: str
 
     @field_validator("password")
     def validate_password(cls, password: str) -> str:
@@ -41,6 +48,14 @@ class VerifyCodeRequest(BaseModel):
 
 
 class VerifyCodeResponse(BaseModel):
+    user: UserModel
+
+
+class GetCurrentUserRequest(BaseModel):
+    pass
+
+
+class GetCurrentUserResponse(BaseModel):
     user: UserModel
 
 

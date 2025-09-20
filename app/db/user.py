@@ -13,9 +13,14 @@ from app.core.constants import (
 
 
 async def db_create_user(
-    email: str, hashed_password: str, db: AsyncDatabase
+    email: str, hashed_password: str, first_name: str, last_name: str, db: AsyncDatabase
 ) -> Dict[str, Any]:
-    user_dict = {"email": email, "hashed_password": hashed_password}
+    user_dict = {
+        "email": email,
+        "hashed_password": hashed_password,
+        "first_name": first_name,
+        "last_name": last_name,
+    }
 
     result = await db[USERS_COLLECTION].insert_one(user_dict)
     user_dict["_id"] = result.inserted_id
@@ -45,13 +50,20 @@ async def db_get_user_by_email(email: str, db: AsyncDatabase) -> Dict[str, Any]:
 
 
 async def db_create_pending_verification(
-    email: str, verification_code: str, hashed_password: str, db: AsyncDatabase
+    email: str,
+    verification_code: str,
+    hashed_password: str,
+    first_name: str,
+    last_name: str,
+    db: AsyncDatabase,
 ) -> None:
     await db[VERIFICATION_CODES_COLLECTION].insert_one(
         {
             "email": email,
             "verification_code": verification_code,
             "hashed_password": hashed_password,
+            "first_name": first_name,
+            "last_name": last_name,
             "created_at": datetime.now(),
         }
     )

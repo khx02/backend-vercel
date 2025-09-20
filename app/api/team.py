@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from pymongo.asynchronous.database import AsyncDatabase
 
-from app.api.auth import get_current_user
+from app.api.auth import get_current_user_info
 from app.db.client import get_db
 from app.schemas.team import (
     CreateEventRequest,
@@ -44,7 +44,7 @@ router = APIRouter()
 @router.post("/create-team")
 async def create_team(
     create_team_request: CreateTeamRequest,
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user_info),
     db: AsyncDatabase = Depends(get_db),
 ) -> CreateTeamResponse:
     return await create_team_service(current_user.id, create_team_request.name, db)
@@ -53,7 +53,7 @@ async def create_team(
 @router.post("/join-team/{team_id}")
 async def join_team(
     team_id: str,
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user_info),
     db: AsyncDatabase = Depends(get_db),
 ) -> JoinTeamResponse:
     return await join_team_service(team_id, current_user.id, db)
@@ -62,7 +62,7 @@ async def join_team(
 @router.get("/get-team/{team_id}")
 async def get_team(
     team_id: str,
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user_info),
     db: AsyncDatabase = Depends(get_db),
 ) -> GetTeamResponse:
     return await get_team_service(team_id, current_user, db)
@@ -72,7 +72,7 @@ async def get_team(
 async def promote_team_member(
     team_id: str,
     promote_team_member_request: PromoteTeamMemberRequest,
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user_info),
     db: AsyncDatabase = Depends(get_db),
 ) -> PromoteTeamMemberResponse:
     return await promote_team_member_service(
@@ -83,7 +83,7 @@ async def promote_team_member(
 @router.post("/leave-team/{team_id}")
 async def leave_team(
     team_id: str,
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user_info),
     db: AsyncDatabase = Depends(get_db),
 ) -> LeaveTeamResponse:
     return await leave_team_service(team_id, current_user.id, db)
@@ -93,7 +93,7 @@ async def leave_team(
 async def kick_team_member(
     team_id: str,
     kick_team_member: KickTeamMemberRequest,
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user_info),
     db: AsyncDatabase = Depends(get_db),
 ) -> KickTeamMemberResponse:
     return await kick_team_member_service(
@@ -114,7 +114,7 @@ async def create_project(
 async def delete_project(
     team_id: str,
     delete_project_request: DeleteProjectRequest,
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user_info),
     db: AsyncDatabase = Depends(get_db),
 ) -> DeleteProjectResponse:
 
@@ -140,7 +140,7 @@ async def create_event(
 async def delete_event(
     team_id: str,
     delete_event_request: DeleteEventRequest,
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user_info),
     db: AsyncDatabase = Depends(get_db),
 ) -> DeleteEventResponse:
     await delete_event_service(
@@ -152,7 +152,7 @@ async def delete_event(
 @router.post("/get-team-events/{team_id}")
 async def get_team_events(
     team_id: str,
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user_info),
     db: AsyncDatabase = Depends(get_db),
 ) -> GetTeamEventsResponse:
 

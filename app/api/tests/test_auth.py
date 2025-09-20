@@ -8,9 +8,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.api.auth import (
     authenticate_user,
     clear_auth_cookies,
-    get_current_user,
-    get_current_user_from_cookie,
-    get_current_user_from_token,
+    get_current_user_info,
+    get_current_user_info_from_cookie,
+    get_current_user_info_from_token,
     login_for_token_access,
     refresh_token,
     set_auth_cookies,
@@ -230,52 +230,52 @@ def test_clear_auth_cookies():
 
 
 @pytest.mark.asyncio
-@patch("app.api.auth.get_current_user_from_cookie")
+@patch("app.api.auth.get_current_user_info_from_cookie")
 async def test_get_current_user_cookie_available_success(
-    mock_get_current_user_from_cookie,
+    mock_get_current_user_info_from_cookie,
 ):
     mock_user = UserModel(id="1", email="addi@addi.com")
-    mock_get_current_user_from_cookie.return_value = mock_user
+    mock_get_current_user_info_from_cookie.return_value = mock_user
 
-    result = await get_current_user()
+    result = await get_current_user_info()
 
     assert result.id == "1"
     assert result.email == "addi@addi.com"
 
 
 @pytest.mark.asyncio
-@patch("app.api.auth.get_current_user_from_token")
-@patch("app.api.auth.get_current_user_from_cookie")
+@patch("app.api.auth.get_current_user_info_from_token")
+@patch("app.api.auth.get_current_user_info_from_cookie")
 async def test_get_current_user_token_available_success(
-    mock_get_current_user_from_cookie, mock_get_current_user_from_token
+    mock_get_current_user_info_from_cookie, mock_get_current_user_info_from_token
 ):
     mock_user = UserModel(id="1", email="addi@addi.com")
-    mock_get_current_user_from_cookie.side_effect = HTTPException(
+    mock_get_current_user_info_from_cookie.side_effect = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
     )
-    mock_get_current_user_from_token.return_value = mock_user
+    mock_get_current_user_info_from_token.return_value = mock_user
 
-    result = await get_current_user()
+    result = await get_current_user_info()
 
     assert result.id == "1"
     assert result.email == "addi@addi.com"
 
 
 @pytest.mark.asyncio
-@patch("app.api.auth.get_current_user_from_token")
-@patch("app.api.auth.get_current_user_from_cookie")
+@patch("app.api.auth.get_current_user_info_from_token")
+@patch("app.api.auth.get_current_user_info_from_cookie")
 async def test_get_current_user_cookie_token_not_available_failure(
-    mock_get_current_user_from_cookie, mock_get_current_user_from_token
+    mock_get_current_user_info_from_cookie, mock_get_current_user_info_from_token
 ):
-    mock_get_current_user_from_cookie.side_effect = HTTPException(
+    mock_get_current_user_info_from_cookie.side_effect = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
     )
-    mock_get_current_user_from_token.side_effect = HTTPException(
+    mock_get_current_user_info_from_token.side_effect = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
     )
 
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user()
+        await get_current_user_info()
 
     assert exc_info.value.status_code == 401
     assert (
@@ -287,7 +287,7 @@ async def test_get_current_user_cookie_token_not_available_failure(
 @pytest.mark.asyncio
 @patch("app.api.auth.get_user_service")
 @patch("app.api.auth.jwt.decode")
-async def test_get_current_user_from_cookie_success(mock_decode, mock_get_user_service):
+async def test_get_current_user_info_from_cookie_success(mock_decode, mock_get_user_service):
     """Test successful user retrieval from cookie."""
     mock_db = AsyncMock()
     access_token = "valid-access-token"
@@ -296,19 +296,19 @@ async def test_get_current_user_from_cookie_success(mock_decode, mock_get_user_s
     mock_user = UserModel(id="1", email="test@example.com")
     mock_get_user_service.return_value = mock_user
 
-    result = await get_current_user_from_cookie(access_token, mock_db)
+    result = await get_current_user_info_from_cookie(access_token, mock_db)
 
     assert result.email == "test@example.com"
     assert result.id == "1"
 
 
 @pytest.mark.asyncio
-async def test_get_current_user_from_cookie_no_token():
+async def test_get_current_user_info_from_cookie_no_token():
     """Test user retrieval with no access token."""
     mock_db = AsyncMock()
 
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user_from_cookie(None, mock_db)
+        await get_current_user_info_from_cookie(None, mock_db)
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "Not authenticated"
@@ -317,7 +317,7 @@ async def test_get_current_user_from_cookie_no_token():
 @pytest.mark.asyncio
 @patch("app.api.auth.get_user_service")
 @patch("app.api.auth.jwt.decode")
-async def test_get_current_user_from_token_success(mock_decode, mock_get_user_service):
+async def test_get_current_user_info_from_token_success(mock_decode, mock_get_user_service):
     mock_db = AsyncMock()
 
     mock_token = "fake-jwt-token"
@@ -326,7 +326,7 @@ async def test_get_current_user_from_token_success(mock_decode, mock_get_user_se
     mock_user = UserModel(id="1", email="addi@addi.com")
     mock_get_user_service.return_value = mock_user
 
-    result = await get_current_user_from_token(mock_token, mock_db)
+    result = await get_current_user_info_from_token(mock_token, mock_db)
 
     assert result.id == "1"
     assert result.email == "addi@addi.com"
@@ -334,14 +334,14 @@ async def test_get_current_user_from_token_success(mock_decode, mock_get_user_se
 
 @pytest.mark.asyncio
 @patch("app.api.auth.jwt.decode")
-async def test_get_current_user_from_token_failure(mock_decode):
+async def test_get_current_user_info_from_token_failure(mock_decode):
     mock_db = AsyncMock()
 
     mock_token = "fake-jwt-token"
     mock_decode.return_value = {}
 
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user_from_token(mock_token, mock_db)
+        await get_current_user_info_from_token(mock_token, mock_db)
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "Could not validate credentials"
@@ -350,7 +350,7 @@ async def test_get_current_user_from_token_failure(mock_decode):
 
 @pytest.mark.asyncio
 @patch("app.api.auth.jwt.decode")
-async def test_get_current_user_from_cookie_invalid_token(mock_decode):
+async def test_get_current_user_info_from_cookie_invalid_token(mock_decode):
     """Test user retrieval with invalid token."""
     mock_db = AsyncMock()
     access_token = "invalid-token"
@@ -358,7 +358,7 @@ async def test_get_current_user_from_cookie_invalid_token(mock_decode):
     mock_decode.side_effect = jwt.InvalidTokenError("Invalid token")
 
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user_from_cookie(access_token, mock_db)
+        await get_current_user_info_from_cookie(access_token, mock_db)
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "Invalid token"
@@ -367,7 +367,7 @@ async def test_get_current_user_from_cookie_invalid_token(mock_decode):
 @pytest.mark.asyncio
 @patch("app.api.auth.get_user_service")
 @patch("app.api.auth.jwt.decode")
-async def test_get_current_user_from_cookie_no_email(
+async def test_get_current_user_info_from_cookie_no_email(
     mock_decode, mock_get_user_service
 ):
     """Test user retrieval when token has no email."""
@@ -377,7 +377,7 @@ async def test_get_current_user_from_cookie_no_email(
     mock_decode.return_value = {}  # No 'sub' field
 
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user_from_cookie(access_token, mock_db)
+        await get_current_user_info_from_cookie(access_token, mock_db)
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "Invalid token"
@@ -386,7 +386,7 @@ async def test_get_current_user_from_cookie_no_email(
 @pytest.mark.asyncio
 @patch("app.api.auth.get_user_service")
 @patch("app.api.auth.jwt.decode")
-async def test_get_current_user_from_cookie_user_not_found(
+async def test_get_current_user_info_from_cookie_user_not_found(
     mock_decode, mock_get_user_service
 ):
     """Test user retrieval when user doesn't exist in database."""
@@ -397,7 +397,7 @@ async def test_get_current_user_from_cookie_user_not_found(
     mock_get_user_service.return_value = None
 
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user_from_cookie(access_token, mock_db)
+        await get_current_user_info_from_cookie(access_token, mock_db)
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "User not found"

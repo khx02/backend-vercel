@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends
 from pymongo.asynchronous.database import AsyncDatabase
 
-from app.api.auth import get_current_user
+from app.api.auth import get_current_user_info
 from app.db.client import get_db
 from app.schemas.user import (
     ChangePasswordRequest,
     ChangePasswordResponse,
     CreateUserRequest,
     CreateUserResponse,
+    GetCurrentUserResponse,
     GetCurrentUserTeamsResponse,
     UserModel,
     VerifyCodeRequest,
@@ -37,9 +38,16 @@ async def verify_code(
     return await verify_code_service(verify_code_request, db)
 
 
+@router.get("/get-current-user")
+async def get_current_user(
+    current_user: UserModel = Depends(get_current_user_info),
+) -> GetCurrentUserResponse:
+    return GetCurrentUserResponse(user=current_user)
+
+
 @router.get("/get-current-user-teams")
 async def get_current_user_teams(
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user_info),
     db: AsyncDatabase = Depends(get_db),
 ) -> GetCurrentUserTeamsResponse:
     return await get_current_user_teams_service(current_user.id, db)
@@ -48,7 +56,7 @@ async def get_current_user_teams(
 @router.post("/change-password")
 async def change_password(
     change_password_request: ChangePasswordRequest,
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user_info),
     db: AsyncDatabase = Depends(get_db),
 ) -> ChangePasswordResponse:
     return await change_password_service(current_user.id, change_password_request, db)
