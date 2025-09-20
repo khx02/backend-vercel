@@ -5,6 +5,7 @@ import pytest
 from app.api.user import (
     change_password,
     create_user,
+    get_current_user,
     get_current_user_teams,
     verify_code,
 )
@@ -14,6 +15,7 @@ from app.schemas.user import (
     ChangePasswordResponse,
     CreateUserRequest,
     CreateUserResponse,
+    GetCurrentUserResponse,
     GetCurrentUserTeamsResponse,
     UserModel,
     VerifyCodeRequest,
@@ -59,6 +61,24 @@ async def test_verify_code_success(mock_verify_code_service):
     result = await verify_code(verify_code_request, mock_db)
 
     assert isinstance(result, VerifyCodeResponse)
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_info_success():
+    mock_current_user = UserModel(
+        id=MOCK_USER_ID,
+        email=MOCK_USER_EMAIL,
+        first_name=MOCK_USER_FIRST_NAME,
+        last_name=MOCK_USER_LAST_NAME,
+    )
+
+    result = await get_current_user(mock_current_user)
+
+    assert isinstance(result, GetCurrentUserResponse)
+    assert result.user.id == MOCK_USER_ID
+    assert result.user.email == MOCK_USER_EMAIL
+    assert result.user.first_name == MOCK_USER_FIRST_NAME
+    assert result.user.last_name == MOCK_USER_LAST_NAME
 
 
 @pytest.mark.asyncio
