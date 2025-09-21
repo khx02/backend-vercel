@@ -2,12 +2,18 @@ from pydantic import BaseModel
 
 from typing import List
 
-from app.schemas.todo import Todo
-
 
 class TodoStatus(BaseModel):
     id: str
     name: str
+
+
+class Todo(BaseModel):
+    id: str
+    name: str
+    description: str
+    status_id: str
+    assignee_id: str | None = None
 
 
 class Project(BaseModel):

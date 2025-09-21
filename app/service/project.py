@@ -19,6 +19,7 @@ from app.schemas.project import (
     ReorderTodoStatusesResponse,
     UpdateTodoRequest,
     UpdateTodoResponse,
+    Todo,
 )
 from app.db.project import (
     db_add_todo,
@@ -33,9 +34,6 @@ from app.db.project import (
     db_update_todo,
 )
 from app.db.project import db_get_project
-
-
-from app.schemas.todo import Todo
 
 
 async def get_project_service(project_id: str, db: AsyncDatabase) -> GetProjectResponse:
