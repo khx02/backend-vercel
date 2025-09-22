@@ -144,6 +144,7 @@ async def test_get_todo_items_service_success(
             "description": MOCK_TODO_DESCRIPTION,
             "status_id": MOCK_STATUS_ID,
             "assignee_id": MOCK_USER_ID,
+            "approved": True,
         }
     ]
 
