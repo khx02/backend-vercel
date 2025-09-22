@@ -249,60 +249,6 @@ async def test_get_proposed_todos_service_success(
     assert result is not None
 
 
-"""
-async def increase_budget_service(
-    project_id: str, amount: float, db: AsyncDatabase
-) -> None:
-
-    # Check if project exists
-    project_in_db_dict = await db_get_project(project_id, db)
-    if not project_in_db_dict:
-        raise HTTPException(
-            status_code=404, detail=f"Project does not exist: project_id={project_id}"
-        )
-
-    if amount <= 0:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Amount must be positive: amount={amount}",
-        )
-
-    new_budget = project_in_db_dict["budget_available"] + amount
-
-    await db_update_budget_available(project_id, new_budget, db)
-
-
-async def spend_budget_service(
-    project_id: str, amount: float, db: AsyncDatabase
-) -> None:
-
-    # Check if project exists
-    project_in_db_dict = await db_get_project(project_id, db)
-    if not project_in_db_dict:
-        raise HTTPException(
-            status_code=404, detail=f"Project does not exist: project_id={project_id}"
-        )
-
-    if amount <= 0:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Amount must be positive: amount={amount}",
-        )
-
-    if amount > project_in_db_dict["budget_available"]:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Insufficient budget available: budget_available={project_in_db_dict['budget_available']}, amount={amount}",
-        )
-
-    new_budget_available = project_in_db_dict["budget_available"] - amount
-    new_budget_spent = project_in_db_dict["budget_spent"] + amount
-
-    await db_update_budget_available(project_id, new_budget_available, db)
-    await db_update_budget_spent(project_id, new_budget_spent, db)
-"""
-
-
 @pytest.mark.asyncio
 @patch("app.service.project.db_update_budget_available")
 @patch("app.service.project.db_get_project")

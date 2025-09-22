@@ -287,7 +287,9 @@ async def test_get_current_user_cookie_token_not_available_failure(
 @pytest.mark.asyncio
 @patch("app.api.auth.get_user_service")
 @patch("app.api.auth.jwt.decode")
-async def test_get_current_user_info_from_cookie_success(mock_decode, mock_get_user_service):
+async def test_get_current_user_info_from_cookie_success(
+    mock_decode, mock_get_user_service
+):
     """Test successful user retrieval from cookie."""
     mock_db = AsyncMock()
     access_token = "valid-access-token"
@@ -317,7 +319,9 @@ async def test_get_current_user_info_from_cookie_no_token():
 @pytest.mark.asyncio
 @patch("app.api.auth.get_user_service")
 @patch("app.api.auth.jwt.decode")
-async def test_get_current_user_info_from_token_success(mock_decode, mock_get_user_service):
+async def test_get_current_user_info_from_token_success(
+    mock_decode, mock_get_user_service
+):
     mock_db = AsyncMock()
 
     mock_token = "fake-jwt-token"
