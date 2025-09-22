@@ -1,3 +1,5 @@
+from re import A
+from typing import List
 from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 
@@ -304,3 +306,26 @@ async def assign_todo_service(
 async def approve_todo_service(todo_id: str, db: AsyncDatabase) -> None:
 
     await db_approve_todo(todo_id, db)
+
+
+async def get_proposed_todos_service(project_id: str, db: AsyncDatabase) -> List[Todo]:
+
+    # Check if project exists
+    project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
+    return [
+        Todo(
+            id=str(todo["_id"]),
+            name=todo["name"],
+            description=todo["description"],
+            status_id=str(todo["status_id"]),
+            assignee_id=str(todo["assignee_id"]) if todo["assignee_id"] else None,
+            approved=todo["approved"],
+        )
+        for todo in project_in_db_dict["proposed_todos"]
+        if todo["approved"] is False
+    ]

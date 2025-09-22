@@ -137,4 +137,4 @@ class GetProposedTodosRequest(BaseModel):
 
 
 class GetProposedTodosResponse(BaseModel):
-    pass
+    proposed_todos: List[Todo]

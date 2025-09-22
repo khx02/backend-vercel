@@ -21,6 +21,7 @@ from app.schemas.project import (
     DeleteTodoStatusRequest,
     DeleteTodoStatusResponse,
     GetProjectResponse,
+    GetProposedTodosResponse,
     GetTodoItemsResponse,
     ReorderTodoItemsRequest,
     ReorderTodoItemsResponse,
@@ -38,6 +39,7 @@ from app.service.project import (
     delete_todo_service,
     delete_todo_status_service,
     get_project_service,
+    get_proposed_todos_service,
     get_todo_items_service,
     reorder_todo_items_service,
     reorder_todo_statuses_service,
@@ -174,3 +176,15 @@ async def approve_todo(
     await approve_todo_service(todo_id, db)
 
     return ApproveTodoResponse()
+
+
+@router.get("/get-proposed-todos/{project_id}")
+async def get_proposed_todos(
+    project_id: str,
+    _: None = Depends(require_standard_project_access),
+    db: AsyncDatabase = Depends(get_db),
+) -> GetProposedTodosResponse:
+
+    return GetProposedTodosResponse(
+        proposed_todos=await get_proposed_todos_service(project_id, db)
+    )
