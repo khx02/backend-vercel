@@ -162,6 +162,7 @@ async def get_todo_items_service(
                 description=todo["description"],
                 status_id=todo["status_id"],
                 assignee_id=todo["assignee_id"],
+                approved=todo["approved"],
             )
             for todo in todo_items_in_db_list
         ]
@@ -316,15 +317,10 @@ async def get_proposed_todos_service(project_id: str, db: AsyncDatabase) -> List
             status_code=404, detail=f"Project does not exist: project_id={project_id}"
         )
 
-    return [
-        Todo(
-            id=str(todo["_id"]),
-            name=todo["name"],
-            description=todo["description"],
-            status_id=str(todo["status_id"]),
-            assignee_id=str(todo["assignee_id"]) if todo["assignee_id"] else None,
-            approved=todo["approved"],
-        )
-        for todo in project_in_db_dict["proposed_todos"]
-        if todo["approved"] is False
+    proposed_todos = [
+        todo
+        for todo in (await get_todo_items_service(project_id, db)).todos
+        if todo.approved is False
     ]
+
+    return proposed_todos

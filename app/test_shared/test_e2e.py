@@ -272,6 +272,85 @@ def assign_todos_to_members_module(users: Dict[str, Dict[str, str]]) -> None:
     )
 
 
+def non_exec_members_create_todos_and_approval(
+    users: Dict[str, Dict[str, str]],
+) -> None:
+
+    def add_todo_item(
+        session: requests.Session, project_id: str, todo_data: Dict[str, str]
+    ) -> None:
+        response = session.post(
+            f"{BASE_URL}/projects/add-todo/{project_id}",
+            json=todo_data,
+        )
+        assert response.status_code == 200, f"Add todo failed: {response.text}"
+
+    for member in ["member1", "member2", "member3"]:
+        member_session = login_session(
+            users[member]["email"], users[member]["password"]
+        )
+
+        # Get the user's team
+        resp = member_session.get(f"{BASE_URL}/users/get-current-user-teams")
+        assert resp.status_code == 200, f"Get user teams failed: {resp.text}"
+        team_id = resp.json()["teams"][0]["id"]
+
+        # Get the team's project
+        resp = member_session.get(f"{BASE_URL}/teams/get-team/{team_id}")
+        assert resp.status_code == 200, f"Get team failed: {resp.text}"
+
+        project_id = resp.json()["team"]["project_ids"][0]
+
+        # Create a todo item that will need approval by exec
+        todo_data = {
+            "name": f"{member} additional {MOCK_TODO_NAME}",
+            "description": f"{member} additional {MOCK_TODO_DESCRIPTION} {SESSION_STRING}",
+        }
+        add_todo_item(member_session, project_id, todo_data)
+
+    # Log into exec and check how many pending todos there are, should be 3
+    exec_session = login_session(users["exec"]["email"], users["exec"]["password"])
+
+    # Get team, get project id
+    resp = exec_session.get(f"{BASE_URL}/users/get-current-user-teams")
+    assert resp.status_code == 200, f"Get exec teams failed: {resp.text}"
+    team_id = resp.json()["teams"][0]["id"]
+
+    resp = exec_session.get(f"{BASE_URL}/teams/get-team/{team_id}")
+    assert resp.status_code == 200, f"Get team failed: {resp.text}"
+
+    project_id = resp.json()["team"]["project_ids"][0]
+
+    resp = exec_session.get(f"{BASE_URL}/projects/get-proposed-todos/{project_id}")
+    assert resp.status_code == 200, f"Get proposed todos failed: {resp.text}"
+    assert (
+        len(resp.json()["proposed_todos"]) == 2
+    ), f"Expected 2 proposed todos, got {len(resp.json()['proposed_todos'])}"
+
+    # Approve all proposed todos
+    for todo in resp.json()["proposed_todos"]:
+        resp_approve = exec_session.post(
+            f"{BASE_URL}/projects/approve-todo/{project_id}/{todo['id']}",
+        )
+        assert (
+            resp_approve.status_code == 200
+        ), f"Approve todo failed: {resp_approve.text}"
+
+    # Check again, should be 0 pending todos
+    resp = exec_session.get(f"{BASE_URL}/projects/get-proposed-todos/{project_id}")
+    assert resp.status_code == 200, f"Get proposed todos failed: {resp.text}"
+    assert (
+        len(resp.json()["proposed_todos"]) == 0
+    ), f"Expected 0 proposed todos, got {len(resp.json()['proposed_todos'])}"
+
+    # Get all todo ids for project, should be 6 now
+    resp = exec_session.get(f"{BASE_URL}/projects/get-project/{project_id}")
+    assert resp.status_code == 200, f"Get project failed: {resp.text}"
+    assert (
+        len(resp.json()["project"]["todo_ids"]) == 6
+    ), f"Expected 6 todos in project, got {len(resp.json()['project']['todo_ids'])}"
+
+
 @pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in Github Actions.")
 def test_end_to_end():
 
@@ -301,5 +380,10 @@ def test_end_to_end():
 
     assign_todos_to_members_module(users)
     print("Assign todos to members module completed successfully")
+
+    non_exec_members_create_todos_and_approval(users)
+    print(
+        "Non-exec members create todos and exec approves module completed successfully"
+    )
 
     print("End-to-end test completed successfully")
