@@ -4,6 +4,7 @@ import random
 from dotenv import load_dotenv
 from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
+from typing import List
 
 from app.core.constants import VERIFICATION_CODE_EXPIRE_MINUTES
 from app.core.security import hash_password, verify_password
@@ -214,3 +215,22 @@ async def get_hashed_password_service(email: str, db: AsyncDatabase) -> str | No
     if user_in_db:
         return user_in_db["hashed_password"]
     return None
+
+
+async def get_users_by_ids_service(user_ids: List[str], db: AsyncDatabase) -> List[UserModel]:
+    users: List[UserModel] = []
+    for uid in user_ids:
+        try:
+            user_dict = await db_get_user_by_id(uid, db)
+            if user_dict:
+                users.append(
+                    UserModel(
+                        id=str(user_dict["_id"]),
+                        email=user_dict["email"],
+                        first_name=user_dict.get("first_name", ""),
+                        last_name=user_dict.get("last_name", ""),
+                    )
+                )
+        except Exception:
+            continue
+    return users

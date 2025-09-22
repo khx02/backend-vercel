@@ -20,6 +20,9 @@ from app.service.user import (
     get_current_user_teams_service,
     verify_code_service,
 )
+from app.service.user import get_users_by_ids_service
+from typing import List
+from fastapi import Body
 
 router = APIRouter()
 
@@ -51,6 +54,15 @@ async def get_current_user_teams(
     db: AsyncDatabase = Depends(get_db),
 ) -> GetCurrentUserTeamsResponse:
     return await get_current_user_teams_service(current_user.id, db)
+
+
+@router.post("/get-users-by-ids")
+async def get_users_by_ids(
+    user_ids: List[str] = Body(..., embed=True),
+    _: UserModel = Depends(get_current_user_info),
+    db: AsyncDatabase = Depends(get_db),
+) -> list[UserModel]:
+    return await get_users_by_ids_service(user_ids, db)
 
 
 @router.post("/change-password")
