@@ -1,3 +1,5 @@
+from re import A
+from typing import List
 from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 
@@ -19,10 +21,12 @@ from app.schemas.project import (
     ReorderTodoStatusesResponse,
     UpdateTodoRequest,
     UpdateTodoResponse,
+    Todo,
 )
 from app.db.project import (
     db_add_todo,
     db_add_todo_status,
+    db_approve_todo,
     db_assign_todo,
     db_delete_todo,
     db_delete_todo_status,
@@ -33,9 +37,6 @@ from app.db.project import (
     db_update_todo,
 )
 from app.db.project import db_get_project
-
-
-from app.schemas.todo import Todo
 
 
 async def get_project_service(project_id: str, db: AsyncDatabase) -> GetProjectResponse:
@@ -57,8 +58,10 @@ async def get_project_service(project_id: str, db: AsyncDatabase) -> GetProjectR
     )
 
 
+# TODO: Check if user is exec or standard access
+# If they are exec, the todo is auto approved, otherwise, need review
 async def add_todo_service(
-    project_id: str, todo_request: AddTodoRequest, db: AsyncDatabase
+    project_id: str, todo_request: AddTodoRequest, user_id: str, db: AsyncDatabase
 ) -> AddTodoResponse:
 
     # Check if project exists
@@ -74,7 +77,17 @@ async def add_todo_service(
         if project_in_db_dict["todo_statuses"]:
             todo_request.status_id = project_in_db_dict["todo_statuses"][0]["id"]
 
-    await db_add_todo(project_id, todo_request, db)
+    # Get the team of the project to check if user is exec or not
+    team_in_db_dict = await db_get_team_by_project_id(project_id, db)
+    if not team_in_db_dict:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Project's team does not exist: project_id={project_id}",
+        )
+
+    await db_add_todo(
+        project_id, todo_request, user_id in team_in_db_dict["exec_member_ids"], db
+    )
 
     return AddTodoResponse()
 
@@ -149,6 +162,7 @@ async def get_todo_items_service(
                 description=todo["description"],
                 status_id=todo["status_id"],
                 assignee_id=todo["assignee_id"],
+                approved=todo["approved"],
             )
             for todo in todo_items_in_db_list
         ]
@@ -287,3 +301,26 @@ async def assign_todo_service(
         )
 
     await db_assign_todo(todo_id, assignee_id, db)
+
+
+async def approve_todo_service(todo_id: str, db: AsyncDatabase) -> None:
+
+    await db_approve_todo(todo_id, db)
+
+
+async def get_proposed_todos_service(project_id: str, db: AsyncDatabase) -> List[Todo]:
+
+    # Check if project exists
+    project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
+    proposed_todos = [
+        todo
+        for todo in (await get_todo_items_service(project_id, db)).todos
+        if todo.approved is False
+    ]
+
+    return proposed_todos

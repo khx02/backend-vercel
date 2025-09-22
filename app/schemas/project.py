@@ -2,12 +2,19 @@ from pydantic import BaseModel
 
 from typing import List
 
-from app.schemas.todo import Todo
-
 
 class TodoStatus(BaseModel):
     id: str
     name: str
+
+
+class Todo(BaseModel):
+    id: str
+    name: str
+    description: str
+    status_id: str
+    assignee_id: str | None = None
+    approved: bool = False
 
 
 class Project(BaseModel):
@@ -115,3 +122,19 @@ class AssignTodoRequest(BaseModel):
 
 class AssignTodoResponse(BaseModel):
     pass
+
+
+class ApproveTodoRequest(BaseModel):
+    pass
+
+
+class ApproveTodoResponse(BaseModel):
+    pass
+
+
+class GetProposedTodosRequest(BaseModel):
+    pass
+
+
+class GetProposedTodosResponse(BaseModel):
+    proposed_todos: List[Todo]
