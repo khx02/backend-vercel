@@ -72,6 +72,7 @@ async def test_get_project_service_success(mock_get_project_service):
 @patch("app.api.project.add_todo_service")
 async def test_add_todo_service_success(mock_add_todo_service):
     mock_db = AsyncMock()
+    mock_user = AsyncMock()
     mock_add_todo_service.return_value = AddTodoResponse()
     todo_request = AddTodoRequest(
         name="Todo",
@@ -80,7 +81,9 @@ async def test_add_todo_service_success(mock_add_todo_service):
         assignee_id=MOCK_USER_2_ID,
     )
 
-    result = await add_todo(MOCK_PROJECT_ID, todo_request, db=mock_db)
+    result = await add_todo(
+        MOCK_PROJECT_ID, todo_request, current_user=mock_user, db=mock_db
+    )
 
     assert isinstance(result, AddTodoResponse)
 

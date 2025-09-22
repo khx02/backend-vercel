@@ -12,7 +12,6 @@ from app.schemas.project import (
     AddTodoResponse,
     AddTodoStatusRequest,
     AddTodoStatusResponse,
-    ApproveTodoRequest,
     ApproveTodoResponse,
     AssignTodoRequest,
     AssignTodoResponse,

@@ -15,7 +15,6 @@ from app.schemas.project import (
     GetProjectResponse,
     GetTodoItemsResponse,
     Project,
-    ProposeTodoResponse,
     ReorderTodoItemsRequest,
     ReorderTodoItemsResponse,
     ReorderTodoStatusesRequest,

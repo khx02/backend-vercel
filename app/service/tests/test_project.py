@@ -56,9 +56,11 @@ async def test_get_project_service_success(mock_db_get_project):
 
 @pytest.mark.asyncio
 @patch("app.service.project.db_add_todo")
+@patch("app.service.project.db_get_team_by_project_id")
 @patch("app.service.project.db_get_project")
-async def test_add_todo_service_success(mock_db_get_project, mock_db_add_todo):
-    project_id = MOCK_PROJECT_ID
+async def test_add_todo_service_success(
+    mock_db_get_project, mock_db_get_team_by_project_id, mock_db_add_todo
+):
     mock_db = AsyncMock()
     todo_req = AddTodoRequest(
         name=MOCK_TODO_NAME,
@@ -67,9 +69,10 @@ async def test_add_todo_service_success(mock_db_get_project, mock_db_add_todo):
         assignee_id=MOCK_USER_ID,
     )
     mock_db_get_project.return_value = {"_id": MOCK_PROJECT_ID}
+    mock_db_get_team_by_project_id.return_value = {"exec_member_ids": []}
     mock_db_add_todo.return_value = None
 
-    result = await add_todo_service(MOCK_PROJECT_ID, todo_req, mock_db)
+    result = await add_todo_service(MOCK_PROJECT_ID, todo_req, MOCK_USER_ID, mock_db)
 
     assert result is not None
 

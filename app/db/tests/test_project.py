@@ -77,7 +77,7 @@ async def test_db_add_todo_success():
 
     mock_db.__getitem__.side_effect = getitem
 
-    await db_add_todo(MOCK_PROJECT_ID, todo_req, mock_db)
+    await db_add_todo(MOCK_PROJECT_ID, todo_req, False, mock_db)
     mock_todos_collection.insert_one.assert_called_once()
     mock_projects_collection.update_one.assert_called_once()
 
