@@ -11,8 +11,10 @@ from app.schemas.project import (
     UpdateTodoRequest,
 )
 from app.service.project import (
+    approve_todo_service,
     get_project_service,
     add_todo_service,
+    get_proposed_todos_service,
     update_todo_service,
     delete_todo_service,
     get_todo_items_service,
@@ -213,5 +215,30 @@ async def test_reorder_todo_statuses_service_success(
     mock_db_reorder_todo_statuses.return_value = None
 
     result = await reorder_todo_statuses_service(project_id, reorder_req, mock_db)
+
+    assert result is not None
+
+
+@pytest.mark.asyncio
+@patch("app.service.project.db_approve_todo")
+async def test_approve_todo_service_success(mock_db_approve_todo):
+    mock_db = AsyncMock()
+    mock_db_approve_todo.return_value = None
+
+    result = await approve_todo_service(MOCK_PROJECT_ID, mock_db)
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+@patch("app.service.project.get_todo_items_service")
+@patch("app.service.project.db_get_project")
+async def test_get_proposed_todos_service_success(
+    mock_db_get_project, mock_get_todo_items_service
+):
+    mock_db = AsyncMock()
+    mock_db_get_project.return_value = {"_id": MOCK_PROJECT_ID}
+    mock_get_todo_items_service.return_value = GetTodoItemsResponse(todos=[])
+    result = await get_proposed_todos_service(MOCK_PROJECT_ID, mock_db)
 
     assert result is not None

@@ -5,6 +5,7 @@ from bson import ObjectId
 
 from app.core.constants import PROJECTS_COLLECTION, TODOS_COLLECTION
 from app.db.project import (
+    db_approve_todo,
     db_assign_todo,
     db_get_project,
     db_add_todo,
@@ -226,5 +227,17 @@ async def test_db_assign_todo_success():
     mock_db.__getitem__.return_value = mock_todos_collection
 
     result = await db_assign_todo(todo_id, assignee_id, mock_db)
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_db_approve_todo_success():
+    mock_db = AsyncMock()
+    mock_todos_collection = AsyncMock()
+    mock_todos_collection.update_one.return_value = None
+    mock_db.__getitem__.return_value = mock_todos_collection
+
+    result = await db_approve_todo(MOCK_TODO_ID, mock_db)
 
     assert result is None
