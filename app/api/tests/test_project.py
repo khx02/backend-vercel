@@ -67,6 +67,8 @@ async def test_get_project_success(mock_get_project_service):
             description=MOCK_PROJECT_DESCRIPTION,
             todo_statuses=[],
             todo_ids=[],
+            budget_available=0,
+            budget_spent=0,
         )
     )
 

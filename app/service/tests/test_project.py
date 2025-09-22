@@ -48,6 +48,8 @@ async def test_get_project_service_success(mock_db_get_project):
         "description": "Desc",
         "todo_statuses": [],
         "todo_ids": [],
+        "budget_available": 0,
+        "budget_spent": 0,
     }
     result = await get_project_service(project_id, mock_db)
     assert isinstance(result, GetProjectResponse)
