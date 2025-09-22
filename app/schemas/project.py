@@ -23,6 +23,8 @@ class Project(BaseModel):
     description: str
     todo_statuses: List[TodoStatus]
     todo_ids: List[str]
+    budget_available: float = 0
+    budget_spent: float = 0
 
 
 # Will pass project_id through path
@@ -138,3 +140,19 @@ class GetProposedTodosRequest(BaseModel):
 
 class GetProposedTodosResponse(BaseModel):
     proposed_todos: List[Todo]
+
+
+class IncreaseBudgetRequest(BaseModel):
+    amount: float
+
+
+class IncreaseBudgetResponse(BaseModel):
+    pass
+
+
+class SpendBudgetRequest(BaseModel):
+    amount: float
+
+
+class SpendBudgetResponse(BaseModel):
+    pass

@@ -40,8 +40,10 @@ from app.service.project import (
     get_project_service,
     get_proposed_todos_service,
     get_todo_items_service,
+    increase_budget_service,
     reorder_todo_items_service,
     reorder_todo_statuses_service,
+    spend_budget_service,
     update_todo_service,
 )
 
@@ -187,3 +189,25 @@ async def get_proposed_todos(
     return GetProposedTodosResponse(
         proposed_todos=await get_proposed_todos_service(project_id, db)
     )
+
+
+@router.post("/increase-budget/{project_id}")
+async def increase_budget(
+    project_id: str,
+    amount: float,
+    _: None = Depends(require_executive_project_access),
+    db: AsyncDatabase = Depends(get_db),
+) -> None:
+
+    await increase_budget_service(project_id, amount, db)
+
+
+@router.post("/spend-budget/{project_id}")
+async def spend_budget(
+    project_id: str,
+    amount: float,
+    _: None = Depends(require_executive_project_access),
+    db: AsyncDatabase = Depends(get_db),
+) -> None:
+
+    await spend_budget_service(project_id, amount, db)

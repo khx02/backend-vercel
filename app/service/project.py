@@ -34,6 +34,8 @@ from app.db.project import (
     db_get_todo_items,
     db_reorder_todo_items,
     db_reorder_todo_statuses,
+    db_update_budget_available,
+    db_update_budget_spent,
     db_update_todo,
 )
 from app.db.project import db_get_project
@@ -54,6 +56,8 @@ async def get_project_service(project_id: str, db: AsyncDatabase) -> GetProjectR
             description=project_in_db_dict["description"],
             todo_statuses=project_in_db_dict["todo_statuses"],
             todo_ids=project_in_db_dict["todo_ids"],
+            budget_available=project_in_db_dict["budget_available"],
+            budget_spent=project_in_db_dict["budget_spent"],
         )
     )
 
@@ -324,3 +328,55 @@ async def get_proposed_todos_service(project_id: str, db: AsyncDatabase) -> List
     ]
 
     return proposed_todos
+
+
+async def increase_budget_service(
+    project_id: str, amount: float, db: AsyncDatabase
+) -> None:
+
+    # Check if project exists
+    project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
+    if amount <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Amount must be positive: amount={amount}",
+        )
+
+    new_budget = project_in_db_dict["budget_available"] + amount
+
+    await db_update_budget_available(project_id, new_budget, db)
+
+
+async def spend_budget_service(
+    project_id: str, amount: float, db: AsyncDatabase
+) -> None:
+
+    # Check if project exists
+    project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
+    if amount <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Amount must be positive: amount={amount}",
+        )
+
+    if amount > project_in_db_dict["budget_available"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient budget available: budget_available={project_in_db_dict['budget_available']}, amount={amount}",
+        )
+
+    new_budget_available = project_in_db_dict["budget_available"] - amount
+    new_budget_spent = project_in_db_dict["budget_spent"] + amount
+
+    await db_update_budget_available(project_id, new_budget_available, db)
+    await db_update_budget_spent(project_id, new_budget_spent, db)

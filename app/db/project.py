@@ -165,3 +165,23 @@ async def db_approve_todo(todo_id: str, db: AsyncDatabase) -> None:
         {"_id": ObjectId(todo_id)},
         {"$set": {"approved": True}},
     )
+
+
+async def db_update_budget_available(
+    project_id: str, budget_available: float, db: AsyncDatabase
+) -> None:
+
+    await db[PROJECTS_COLLECTION].update_one(
+        {"_id": ObjectId(project_id)},
+        {"$set": {"budget_available": budget_available}},
+    )
+
+
+async def db_update_budget_spent(
+    project_id: str, budget_spent: float, db: AsyncDatabase
+) -> None:
+
+    await db[PROJECTS_COLLECTION].update_one(
+        {"_id": ObjectId(project_id)},
+        {"$set": {"budget_spent": budget_spent}},
+    )

@@ -9,6 +9,8 @@ from app.db.project import (
     db_assign_todo,
     db_get_project,
     db_add_todo,
+    db_update_budget_available,
+    db_update_budget_spent,
     db_update_todo,
     db_delete_todo,
     db_get_todo_items,
@@ -239,5 +241,29 @@ async def test_db_approve_todo_success():
     mock_db.__getitem__.return_value = mock_todos_collection
 
     result = await db_approve_todo(MOCK_TODO_ID, mock_db)
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_db_update_budget_available_success():
+    mock_db = AsyncMock()
+    mock_projects_collection = AsyncMock()
+    mock_projects_collection.update_one.return_value = None
+    mock_db.__getitem__.return_value = mock_projects_collection
+
+    result = await db_update_budget_available(MOCK_PROJECT_ID, 100.0, mock_db)
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_db_update_budget_spent_success():
+    mock_db = AsyncMock()
+    mock_projects_collection = AsyncMock()
+    mock_projects_collection.update_one.return_value = None
+    mock_db.__getitem__.return_value = mock_projects_collection
+
+    result = await db_update_budget_spent(MOCK_PROJECT_ID, 50.0, mock_db)
 
     assert result is None
