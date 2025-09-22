@@ -6,6 +6,8 @@ from app.api.project import (
     get_project,
     add_todo,
     get_proposed_todos,
+    increase_budget,
+    spend_budget,
     update_todo,
     delete_todo,
     get_todo_items,
@@ -40,6 +42,7 @@ from app.schemas.project import (
     UpdateTodoResponse,
     Project,
 )
+from app.service.project import spend_budget_service
 from app.test_shared.constants import (
     MOCK_PROJECT_ID,
     MOCK_PROJECT_NAME,
@@ -231,3 +234,25 @@ async def test_get_proposed_todos_success(mock_get_proposed_todos_service):
     result = await get_proposed_todos(MOCK_PROJECT_ID, db=mock_db)
 
     assert isinstance(result, GetProposedTodosResponse)
+
+
+@pytest.mark.asyncio
+@patch("app.api.project.increase_budget_service")
+async def test_increase_budget_success(mock_increase_budget_service):
+    mock_db = AsyncMock()
+    mock_increase_budget_service.return_value = None
+
+    result = await increase_budget(MOCK_PROJECT_ID, 100.0, db=mock_db)
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+@patch("app.api.project.spend_budget_service")
+async def test_spend_budget_success(mock_spend_budget_service):
+    mock_db = AsyncMock()
+    mock_spend_budget_service.return_value = None
+
+    result = await spend_budget(MOCK_PROJECT_ID, 50.0, db=mock_db)
+
+    assert result is None

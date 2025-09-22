@@ -40,8 +40,10 @@ from app.service.project import (
     get_project_service,
     get_proposed_todos_service,
     get_todo_items_service,
+    increase_budget_service,
     reorder_todo_items_service,
     reorder_todo_statuses_service,
+    spend_budget_service,
     update_todo_service,
 )
 
