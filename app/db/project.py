@@ -17,7 +17,10 @@ async def db_get_project(project_id: str, db: AsyncDatabase) -> Dict[str, Any]:
 
 
 async def db_add_todo(
-    project_id: str, add_todo_request: AddTodoRequest, db: AsyncDatabase
+    project_id: str,
+    add_todo_request: AddTodoRequest,
+    auto_approved: bool,
+    db: AsyncDatabase,
 ) -> None:
     todo_dict = {
         "name": add_todo_request.name,
@@ -28,6 +31,7 @@ async def db_add_todo(
             if add_todo_request.assignee_id
             else None
         ),
+        "approved": auto_approved,
     }
     result = await db[TODOS_COLLECTION].insert_one(todo_dict)
 
@@ -153,3 +157,11 @@ async def db_get_team_by_project_id(
 ) -> Dict[str, Any] | None:
     team = await db[TEAMS_COLLECTION].find_one({"project_ids": ObjectId(project_id)})
     return stringify_object_ids(team)
+
+
+async def db_approve_todo(todo_id: str, db: AsyncDatabase) -> None:
+
+    await db[TODOS_COLLECTION].update_one(
+        {"_id": ObjectId(todo_id)},
+        {"$set": {"approved": True}},
+    )

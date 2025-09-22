@@ -13,6 +13,7 @@ from app.schemas.project import (
     GetProjectResponse,
     GetTodoItemsResponse,
     Project,
+    ProposeTodoResponse,
     ReorderTodoItemsRequest,
     ReorderTodoItemsResponse,
     ReorderTodoStatusesRequest,
@@ -24,6 +25,7 @@ from app.schemas.project import (
 from app.db.project import (
     db_add_todo,
     db_add_todo_status,
+    db_approve_todo,
     db_assign_todo,
     db_delete_todo,
     db_delete_todo_status,
@@ -55,8 +57,10 @@ async def get_project_service(project_id: str, db: AsyncDatabase) -> GetProjectR
     )
 
 
+# TODO: Check if user is exec or standard access
+# If they are exec, the todo is auto approved, otherwise, need review
 async def add_todo_service(
-    project_id: str, todo_request: AddTodoRequest, db: AsyncDatabase
+    project_id: str, todo_request: AddTodoRequest, user_id: str, db: AsyncDatabase
 ) -> AddTodoResponse:
 
     # Check if project exists
@@ -72,7 +76,17 @@ async def add_todo_service(
         if project_in_db_dict["todo_statuses"]:
             todo_request.status_id = project_in_db_dict["todo_statuses"][0]["id"]
 
-    await db_add_todo(project_id, todo_request, db)
+    # Get the team of the project to check if user is exec or not
+    team_in_db_dict = await db_get_team_by_project_id(project_id, db)
+    if not team_in_db_dict:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Project's team does not exist: project_id={project_id}",
+        )
+
+    await db_add_todo(
+        project_id, todo_request, user_id in team_in_db_dict["exec_member_ids"], db
+    )
 
     return AddTodoResponse()
 
@@ -285,3 +299,8 @@ async def assign_todo_service(
         )
 
     await db_assign_todo(todo_id, assignee_id, db)
+
+
+async def approve_todo_service(todo_id: str, db: AsyncDatabase) -> None:
+
+    await db_approve_todo(todo_id, db)

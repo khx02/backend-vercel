@@ -14,6 +14,7 @@ class Todo(BaseModel):
     description: str
     status_id: str
     assignee_id: str | None = None
+    approved: bool = False
 
 
 class Project(BaseModel):
@@ -120,4 +121,20 @@ class AssignTodoRequest(BaseModel):
 
 
 class AssignTodoResponse(BaseModel):
+    pass
+
+
+class ApproveTodoRequest(BaseModel):
+    pass
+
+
+class ApproveTodoResponse(BaseModel):
+    pass
+
+
+class GetProposedTodosRequest(BaseModel):
+    pass
+
+
+class GetProposedTodosResponse(BaseModel):
     pass

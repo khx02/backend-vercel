@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from pymongo.asynchronous.database import AsyncDatabase
 
+from app.api.auth import get_current_user_info
 from app.db.client import get_db
 from app.dependencies.project import (
     require_standard_project_access,
@@ -11,6 +12,8 @@ from app.schemas.project import (
     AddTodoResponse,
     AddTodoStatusRequest,
     AddTodoStatusResponse,
+    ApproveTodoRequest,
+    ApproveTodoResponse,
     AssignTodoRequest,
     AssignTodoResponse,
     DeleteTodoRequest,
@@ -26,9 +29,11 @@ from app.schemas.project import (
     UpdateTodoRequest,
     UpdateTodoResponse,
 )
+from app.schemas.user import UserModel
 from app.service.project import (
     add_todo_service,
     add_todo_status_service,
+    approve_todo_service,
     assign_todo_service,
     delete_todo_service,
     delete_todo_status_service,
@@ -56,13 +61,15 @@ async def get_project(
 async def add_todo(
     project_id: str,
     todo_request: AddTodoRequest,
-    _: None = Depends(require_executive_project_access),
+    _: None = Depends(require_standard_project_access),
+    current_user: UserModel = Depends(get_current_user_info),
     db: AsyncDatabase = Depends(get_db),
 ) -> AddTodoResponse:
 
-    return await add_todo_service(project_id, todo_request, db)
+    return await add_todo_service(project_id, todo_request, current_user.id, db)
 
 
+# TODO: Allow for assigned id to also perform update
 @router.post("/update-todo/{project_id}")
 async def update_todo(
     project_id: str,
@@ -154,3 +161,16 @@ async def assign_todo(
     )
 
     return AssignTodoResponse()
+
+
+# TODO: Make sure this actually works, because project_id is not in signature
+@router.post("/approve-todo/{project_id}/{todo_id}")  # project_id is used in dependency
+async def approve_todo(
+    todo_id: str,
+    _: None = Depends(require_executive_project_access),
+    db: AsyncDatabase = Depends(get_db),
+) -> ApproveTodoResponse:
+
+    await approve_todo_service(todo_id, db)
+
+    return ApproveTodoResponse()
