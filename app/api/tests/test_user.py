@@ -7,6 +7,7 @@ from app.api.user import (
     create_user,
     get_current_user,
     get_current_user_teams,
+    get_user_by_id,
     verify_code,
 )
 from app.schemas.team import TeamModel
@@ -17,6 +18,7 @@ from app.schemas.user import (
     CreateUserResponse,
     GetCurrentUserResponse,
     GetCurrentUserTeamsResponse,
+    GetUserByIdResponse,
     UserModel,
     VerifyCodeRequest,
     VerifyCodeResponse,
@@ -79,6 +81,23 @@ async def test_get_current_user_info_success():
     assert result.user.email == MOCK_USER_EMAIL
     assert result.user.first_name == MOCK_USER_FIRST_NAME
     assert result.user.last_name == MOCK_USER_LAST_NAME
+
+@pytest.mark.asyncio
+@patch("app.api.user.get_user_by_id_service")
+async def test_get_user_by_id_success(mock_get_user_by_id_service):
+    mock_db = AsyncMock()
+    mock_get_user_by_id_service.return_value = UserModel(
+        id=MOCK_USER_ID,
+        email=MOCK_USER_EMAIL,
+        first_name=MOCK_USER_FIRST_NAME,
+        last_name=MOCK_USER_LAST_NAME,
+    )
+
+    result = await get_user_by_id(MOCK_USER_ID, mock_db)
+
+    assert isinstance(result, GetUserByIdResponse)
+    assert result.user.id == MOCK_USER_ID
+    assert result.user.email == MOCK_USER_EMAIL
 
 
 @pytest.mark.asyncio

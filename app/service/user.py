@@ -144,6 +144,21 @@ async def verify_code_service(
     )
 
 
+async def get_user_by_id_service(
+    user_id: str,
+    db: AsyncDatabase,
+) -> UserModel:
+    user_in_db = await db_get_user_by_id(user_id, db)
+    if not user_in_db:
+        raise HTTPException(status_code=404, detail=f"User not found: id={user_id}")
+    return UserModel(
+        id=str(user_in_db["_id"]),
+        email=user_in_db["email"],
+        first_name=user_in_db["first_name"],
+        last_name=user_in_db["last_name"],
+    )
+
+
 async def get_current_user_teams_service(
     current_user_id: str,
     db: AsyncDatabase,
