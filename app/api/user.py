@@ -20,6 +20,7 @@ from app.service.user import (
     change_password_service,
     create_user_service,
     get_current_user_teams_service,
+    get_user_by_id_service,
     verify_code_service,
 )
 

@@ -10,6 +10,7 @@ from app.schemas.user import (
     CreateUserRequest,
     CreateUserResponse,
     GetCurrentUserTeamsResponse,
+    UserModel,
     VerifyCodeRequest,
     VerifyCodeResponse,
 )
@@ -17,6 +18,7 @@ from app.service.user import (
     change_password_service,
     create_user_service,
     get_current_user_teams_service,
+    get_user_by_id_service,
     verify_code_service,
 )
 
@@ -112,6 +114,27 @@ async def test_verify_code_service_success(
     assert isinstance(result, VerifyCodeResponse)
     assert result.user.id == MOCK_USER_ID
     assert result.user.email == MOCK_USER_EMAIL
+
+
+@pytest.mark.asyncio
+@patch("app.service.user.db_get_user_by_id")
+async def test_get_user_by_id_service_success(mock_db_get_user_by_id):
+    mock_db = AsyncMock()
+    mock_db_get_user_by_id.return_value = {
+        "_id": MOCK_USER_ID,
+        "email": MOCK_USER_EMAIL,
+        "hashed_password": MOCK_USER_PASSWORD_HASHED,
+        "first_name": MOCK_USER_FIRST_NAME,
+        "last_name": MOCK_USER_LAST_NAME,
+    }
+
+    result = await get_user_by_id_service(MOCK_USER_ID, mock_db)
+
+    assert isinstance(result, UserModel)
+    assert result.id == MOCK_USER_ID
+    assert result.email == MOCK_USER_EMAIL
+    assert result.first_name == MOCK_USER_FIRST_NAME
+    assert result.last_name == MOCK_USER_LAST_NAME
 
 
 @pytest.mark.asyncio
