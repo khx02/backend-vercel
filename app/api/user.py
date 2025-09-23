@@ -10,6 +10,8 @@ from app.schemas.user import (
     CreateUserResponse,
     GetCurrentUserResponse,
     GetCurrentUserTeamsResponse,
+    GetUserByIdRequest,
+    GetUserByIdResponse,
     UserModel,
     VerifyCodeRequest,
     VerifyCodeResponse,
@@ -43,6 +45,15 @@ async def get_current_user(
     current_user: UserModel = Depends(get_current_user_info),
 ) -> GetCurrentUserResponse:
     return GetCurrentUserResponse(user=current_user)
+
+
+@router.get("/get-user-by-id/{user_id}")
+async def get_user_by_id(
+    user_id: str,
+    db: AsyncDatabase = Depends(get_db),
+) -> GetUserByIdResponse:
+    user = await get_user_by_id_service(user_id, db)
+    return GetUserByIdResponse(user=user)
 
 
 @router.get("/get-current-user-teams")

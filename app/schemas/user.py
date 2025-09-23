@@ -64,6 +64,14 @@ class GetCurrentUserTeamsRequest(BaseModel):
     pass
 
 
+class GetUserByIdRequest(BaseModel):
+    pass
+
+
+class GetUserByIdResponse(BaseModel):
+    user: UserModel
+
+
 class GetCurrentUserTeamsResponse(BaseModel):
     teams: list[TeamModel]
 
