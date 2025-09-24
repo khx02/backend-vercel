@@ -92,6 +92,8 @@ async def db_create_project(
             {"id": ObjectId(), "name": "Done"},
         ],
         "todo_ids": [],
+        "budget_available": 0.0,
+        "budget_spent": 0.0,
     }
 
     result = await db[PROJECTS_COLLECTION].insert_one(project_dict)
