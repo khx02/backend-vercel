@@ -92,6 +92,10 @@ class DeleteProjectResponse(BaseModel):
 class CreateEventRequest(BaseModel):
     name: str
     description: str
+    start: str
+    end: str
+    colour: str
+    location: str
 
 
 class CreateEventResponse(BaseModel):
