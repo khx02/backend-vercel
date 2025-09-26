@@ -141,6 +141,10 @@ async def db_create_event_for_team(
     event_dict = {
         "name": create_event_request.name,
         "description": create_event_request.description,
+        "start": create_event_request.start,
+        "end": create_event_request.end,
+        "colour": create_event_request.colour,
+        "location": create_event_request.location,
         "rsvp_ids": [],
     }
 

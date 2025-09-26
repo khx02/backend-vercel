@@ -269,6 +269,10 @@ async def create_event_for_team_service(
         id=event_in_db_dict["_id"],
         name=event_in_db_dict["name"],
         description=event_in_db_dict["description"],
+        start=event_in_db_dict["start"],
+        end=event_in_db_dict["end"],
+        colour=event_in_db_dict["colour"],
+        location=event_in_db_dict["location"],
         rsvp_ids=event_in_db_dict["rsvp_ids"],
     )
 
@@ -325,6 +329,10 @@ async def get_team_events_service(
             id=event_in_db_dict["_id"],
             name=event_in_db_dict["name"],
             description=event_in_db_dict["description"],
+            start=event_in_db_dict["start"],
+            end=event_in_db_dict["end"],
+            colour=event_in_db_dict["colour"],
+            location=event_in_db_dict["location"],
             rsvp_ids=event_in_db_dict["rsvp_ids"],
         )
         for event_in_db_dict in await db_get_events_by_ids(event_ids, db)
