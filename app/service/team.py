@@ -38,6 +38,7 @@ from app.schemas.team import (
     TeamModel,
 )
 from app.schemas.user import UserModel
+from app.service.event import schedule_event_reminders
 
 
 async def create_team_service(
@@ -264,6 +265,9 @@ async def create_event_for_team_service(
 ) -> Event:
 
     event_in_db_dict = await db_create_event_for_team(team_id, create_event_request, db)
+
+    # Schedule event reminders
+    schedule_event_reminders(event_in_db_dict["_id"], create_event_request.start, db)
 
     return Event(
         id=event_in_db_dict["_id"],

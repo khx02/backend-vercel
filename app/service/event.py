@@ -1,9 +1,12 @@
+from datetime import datetime, timedelta, timezone
 import os
 from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 from typing import List
+from dateutil import parser
 
 from app.db.event import (
+    db_add_rsvp_id_to_event,
     db_create_rsvp_invite,
     db_get_event_or_none,
     db_get_rsvps_by_ids,
@@ -16,6 +19,7 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
 from app.core.constants import BASE_URL
+from app.core.scheduler import scheduler
 
 
 async def get_event_service(event_id: str, db: AsyncDatabase) -> Event:
@@ -63,13 +67,17 @@ def send_rsvp_invite_email(email: str, event_name: str, rsvp_id: str) -> int:
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
 
 
-async def send_rsvp_email_service(event_id: str, email: str, db: AsyncDatabase) -> None:
+async def send_rsvp_email_service(event_id: str, email: str, db: AsyncDatabase) -> str:
     event = await get_event_service(event_id, db)
 
     rsvp_in_db_dict = await db_create_rsvp_invite(email, db)
     rsvp_id = rsvp_in_db_dict["_id"]
 
+    await db_add_rsvp_id_to_event(event_id, rsvp_id, db)
+
     send_rsvp_invite_email(email, event.name, rsvp_id)
+
+    return rsvp_id
 
 
 async def reply_rsvp_service(
@@ -122,3 +130,61 @@ async def update_event_details_service(
     }
 
     await db_update_event_details(event_id, new_event_details, db)
+
+
+# Reminder email scheduling logic
+async def send_reminder_email(event_id: str, when: str, db: AsyncDatabase):
+
+    event = await get_event_service(event_id, db)
+    if not event:
+        return
+
+    rsvps = await get_event_rsvps_service(event_id, db)
+
+    mail_html_content = f"""
+    <p>This is a reminder that the event: <b>{event.name}</b> is starting in {when}.</p>
+    """
+
+    for rsvp in rsvps:
+        if rsvp.rsvp_status != RSVPStatus.ACCEPTED:
+            continue
+
+        message = Mail(
+            from_email="admin@clubsync.club",
+            to_emails=rsvp.email,
+            subject=f"Reminder: You have an event coming up!",
+            html_content=mail_html_content,
+        )
+        try:
+            sg = SendGridAPIClient(os.environ["SENDGRID_KEY"])
+            response = sg.send(message)
+            return response.status_code
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, detail=f"Failed to send email: {str(e)}"
+            )
+
+
+# TODO: Make the scheduling reconfigurable if event details change
+def schedule_event_reminders(
+    event_id: str, event_start: str, db: AsyncDatabase
+) -> None:
+    event_start_time = parser.isoparse(event_start)
+
+    reminders = {
+        "10 minutes": event_start_time - timedelta(minutes=10),
+        "1 hour": event_start_time - timedelta(hours=1),
+        "1 day": event_start_time - timedelta(days=1),
+        "1 week": event_start_time - timedelta(weeks=1),
+    }
+
+    for label, run_time in reminders.items():
+        if run_time > datetime.now(timezone.utc):
+            scheduler.add_job(
+                send_reminder_email,
+                trigger="date",
+                run_date=run_time,
+                args=[event_id, label, db],
+                id=f"{event_id}-{label}",
+                replace_existing=True,
+            )

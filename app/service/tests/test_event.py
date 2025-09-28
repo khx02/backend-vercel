@@ -54,10 +54,14 @@ async def test_get_event_service_success(mock_db_get_event_or_none):
 
 @pytest.mark.asyncio
 @patch("app.service.event.send_rsvp_invite_email")
+@patch("app.service.event.db_add_rsvp_id_to_event")
 @patch("app.service.event.db_create_rsvp_invite")
 @patch("app.service.event.get_event_service")
 async def test_send_rsvp_email_service_success(
-    mock_get_event_service, mock_db_create_rsvp_invite, mock_send_rsvp_invite_email
+    mock_get_event_service,
+    mock_db_create_rsvp_invite,
+    mock_db_add_rsvp_id_to_event,
+    mock_send_rsvp_invite_email,
 ):
     mock_db = AsyncMock()
     mock_get_event_service.return_value = Event(
@@ -76,11 +80,12 @@ async def test_send_rsvp_email_service_success(
         "email": MOCK_USER_EMAIL,
         "status": RSVPStatus.PENDING,
     }
+    mock_db_add_rsvp_id_to_event.return_value = None
     mock_send_rsvp_invite_email.return_value = None
 
     result = await send_rsvp_email_service(MOCK_USER_EMAIL, MOCK_EVENT_ID, mock_db)
 
-    assert result is None
+    assert result == MOCK_INSERTED_ID
 
 
 @pytest.mark.asyncio
@@ -121,7 +126,6 @@ async def test_get_event_rsvps_service_success(
     ]
 
     result = await get_event_rsvps_service(MOCK_EVENT_ID, mock_db)
-    print(result)
 
     assert isinstance(result, list)
     assert len(result) == 2

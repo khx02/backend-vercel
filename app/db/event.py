@@ -23,6 +23,15 @@ async def db_create_rsvp_invite(email: str, db: AsyncDatabase) -> Dict[str, Any]
     return stringify_object_ids(rsvp_dict)
 
 
+async def db_add_rsvp_id_to_event(
+    event_id: str, rsvp_id: str, db: AsyncDatabase
+) -> None:
+    await db[EVENTS_COLLECTION].update_one(
+        {"_id": ObjectId(event_id)},
+        {"$addToSet": {"rsvp_ids": rsvp_id}},
+    )
+
+
 async def db_record_rsvp_response(
     rsvp_id: str, rsvp_status: RSVPStatus, db: AsyncDatabase
 ) -> None:
