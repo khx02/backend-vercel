@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse
 from pymongo.asynchronous.database import AsyncDatabase
+from pathlib import Path
 
 from app.core.constants import FRONTEND_URL
 from app.db.client import get_db
@@ -45,6 +46,11 @@ async def send_rsvp_email(
     )
 
 
+def get_rsvp_response_html():
+    html_file = Path("app/templates/rsvp_response_page.html")
+    return html_file.read_text(encoding="utf-8")
+
+
 @router.get("/reply-rsvp/{rsvp_id}/{rsvp_status}")
 async def reply_rsvp(
     rsvp_id: str,
@@ -54,7 +60,7 @@ async def reply_rsvp(
 
     await reply_rsvp_service(rsvp_id, rsvp_status, db)
 
-    return HTMLResponse(content="<h1>Thanks for accepting!</h1>", status_code=200)
+    return HTMLResponse(content=get_rsvp_response_html(), status_code=200)
 
 
 @router.get("/get-event-rsvps/{event_id}")
