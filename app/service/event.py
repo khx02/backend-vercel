@@ -6,6 +6,7 @@ from typing import List
 from dateutil import parser
 
 from app.db.event import (
+    db_add_rsvp_id_to_event,
     db_create_rsvp_invite,
     db_get_event_or_none,
     db_get_rsvps_by_ids,
@@ -18,10 +19,7 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
 from app.core.constants import BASE_URL
-
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-scheduler = AsyncIOScheduler()
+from app.core.scheduler import scheduler
 
 
 async def get_event_service(event_id: str, db: AsyncDatabase) -> Event:
@@ -69,13 +67,17 @@ def send_rsvp_invite_email(email: str, event_name: str, rsvp_id: str) -> int:
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
 
 
-async def send_rsvp_email_service(event_id: str, email: str, db: AsyncDatabase) -> None:
+async def send_rsvp_email_service(event_id: str, email: str, db: AsyncDatabase) -> str:
     event = await get_event_service(event_id, db)
 
     rsvp_in_db_dict = await db_create_rsvp_invite(email, db)
     rsvp_id = rsvp_in_db_dict["_id"]
 
+    await db_add_rsvp_id_to_event(event_id, rsvp_id, db)
+
     send_rsvp_invite_email(email, event.name, rsvp_id)
+
+    return rsvp_id
 
 
 async def reply_rsvp_service(
@@ -132,6 +134,7 @@ async def update_event_details_service(
 
 # Reminder email scheduling logic
 async def send_reminder_email(event_id: str, when: str, db: AsyncDatabase):
+
     event = await get_event_service(event_id, db)
     if not event:
         return
@@ -169,6 +172,7 @@ def schedule_event_reminders(
     event_start_time = parser.isoparse(event_start)
 
     reminders = {
+        "10 minutes": event_start_time - timedelta(minutes=10),
         "1 hour": event_start_time - timedelta(hours=1),
         "1 day": event_start_time - timedelta(days=1),
         "1 week": event_start_time - timedelta(weeks=1),

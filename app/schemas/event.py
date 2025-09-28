@@ -43,7 +43,7 @@ class SendRSVPEmailRequest(BaseModel):
 
 
 class SendRSVPEmailResponse(BaseModel):
-    pass
+    rsvp_id: str
 
 
 # For event attendees to confirm or deny event attendance
