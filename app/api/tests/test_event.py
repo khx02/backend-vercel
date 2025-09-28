@@ -1,6 +1,6 @@
 from unittest.mock import AsyncMock, patch
 
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 import pytest
 
 from app.api.event import (
@@ -28,6 +28,7 @@ from app.test_shared.constants import (
     MOCK_EVENT_LOCATION,
     MOCK_EVENT_NAME,
     MOCK_EVENT_START,
+    MOCK_RSVP_ID,
     MOCK_USER_EMAIL,
 )
 
@@ -60,7 +61,7 @@ async def test_create_event_service_success(mock_get_event_service):
 @patch("app.api.event.send_rsvp_email_service")
 async def test_send_rsvp_email_service_success(mock_send_rsvp_email_service):
     mock_db = AsyncMock()
-    mock_send_rsvp_email_service.return_value = None
+    mock_send_rsvp_email_service.return_value = MOCK_RSVP_ID
     mock_send_rsvp_email_request = SendRSVPEmailRequest(email=MOCK_USER_EMAIL)
 
     result = await send_rsvp_email(MOCK_EVENT_ID, mock_send_rsvp_email_request, mock_db)
@@ -76,7 +77,7 @@ async def test_reply_rsvp_service_success(mock_reply_rsvp_service):
 
     result = await reply_rsvp(mock_reply_rsvp_service, mock_db)
 
-    assert isinstance(result, RedirectResponse)
+    assert isinstance(result, HTMLResponse)
 
 
 @pytest.mark.asyncio
