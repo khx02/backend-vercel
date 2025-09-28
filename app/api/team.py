@@ -14,6 +14,7 @@ from app.schemas.team import (
     DeleteEventResponse,
     DeleteProjectRequest,
     DeleteProjectResponse,
+    DeleteTeamResponse,
     GetTeamEventsResponse,
     GetTeamResponse,
     JoinTeamByShortIdResponse,
@@ -31,6 +32,7 @@ from app.service.team import (
     create_team_service,
     delete_event_service,
     delete_project_service,
+    delete_team_service,
     get_team_events_service,
     get_team_service,
     join_team_by_short_id_service,
@@ -100,6 +102,17 @@ async def leave_team(
     db: AsyncDatabase = Depends(get_db),
 ) -> LeaveTeamResponse:
     return await leave_team_service(team_id, current_user.id, db)
+
+
+@router.post("/delete-team/{team_id}")
+async def delete_team(
+    team_id: str,
+    current_user: UserModel = Depends(get_current_user_info),
+    db: AsyncDatabase = Depends(get_db),
+) -> DeleteTeamResponse:
+    await delete_team_service(team_id, current_user.id, db)
+
+    return DeleteTeamResponse()
 
 
 @router.post("/kick-team-member/{team_id}")

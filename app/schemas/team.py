@@ -64,6 +64,14 @@ class LeaveTeamResponse(BaseModel):
     pass
 
 
+class DeleteTeamRequest(BaseModel):
+    pass
+
+
+class DeleteTeamResponse(BaseModel):
+    pass
+
+
 class KickTeamMemberRequest(BaseModel):
     member_id: str
 
