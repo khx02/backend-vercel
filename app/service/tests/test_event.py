@@ -121,7 +121,6 @@ async def test_get_event_rsvps_service_success(
     ]
 
     result = await get_event_rsvps_service(MOCK_EVENT_ID, mock_db)
-    print(result)
 
     assert isinstance(result, list)
     assert len(result) == 2
