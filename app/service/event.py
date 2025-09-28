@@ -162,6 +162,7 @@ async def send_reminder_email(event_id: str, when: str, db: AsyncDatabase):
             )
 
 
+# TODO: Make the scheduling reconfigurable if event details change
 def schedule_event_reminders(
     event_id: str, event_start: str, db: AsyncDatabase
 ) -> None:
