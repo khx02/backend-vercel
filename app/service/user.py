@@ -8,6 +8,7 @@ from typing import List
 
 from app.core.constants import VERIFICATION_CODE_EXPIRE_MINUTES
 from app.core.security import hash_password, verify_password
+from app.core.templates import env
 from app.db.user import (
     db_create_pending_verification,
     db_create_user,
@@ -48,11 +49,18 @@ def generate_random_verification_code() -> str:
 # This should never fail outside of infrastructure / network related errors
 # It will still return as normal if the email is invalid
 def send_verification_code_email(email: str, verification_code: str) -> int:
+
+    template = env.get_template("verification_code_email.html")
+    html_content = template.render(
+        verification_code=verification_code,
+        expiry_minutes=VERIFICATION_CODE_EXPIRE_MINUTES,
+    )
+
     message = Mail(
         from_email="admin@clubsync.club",
         to_emails=email,
         subject="Verify your account",
-        html_content=f"<p>Your verification code is: <b>{verification_code}</b>. It will expire in {VERIFICATION_CODE_EXPIRE_MINUTES} minutes.</p>",
+        html_content=html_content,
     )
     try:
         sg = SendGridAPIClient(os.environ["SENDGRID_KEY"])
@@ -232,7 +240,9 @@ async def get_hashed_password_service(email: str, db: AsyncDatabase) -> str | No
     return None
 
 
-async def get_users_by_ids_service(user_ids: List[str], db: AsyncDatabase) -> List[UserModel]:
+async def get_users_by_ids_service(
+    user_ids: List[str], db: AsyncDatabase
+) -> List[UserModel]:
     users: List[UserModel] = []
     for uid in user_ids:
         try:

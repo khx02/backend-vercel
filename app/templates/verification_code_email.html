@@ -1,0 +1,49 @@
+{% extends "base_email.html" %}
+
+{% block content %}
+    <div style="text-align: center; margin-bottom: 32px;">
+        <div class="icon-circle" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+            <span style="font-size: 36px;">🔐</span>
+        </div>
+    </div>
+    
+    <h2>Verify Your Account</h2>
+    
+    <p style="text-align: center; color: #64748b; margin-bottom: 40px; font-size: 18px;">
+        We need to verify your account to ensure security. Please use the verification code below:
+    </p>
+    
+    <div class="code-block">
+        <p class="code-label">Verification Code</p>
+        <p class="code">{{ verification_code }}</p>
+    </div>
+    
+    <div class="warning-card">
+        <p style="margin: 0; font-size: 15px; color: #92400e; text-align: center;">
+            <strong>⚠️ Important:</strong> This code will expire in <strong>{{ expiry_minutes }} minutes</strong>. 
+            Please enter it as soon as possible to complete your verification.
+        </p>
+    </div>
+    
+    <div class="security-card">
+        <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #1e40af;">Security Reminders</h3>
+        <div style="color: #1e40af; font-size: 15px;">
+            <p style="margin: 0 0 12px 0; display: flex; align-items: flex-start; gap: 8px;">
+                <span style="color: #3b82f6; font-weight: bold;">•</span>
+                <span>Never share this code with anyone</span>
+            </p>
+            <p style="margin: 0 0 12px 0; display: flex; align-items: flex-start; gap: 8px;">
+                <span style="color: #3b82f6; font-weight: bold;">•</span>
+                <span>ClubSync will never ask for this code via phone or email</span>
+            </p>
+            <p style="margin: 0; display: flex; align-items: flex-start; gap: 8px;">
+                <span style="color: #3b82f6; font-weight: bold;">•</span>
+                <span>If you didn't request this code, please ignore this email</span>
+            </p>
+        </div>
+    </div>
+    
+    <p style="text-align: center; color: #94a3b8; font-size: 14px; margin-top: 32px;">
+        This is an automated security message from ClubSync.
+    </p>
+{% endblock %}

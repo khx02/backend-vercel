@@ -1,0 +1,66 @@
+{% extends "base_email.html" %}
+
+{% block content %}
+    <div style="text-align: center; margin-bottom: 32px;">
+        <div class="icon-circle" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+            <span style="font-size: 36px;">🎉</span>
+        </div>
+    </div>
+    
+    <h2>You're Invited!</h2>
+    
+    <p style="text-align: center; font-size: 20px; color: #475569; margin-bottom: 36px;">
+        We'd love for you to join us at <strong style="color: #1e293b;">{{ event_name }}</strong>
+    </p>
+    
+    {% if event_description %}
+    <div style="background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); padding: 28px; border-radius: 16px; margin: 28px 0; border-left: 4px solid #8b5cf6;">
+        <p style="margin: 0; color: #6b46c1; font-style: italic; font-size: 16px; line-height: 1.6;">
+            "{{ event_description }}"
+        </p>
+    </div>
+    {% endif %}
+    
+    <div class="info-card">
+        <h3 style="margin: 0 0 20px 0; font-size: 20px; font-weight: 600; color: #1e293b;">Event Details</h3>
+        <div style="space-y: 12px;">
+            {% if event_start %}
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <span style="font-weight: 600; color: #64748b; min-width: 80px;">Starts:</span>
+                <span style="color: #1e293b; font-weight: 500; text-align: right; flex: 1;">{{ event_start }}</span>
+            </div>
+            {% endif %}
+            {% if event_end %}
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <span style="font-weight: 600; color: #64748b; min-width: 80px;">Ends:</span>
+                <span style="color: #1e293b; font-weight: 500; text-align: right; flex: 1;">{{ event_end }}</span>
+            </div>
+            {% endif %}
+            {% if event_location %}
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; flex-wrap: wrap; gap: 8px;">
+                <span style="font-weight: 600; color: #64748b; min-width: 80px;">Location:</span>
+                <span style="color: #1e293b; font-weight: 500; text-align: right; flex: 1;">{{ event_location }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <p style="text-align: center; font-weight: 600; color: #1e293b; margin-bottom: 32px; font-size: 18px;">
+        Please let us know if you'll be joining us:
+    </p>
+    
+    <div class="btn-group">
+        <a href="{{ accept_url }}" class="btn btn-success">
+            ✅ Accept Invitation
+        </a>
+        <a href="{{ decline_url }}" class="btn btn-danger">
+            ❌ Decline Invitation
+        </a>
+    </div>
+    
+    <p style="text-align: center; font-size: 14px; color: #94a3b8; margin-top: 24px;">
+        Can't decide right now? You can always change your response later.
+    </p>
+{% endblock %}

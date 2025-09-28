@@ -20,6 +20,7 @@ from sendgrid.helpers.mail import Mail
 
 from app.core.constants import BASE_URL
 from app.core.scheduler import scheduler
+from app.core.templates import env
 
 
 async def get_event_service(event_id: str, db: AsyncDatabase) -> Event:
@@ -45,19 +46,32 @@ async def get_event_service(event_id: str, db: AsyncDatabase) -> Event:
 
 # This should never fail outside of infrastructure / network related errors
 # It will still return as normal if the email is invalid
-def send_rsvp_invite_email(email: str, event_name: str, rsvp_id: str) -> int:
+def send_rsvp_invite_email(email: str, event: Event, rsvp_id: str) -> int:
+    start_dt_local = parser.isoparse(event.start).astimezone()
+    formatted_start = start_dt_local.strftime("%A, %B %d, %Y at %I:%M %p %Z")
+
+    end_dt_local = parser.isoparse(event.end).astimezone()
+    formatted_end = end_dt_local.strftime("%A, %B %d, %Y at %I:%M %p %Z")
+
     accept_url = f"{BASE_URL}/events/reply-rsvp/{rsvp_id}/accepted"
     decline_url = f"{BASE_URL}/events/reply-rsvp/{rsvp_id}/declined"
-    mail_html_content = f"""
-    <p>You have been invited to the event: <b>{event_name}</b>.</p>
-    <p>Please click the following link to RSVP:</p>
-    <p><a href="{accept_url}">Accept</a> | <a href="{decline_url}">Decline</a></p>
-    """
+
+    template = env.get_template("rsvp_request_email.html")
+    html_content = template.render(
+        event_name=event.name,
+        event_description=event.description,
+        event_start=formatted_start,
+        event_end=formatted_end,
+        event_location=event.location,
+        accept_url=accept_url,
+        decline_url=decline_url,
+    )
+
     message = Mail(
         from_email="admin@clubsync.club",
         to_emails=email,
         subject="You're invited to an event!",
-        html_content=mail_html_content,
+        html_content=html_content,
     )
     try:
         sg = SendGridAPIClient(os.environ["SENDGRID_KEY"])
@@ -75,7 +89,7 @@ async def send_rsvp_email_service(event_id: str, email: str, db: AsyncDatabase) 
 
     await db_add_rsvp_id_to_event(event_id, rsvp_id, db)
 
-    send_rsvp_invite_email(email, event.name, rsvp_id)
+    send_rsvp_invite_email(email, event, rsvp_id)
 
     return rsvp_id
 
@@ -141,9 +155,16 @@ async def send_reminder_email(event_id: str, when: str, db: AsyncDatabase):
 
     rsvps = await get_event_rsvps_service(event_id, db)
 
-    mail_html_content = f"""
-    <p>This is a reminder that the event: <b>{event.name}</b> is starting in {when}.</p>
-    """
+    start_dt_local = parser.isoparse(event.start).astimezone()
+    formatted_start = start_dt_local.strftime("%A, %B %d, %Y at %I:%M %p %Z")
+
+    template = env.get_template("event_reminder_email.html")
+    html_content = template.render(
+        event_name=event.name,
+        when=when,
+        event_location=event.location,
+        event_time=formatted_start,
+    )
 
     for rsvp in rsvps:
         if rsvp.rsvp_status != RSVPStatus.ACCEPTED:
@@ -153,7 +174,7 @@ async def send_reminder_email(event_id: str, when: str, db: AsyncDatabase):
             from_email="admin@clubsync.club",
             to_emails=rsvp.email,
             subject=f"Reminder: You have an event coming up!",
-            html_content=mail_html_content,
+            html_content=html_content,
         )
         try:
             sg = SendGridAPIClient(os.environ["SENDGRID_KEY"])
