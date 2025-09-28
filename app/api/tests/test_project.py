@@ -22,7 +22,6 @@ from app.schemas.project import (
     AddTodoResponse,
     AddTodoStatusRequest,
     AddTodoStatusResponse,
-    ApproveTodoRequest,
     ApproveTodoResponse,
     AssignTodoRequest,
     AssignTodoResponse,
@@ -37,20 +36,15 @@ from app.schemas.project import (
     ReorderTodoItemsResponse,
     ReorderTodoStatusesRequest,
     ReorderTodoStatusesResponse,
-    Todo,
     UpdateTodoRequest,
     UpdateTodoResponse,
     Project,
 )
-from app.service.project import spend_budget_service
 from app.test_shared.constants import (
     MOCK_PROJECT_ID,
     MOCK_PROJECT_NAME,
     MOCK_PROJECT_DESCRIPTION,
-    MOCK_STATUS_ID,
-    MOCK_TODO_DESCRIPTION,
     MOCK_TODO_ID,
-    MOCK_TODO_NAME,
     MOCK_USER_ID,
     MOCK_USER_2_ID,
 )

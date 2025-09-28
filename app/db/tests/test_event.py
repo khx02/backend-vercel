@@ -2,7 +2,6 @@ from unittest.mock import AsyncMock, MagicMock
 from bson import ObjectId
 import pytest
 
-from app import db
 from app.db.event import (
     db_create_rsvp_invite,
     db_get_event_or_none,
@@ -11,7 +10,7 @@ from app.db.event import (
     db_record_rsvp_response,
     db_update_event_details,
 )
-from app.schemas.event import RSVP, RSVPStatus
+from app.schemas.event import RSVPStatus
 from app.test_shared.constants import (
     MOCK_EVENT_DESCRIPTION,
     MOCK_EVENT_ID,

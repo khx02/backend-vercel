@@ -1,6 +1,6 @@
 from unittest.mock import AsyncMock, patch
 
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse
 import pytest
 
 from app.api.event import (
@@ -14,7 +14,6 @@ from app.schemas.event import (
     Event,
     GetEventRSVPsResponse,
     GetEventResponse,
-    ReplyRSVPResponse,
     SendRSVPEmailRequest,
     SendRSVPEmailResponse,
     UpdateEventDetailsRequest,
