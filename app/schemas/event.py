@@ -19,6 +19,10 @@ class Event(BaseModel):
     id: str
     name: str
     description: str
+    start: str
+    end: str
+    colour: str
+    location: str
     rsvp_ids: List[str]
     public: bool = False
 

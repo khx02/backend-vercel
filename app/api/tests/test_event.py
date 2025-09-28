@@ -21,9 +21,13 @@ from app.schemas.event import (
     UpdateEventDetailsResponse,
 )
 from app.test_shared.constants import (
+    MOCK_EVENT_COLOUR,
     MOCK_EVENT_DESCRIPTION,
+    MOCK_EVENT_END,
     MOCK_EVENT_ID,
+    MOCK_EVENT_LOCATION,
     MOCK_EVENT_NAME,
+    MOCK_EVENT_START,
     MOCK_USER_EMAIL,
 )
 
@@ -36,6 +40,10 @@ async def test_create_event_service_success(mock_get_event_service):
         id=MOCK_EVENT_ID,
         name=MOCK_EVENT_NAME,
         description=MOCK_EVENT_DESCRIPTION,
+        start=MOCK_EVENT_START,
+        end=MOCK_EVENT_END,
+        colour=MOCK_EVENT_COLOUR,
+        location=MOCK_EVENT_LOCATION,
         rsvp_ids=[],
     )
 
