@@ -1,5 +1,6 @@
 annotated-types==0.7.0
 anyio==4.9.0
+APScheduler==3.11.0
 bcrypt==4.0.1
 certifi==2025.6.15
 charset-normalizer==3.4.3
@@ -46,6 +47,7 @@ starlette==0.46.2
 typer==0.16.0
 typing-inspection==0.4.1
 typing_extensions==4.14.0
+tzlocal==5.3.1
 urllib3==2.5.0
 uvicorn==0.34.3
 uvloop==0.21.0

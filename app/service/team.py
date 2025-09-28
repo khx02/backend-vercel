@@ -265,6 +265,10 @@ async def create_event_for_team_service(
 
     event_in_db_dict = await db_create_event_for_team(team_id, create_event_request, db)
 
+    # Schedule event reminders
+    schedule_event_reminders(event)
+
+
     return Event(
         id=event_in_db_dict["_id"],
         name=event_in_db_dict["name"],
