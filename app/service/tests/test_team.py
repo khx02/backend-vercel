@@ -20,6 +20,7 @@ from app.service.team import (
     create_team_service,
     delete_event_service,
     delete_project_service,
+    delete_team_service,
     join_team_service,
     kick_team_member_service,
     leave_team_service,
@@ -201,8 +202,11 @@ async def test_leave_team_service_success(mock_db_get_team_by_id, mock_db_leave_
 
 
 @pytest.mark.asyncio
+@patch("app.service.team.db_delete_team")
 @patch("app.service.team.db_get_team_by_id")
-async def test_leave_team_service_failure_last_exec(mock_db_get_team_by_id):
+async def test_leave_team_service_last_executive(
+    mock_db_get_team_by_id, mock_db_delete_team
+):
     mock_db = AsyncMock()
     mock_db_get_team_by_id.return_value = {
         "_id": MOCK_TEAM_ID,
@@ -211,15 +215,22 @@ async def test_leave_team_service_failure_last_exec(mock_db_get_team_by_id):
         "exec_member_ids": [MOCK_USER_ID],
         "event_ids": [],
     }
+    mock_db_delete_team.return_value = None
 
-    with pytest.raises(HTTPException) as exc_info:
-        await leave_team_service(MOCK_TEAM_ID, MOCK_USER_ID, mock_db)
+    result = await leave_team_service(MOCK_TEAM_ID, MOCK_USER_ID, mock_db)
 
-    assert exc_info.value.status_code == 403
-    assert (
-        exc_info.value.detail
-        == f"User is the last executive member and cannot leave the team: user_id={MOCK_USER_ID}, team_id={MOCK_TEAM_ID}"
-    )
+    assert isinstance(result, LeaveTeamResponse)
+
+
+@pytest.mark.asyncio
+@patch("app.service.team.db_delete_team")
+async def test_db_delete_team_success(mock_db_delete_team):
+    mock_db = AsyncMock()
+    mock_db_delete_team.return_value = None
+
+    result = await delete_team_service(MOCK_TEAM_ID, mock_db)
+
+    assert result is None
 
 
 @pytest.mark.asyncio

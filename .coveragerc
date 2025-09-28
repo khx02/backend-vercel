@@ -1,3 +1,4 @@
 [run]
 omit =
     app/test_shared/test_e2e.py
+    app/test_shared/test_last_exec_del_flow.py
