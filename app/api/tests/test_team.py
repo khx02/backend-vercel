@@ -36,9 +36,13 @@ from app.schemas.team import (
 from app.schemas.user import UserModel
 
 from app.test_shared.constants import (
+    MOCK_EVENT_COLOUR,
     MOCK_EVENT_DESCRIPTION,
+    MOCK_EVENT_END,
     MOCK_EVENT_ID,
+    MOCK_EVENT_LOCATION,
     MOCK_EVENT_NAME,
+    MOCK_EVENT_START,
     MOCK_PROJECT_ID,
     MOCK_TEAM_SHORT_ID,
     MOCK_USER_ID,
@@ -259,10 +263,20 @@ async def test_create_event_success(mock_create_event_for_team_service):
         id=MOCK_EVENT_ID,
         name=MOCK_EVENT_NAME,
         description=MOCK_EVENT_DESCRIPTION,
+        start=MOCK_EVENT_START,
+        end=MOCK_EVENT_END,
+        colour=MOCK_EVENT_COLOUR,
+        location=MOCK_EVENT_LOCATION,
         rsvp_ids=[],
     )
+
     mock_create_event_request = CreateEventRequest(
-        name=MOCK_EVENT_NAME, description=MOCK_EVENT_DESCRIPTION
+        name=MOCK_EVENT_NAME,
+        description=MOCK_EVENT_DESCRIPTION,
+        start=MOCK_EVENT_START,
+        end=MOCK_EVENT_END,
+        colour=MOCK_EVENT_COLOUR,
+        location=MOCK_EVENT_LOCATION,
     )
 
     result = await create_event(MOCK_TEAM_ID, mock_create_event_request, mock_db)
@@ -305,6 +319,10 @@ async def test_get_team_events_success(mock_get_team_events_service):
             id=MOCK_EVENT_ID,
             name=MOCK_EVENT_NAME,
             description=MOCK_EVENT_DESCRIPTION,
+            start=MOCK_EVENT_START,
+            end=MOCK_EVENT_END,
+            colour=MOCK_EVENT_COLOUR,
+            location=MOCK_EVENT_LOCATION,
             rsvp_ids=[],
         )
     ]

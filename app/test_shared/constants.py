@@ -36,6 +36,10 @@ MOCK_PROJECT_2_DESCRIPTION = "This is a mock project 2."
 MOCK_EVENT_ID = str(ObjectId())
 MOCK_EVENT_NAME = "Mock Event"
 MOCK_EVENT_DESCRIPTION = "This is a mock event."
+MOCK_EVENT_START = "2023-10-10T10:00:00Z"
+MOCK_EVENT_END = "2023-10-10T12:00:00Z"
+MOCK_EVENT_COLOUR = "blue"
+MOCK_EVENT_LOCATION = "123 Mock St, Mock City"
 
 MOCK_RSVP_ID = str(ObjectId())
 MOCK_RSVP_STATUS = "accepted"

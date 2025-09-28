@@ -21,9 +21,13 @@ from app.db.team import (
 
 from app.schemas.team import CreateEventRequest, CreateProjectRequest
 from app.test_shared.constants import (
+    MOCK_EVENT_COLOUR,
     MOCK_EVENT_DESCRIPTION,
+    MOCK_EVENT_END,
     MOCK_EVENT_ID,
+    MOCK_EVENT_LOCATION,
     MOCK_EVENT_NAME,
+    MOCK_EVENT_START,
     MOCK_PROJECT_ID,
     MOCK_TEAM_SHORT_ID,
     MOCK_USER_ID,
@@ -225,7 +229,12 @@ async def test_db_create_event_for_team_success():
     )
     mock_db.__getitem__.return_value = mock_events_collection
     mock_create_event_request = CreateEventRequest(
-        name=MOCK_EVENT_NAME, description=MOCK_EVENT_DESCRIPTION
+        name=MOCK_EVENT_NAME,
+        description=MOCK_EVENT_DESCRIPTION,
+        start=MOCK_EVENT_START,
+        end=MOCK_EVENT_END,
+        colour=MOCK_EVENT_COLOUR,
+        location=MOCK_EVENT_LOCATION,
     )
 
     result = await db_create_event_for_team(
