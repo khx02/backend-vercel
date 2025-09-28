@@ -11,6 +11,7 @@ from app.db.team import (
     db_create_team,
     db_delete_event,
     db_delete_project,
+    db_delete_team,
     db_get_event_by_id,
     db_get_project_by_id,
     db_get_team_by_short_id,
@@ -170,18 +171,21 @@ async def leave_team_service(
             detail=f"User is not a member of the team: user_id={user_id}, team_id={team_id}",
         )
 
+    # If the last executive member of a team leaves, the team is deleted
     if (
         user_id in existing_team["exec_member_ids"]
         and len(existing_team["exec_member_ids"]) == 1
     ):
-        raise HTTPException(
-            status_code=403,
-            detail=f"User is the last executive member and cannot leave the team: user_id={user_id}, team_id={team_id}",
-        )
+        await delete_team_service(team_id, db)
+        return LeaveTeamResponse()
 
     await db_leave_team(team_id, user_id, db)
 
     return LeaveTeamResponse()
+
+
+async def delete_team_service(team_id: str, db: AsyncDatabase) -> None:
+    await db_delete_team(team_id, db)
 
 
 async def kick_team_member_service(

@@ -70,6 +70,10 @@ async def db_leave_team(team_id: str, user_id: str, db: AsyncDatabase) -> None:
     )
 
 
+async def db_delete_team(team_id: str, db: AsyncDatabase) -> None:
+    await db[TEAMS_COLLECTION].delete_one({"_id": ObjectId(team_id)})
+
+
 async def db_kick_team_member(
     team_id: str, kick_member_id: str, db: AsyncDatabase
 ) -> None:

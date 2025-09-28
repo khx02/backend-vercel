@@ -10,6 +10,7 @@ from app.db.team import (
     db_create_team,
     db_delete_event,
     db_delete_project,
+    db_delete_team,
     db_get_event_by_id,
     db_get_project_by_id,
     db_join_team,
@@ -129,6 +130,18 @@ async def test_db_leave_team_success():
     mock_db.__getitem__.return_value = mock_teams_collection
 
     result = await db_leave_team(MOCK_TEAM_ID, MOCK_USER_ID, mock_db)
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_db_delete_team_success():
+    mock_db = AsyncMock()
+    mock_teams_collection = AsyncMock()
+    mock_db.__getitem__.return_value = mock_teams_collection
+    mock_teams_collection.delete_one.return_value = None
+
+    result = await db_delete_team(MOCK_TEAM_ID, mock_db)
 
     assert result is None
 
