@@ -1,7 +1,9 @@
+from datetime import datetime, timedelta, timezone
 import os
 from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 from typing import List
+from dateutil import parser
 
 from app.db.event import (
     db_create_rsvp_invite,
@@ -16,6 +18,10 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
 from app.core.constants import BASE_URL
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+scheduler = AsyncIOScheduler()
 
 
 async def get_event_service(event_id: str, db: AsyncDatabase) -> Event:
@@ -122,3 +128,58 @@ async def update_event_details_service(
     }
 
     await db_update_event_details(event_id, new_event_details, db)
+
+
+# Reminder email scheduling logic
+async def send_reminder_email(event_id: str, when: str, db: AsyncDatabase):
+    event = await get_event_service(event_id, db)
+    if not event:
+        return
+
+    rsvps = await get_event_rsvps_service(event_id, db)
+
+    mail_html_content = f"""
+    <p>This is a reminder that the event: <b>{event.name}</b> is starting in {when}.</p>
+    """
+
+    for rsvp in rsvps:
+        if rsvp.rsvp_status != RSVPStatus.ACCEPTED:
+            continue
+
+        message = Mail(
+            from_email="admin@clubsync.club",
+            to_emails=rsvp.email,
+            subject=f"Reminder: You have an event coming up!",
+            html_content=mail_html_content,
+        )
+        try:
+            sg = SendGridAPIClient(os.environ["SENDGRID_KEY"])
+            response = sg.send(message)
+            return response.status_code
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, detail=f"Failed to send email: {str(e)}"
+            )
+
+
+def schedule_event_reminders(
+    event_id: str, event_start: str, db: AsyncDatabase
+) -> None:
+    event_start_time = parser.isoparse(event_start)
+
+    reminders = {
+        "1 hour": event_start_time - timedelta(hours=1),
+        "1 day": event_start_time - timedelta(days=1),
+        "1 week": event_start_time - timedelta(weeks=1),
+    }
+
+    for label, run_time in reminders.items():
+        if run_time > datetime.now(timezone.utc):
+            scheduler.add_job(
+                send_reminder_email,
+                trigger="date",
+                run_date=run_time,
+                args=[event_id, label, db],
+                id=f"{event_id}-{label}",
+                replace_existing=True,
+            )
