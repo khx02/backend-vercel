@@ -30,7 +30,6 @@ from app.schemas.team import (
     CreateProjectRequest,
     CreateProjectResponse,
     CreateTeamResponse,
-    DeleteProjectResponse,
     GetTeamResponse,
     JoinTeamResponse,
     KickTeamMemberResponse,

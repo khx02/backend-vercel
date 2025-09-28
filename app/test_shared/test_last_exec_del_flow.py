@@ -5,14 +5,9 @@ import requests
 import random
 import string
 
-from yaml import SequenceEndEvent
 
 from app.test_shared.constants import (
-    MOCK_PROJECT_DESCRIPTION,
-    MOCK_PROJECT_NAME,
     MOCK_TEAM_NAME,
-    MOCK_TODO_DESCRIPTION,
-    MOCK_TODO_NAME,
 )
 
 IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"

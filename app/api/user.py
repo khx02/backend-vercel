@@ -10,7 +10,6 @@ from app.schemas.user import (
     CreateUserResponse,
     GetCurrentUserResponse,
     GetCurrentUserTeamsResponse,
-    GetUserByIdRequest,
     GetUserByIdResponse,
     UserModel,
     VerifyCodeRequest,

@@ -5,7 +5,6 @@ import requests
 import random
 import string
 
-from yaml import SequenceEndEvent
 
 from app.test_shared.constants import (
     MOCK_PROJECT_DESCRIPTION,

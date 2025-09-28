@@ -3,7 +3,6 @@ from fastapi.responses import HTMLResponse
 from pymongo.asynchronous.database import AsyncDatabase
 from pathlib import Path
 
-from app.core.constants import FRONTEND_URL
 from app.db.client import get_db
 from app.schemas.event import (
     GetEventRSVPsResponse,

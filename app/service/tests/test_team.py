@@ -8,7 +8,6 @@ from app.schemas.event import Event
 from app.schemas.team import (
     CreateEventRequest,
     CreateTeamResponse,
-    DeleteProjectResponse,
     JoinTeamResponse,
     KickTeamMemberResponse,
     LeaveTeamResponse,

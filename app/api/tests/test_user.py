@@ -82,6 +82,7 @@ async def test_get_current_user_info_success():
     assert result.user.first_name == MOCK_USER_FIRST_NAME
     assert result.user.last_name == MOCK_USER_LAST_NAME
 
+
 @pytest.mark.asyncio
 @patch("app.api.user.get_user_by_id_service")
 async def test_get_user_by_id_success(mock_get_user_by_id_service):

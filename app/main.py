@@ -1,11 +1,9 @@
 import asyncio
-from re import A
 from fastapi import APIRouter, FastAPI, Request, HTTPException, status
 from fastapi.concurrency import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.api.auth import router as auth_router
 from app.api.team import router as team_router

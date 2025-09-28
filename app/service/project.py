@@ -1,4 +1,3 @@
-from re import A
 from typing import List
 from fastapi import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
