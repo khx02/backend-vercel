@@ -8,6 +8,7 @@ from app.api.team import (
     create_team,
     delete_event,
     delete_project,
+    delete_team,
     get_team_events,
     join_team,
     kick_team_member,
@@ -24,6 +25,7 @@ from app.schemas.team import (
     DeleteEventResponse,
     DeleteProjectRequest,
     DeleteProjectResponse,
+    DeleteTeamResponse,
     GetTeamEventsResponse,
     JoinTeamResponse,
     KickTeamMemberRequest,
@@ -35,6 +37,7 @@ from app.schemas.team import (
 )
 from app.schemas.user import UserModel
 
+from app.service.team import delete_team_service
 from app.test_shared.constants import (
     MOCK_EVENT_COLOUR,
     MOCK_EVENT_DESCRIPTION,
@@ -195,6 +198,21 @@ async def test_leave_team_failure(mock_leave_team_service):
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == f"Team does not exist: team_id={MOCK_TEAM_ID}"
+
+
+@pytest.mark.asyncio
+@patch("app.api.team.delete_team_service")
+async def test_delete_team_success(mock_delete_team_service):
+    mock_db = AsyncMock()
+    mock_current_user = UserModel(
+        id=MOCK_USER_ID,
+        email=MOCK_USER_EMAIL,
+    )
+    mock_delete_team_service.return_value = DeleteTeamResponse()
+
+    result = await delete_team(MOCK_TEAM_ID, mock_current_user, mock_db)
+
+    assert isinstance(result, DeleteTeamResponse)
 
 
 @pytest.mark.asyncio

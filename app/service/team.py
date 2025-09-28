@@ -175,7 +175,7 @@ async def leave_team_service(
         user_id in existing_team["exec_member_ids"]
         and len(existing_team["exec_member_ids"]) == 1
     ):
-        await delete_team_service(team_id, db)
+        await delete_team_service(team_id, user_id, db)
         return LeaveTeamResponse()
 
     await db_leave_team(team_id, user_id, db)
@@ -183,7 +183,20 @@ async def leave_team_service(
     return LeaveTeamResponse()
 
 
-async def delete_team_service(team_id: str, db: AsyncDatabase) -> None:
+async def delete_team_service(team_id: str, user_id: str, db: AsyncDatabase) -> None:
+    existing_team = await db_get_team_by_id(team_id, db)
+    if not existing_team:
+        raise HTTPException(
+            status_code=404, detail=f"Team does not exist: team_id={team_id}"
+        )
+
+    # User must be an executive member to delete the team
+    if user_id not in existing_team["exec_member_ids"]:
+        raise HTTPException(
+            status_code=403,
+            detail=f"User does not have permission to delete team: user_id={user_id}, team_id={team_id}",
+        )
+
     await db_delete_team(team_id, db)
 
 

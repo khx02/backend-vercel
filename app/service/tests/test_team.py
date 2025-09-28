@@ -223,11 +223,19 @@ async def test_leave_team_service_last_executive(
 
 @pytest.mark.asyncio
 @patch("app.service.team.db_delete_team")
-async def test_db_delete_team_success(mock_db_delete_team):
+@patch("app.service.team.db_get_team_by_id")
+async def test_db_delete_team_success(mock_db_get_team_by_id, mock_db_delete_team):
     mock_db = AsyncMock()
+    mock_db_get_team_by_id.return_value = {
+        "_id": MOCK_TEAM_ID,
+        "name": MOCK_TEAM_NAME,
+        "member_ids": [MOCK_USER_ID, MOCK_USER_2_ID],
+        "exec_member_ids": [MOCK_USER_ID],
+        "event_ids": [],
+    }
     mock_db_delete_team.return_value = None
 
-    result = await delete_team_service(MOCK_TEAM_ID, mock_db)
+    result = await delete_team_service(MOCK_TEAM_ID, MOCK_USER_ID, mock_db)
 
     assert result is None
 
