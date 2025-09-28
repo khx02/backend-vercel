@@ -11,9 +11,13 @@ from app.service.event import (
 )
 from app.service.team import get_team_events_service
 from app.test_shared.constants import (
+    MOCK_EVENT_COLOUR,
     MOCK_EVENT_DESCRIPTION,
+    MOCK_EVENT_END,
     MOCK_EVENT_ID,
+    MOCK_EVENT_LOCATION,
     MOCK_EVENT_NAME,
+    MOCK_EVENT_START,
     MOCK_INSERTED_ID,
     MOCK_NEW_EVENT_DESCRIPTION,
     MOCK_NEW_EVENT_NAME,
@@ -33,6 +37,10 @@ async def test_get_event_service_success(mock_db_get_event_or_none):
         "name": MOCK_EVENT_NAME,
         "description": MOCK_EVENT_DESCRIPTION,
         "rsvp_ids": [],
+        "start": MOCK_EVENT_START,
+        "end": MOCK_EVENT_END,
+        "colour": MOCK_EVENT_COLOUR,
+        "location": MOCK_EVENT_LOCATION,
     }
 
     result = await get_event_service(MOCK_EVENT_ID, mock_db)
@@ -56,8 +64,13 @@ async def test_send_rsvp_email_service_success(
         id=MOCK_EVENT_ID,
         name=MOCK_EVENT_NAME,
         description=MOCK_EVENT_DESCRIPTION,
+        start=MOCK_EVENT_START,
+        end=MOCK_EVENT_END,
+        colour=MOCK_EVENT_COLOUR,
+        location=MOCK_EVENT_LOCATION,
         rsvp_ids=[],
     )
+
     mock_db_create_rsvp_invite.return_value = {
         "_id": MOCK_INSERTED_ID,
         "email": MOCK_USER_EMAIL,
@@ -141,6 +154,10 @@ async def test_get_team_events_service_success(
             "name": MOCK_EVENT_NAME,
             "description": MOCK_EVENT_DESCRIPTION,
             "rsvp_ids": [],
+            "start": MOCK_EVENT_START,
+            "end": MOCK_EVENT_END,
+            "colour": MOCK_EVENT_COLOUR,
+            "location": MOCK_EVENT_LOCATION,
         }
     ]
     result = await get_team_events_service(MOCK_EVENT_ID, MOCK_USER_EMAIL, mock_db)
