@@ -196,15 +196,15 @@ async def reorder_todo_items_service(
 async def add_todo_status_service(
     project_id: str, todo_status_request: AddTodoStatusRequest, db: AsyncDatabase
 ) -> AddTodoStatusResponse:
-
+    
     # Check if project exists
     project_in_db_dict = await db_get_project(project_id, db)
     if not project_in_db_dict:
         raise HTTPException(
             status_code=404, detail=f"Project does not exist: project_id={project_id}"
         )
-
-    await db_add_todo_status(project_id, todo_status_request.name, db)
+    
+    await db_add_todo_status(project_id, todo_status_request.name, todo_status_request.color, db)
 
     return AddTodoStatusResponse()
 

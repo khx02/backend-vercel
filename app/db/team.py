@@ -91,9 +91,9 @@ async def db_create_project(
         "name": create_project_request.name,
         "description": create_project_request.description,
         "todo_statuses": [
-            {"id": ObjectId(), "name": "To Do"},
-            {"id": ObjectId(), "name": "In Progress"},
-            {"id": ObjectId(), "name": "Done"},
+            {"id": ObjectId(), "name": "To Do", "color": "#6B7280"},
+            {"id": ObjectId(), "name": "In Progress", "color": "#F59E0B"},
+            {"id": ObjectId(), "name": "Done", "color": "#10B981"},
         ],
         "todo_ids": [],
         "budget_available": 0.0,

@@ -94,14 +94,15 @@ async def db_reorder_todo_items(
     )
 
 
-async def db_add_todo_status(project_id: str, name: str, db: AsyncDatabase) -> None:
+async def db_add_todo_status(project_id: str, name: str, color: str, db: AsyncDatabase) -> None:
 
-    todo_status_dict = {"id": ObjectId(), "name": name}
-
+    todo_status_dict = {"id": ObjectId(), "name": name, "color": color}
+    
     await db[PROJECTS_COLLECTION].update_one(
         {"_id": ObjectId(project_id)},
         {"$addToSet": {"todo_statuses": todo_status_dict}},
     )
+
 
 
 async def db_delete_todo_status(
