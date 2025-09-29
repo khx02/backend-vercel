@@ -118,6 +118,16 @@ class ReorderTodoStatusesResponse(BaseModel):
     pass
 
 
+class UpdateTodoStatusRequest(BaseModel):
+    status_id: str
+    name: str
+    color: str
+
+
+class UpdateTodoStatusResponse(BaseModel):
+    pass
+
+
 class AssignTodoRequest(BaseModel):
     todo_id: str
     assignee_id: str

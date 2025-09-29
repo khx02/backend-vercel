@@ -28,6 +28,8 @@ from app.schemas.project import (
     ReorderTodoStatusesResponse,
     UpdateTodoRequest,
     UpdateTodoResponse,
+    UpdateTodoStatusRequest,
+    UpdateTodoStatusResponse,
 )
 from app.schemas.user import UserModel
 from app.service.project import (
@@ -45,6 +47,7 @@ from app.service.project import (
     reorder_todo_statuses_service,
     spend_budget_service,
     update_todo_service,
+    update_todo_status_service,
 )
 
 router = APIRouter()
@@ -149,6 +152,17 @@ async def reorder_todo_statuses(
     return await reorder_todo_statuses_service(
         project_id, reorder_todo_statuses_request, db
     )
+
+
+@router.post("/update-todo-status/{project_id}")
+async def update_todo_status(
+    project_id: str,
+    update_todo_status_request: UpdateTodoStatusRequest,
+    _: None = Depends(require_executive_project_access),
+    db: AsyncDatabase = Depends(get_db),
+) -> UpdateTodoStatusResponse:
+
+    return await update_todo_status_service(project_id, update_todo_status_request, db)
 
 
 @router.post("/assign-todo/{project_id}")

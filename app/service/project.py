@@ -21,6 +21,8 @@ from app.schemas.project import (
     UpdateTodoRequest,
     UpdateTodoResponse,
     Todo,
+    UpdateTodoStatusRequest,
+    UpdateTodoStatusResponse,
 )
 from app.db.project import (
     db_add_todo,
@@ -36,6 +38,7 @@ from app.db.project import (
     db_update_budget_available,
     db_update_budget_spent,
     db_update_todo,
+    db_update_todo_statuses,
 )
 from app.db.project import db_get_project
 
@@ -266,6 +269,38 @@ async def reorder_todo_statuses_service(
     await db_reorder_todo_statuses(project_id, new_statuses, db)
 
     return ReorderTodoStatusesResponse()
+
+
+async def update_todo_status_service(
+    project_id: str, update_todo_status_request: UpdateTodoStatusRequest, 
+    db: AsyncDatabase
+) -> UpdateTodoStatusResponse:
+
+    # Check if project exists
+    project_in_db_dict = await db_get_project(project_id, db)
+    if not project_in_db_dict:
+        raise HTTPException(
+            status_code=404, detail=f"Project does not exist: project_id={project_id}"
+        )
+
+    # Check if status_id exists in project
+    status_ids = [str(status["id"]) for status in project_in_db_dict["todo_statuses"]]
+    if update_todo_status_request.status_id not in status_ids:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status_id: {update_todo_status_request.status_id}",
+        )
+
+    # Call DB layer to update the todo status
+    await db_update_todo_statuses(
+        project_id,
+        update_todo_status_request.status_id,
+        update_todo_status_request.name,
+        update_todo_status_request.color,
+        db,
+    )
+
+    return UpdateTodoStatusResponse()
 
 
 async def assign_todo_service(

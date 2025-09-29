@@ -104,7 +104,6 @@ async def db_add_todo_status(project_id: str, name: str, color: str, db: AsyncDa
     )
 
 
-
 async def db_delete_todo_status(
     project_id: str, status_id: str, db: AsyncDatabase
 ) -> None:
@@ -142,6 +141,16 @@ async def db_reorder_todo_statuses(
     await db[PROJECTS_COLLECTION].update_one(
         {"_id": ObjectId(project_id)},
         {"$set": {"todo_statuses": new_statuses}},
+    )
+
+
+async def db_update_todo_statuses(
+    project_id: str, status_id: str, name: str, color: str, db: AsyncDatabase
+) -> None:
+
+    await db[PROJECTS_COLLECTION].update_one(
+        {"_id": ObjectId(project_id), "todo_statuses.id": ObjectId(status_id)},
+        {"$set": {"todo_statuses.$.name": name, "todo_statuses.$.color": color}},
     )
 
 
