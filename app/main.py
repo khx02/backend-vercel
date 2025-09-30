@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from fastapi import APIRouter, FastAPI, Request, HTTPException, status
 from fastapi.concurrency import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,6 +35,14 @@ async def lifespan(app: FastAPI):
     scheduler.shutdown()
 
 
+# Logger setup
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+
 app = FastAPI(lifespan=lifespan)
 
 # Middleware for timing out requests which take too long
@@ -49,6 +58,30 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Middleware for logging requests and responses
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    method = request.method
+    path = request.url.path
+
+    query = dict(request.query_params)
+
+    logger.info(f"Incoming request: {method} {path} | Query: {query}")
+
+    try:
+        body = await request.json()
+        logger.info(f"Body: {body}")
+    except Exception:
+        pass
+
+    response = await call_next(request)
+
+    logger.info(f"Completed {method} {path} -> {response.status_code}")
+
+    return response
+
 
 api_router = APIRouter(prefix="/api")
 
