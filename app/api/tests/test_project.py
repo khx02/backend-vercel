@@ -45,6 +45,8 @@ from app.test_shared.constants import (
     MOCK_PROJECT_NAME,
     MOCK_PROJECT_DESCRIPTION,
     MOCK_TODO_ID,
+    MOCK_TODO_STATUS_COLOUR,
+    MOCK_TODO_STATUS_NAME,
     MOCK_USER_ID,
     MOCK_USER_2_ID,
 )
@@ -157,7 +159,9 @@ async def test_reorder_todo_items_success(mock_reorder_todo_items_service):
 async def test_add_todo_status_success(mock_add_todo_status_service):
     mock_db = AsyncMock()
     mock_add_todo_status_service.return_value = AddTodoStatusResponse()
-    add_todo_status_request = AddTodoStatusRequest(name="In Progress")
+    add_todo_status_request = AddTodoStatusRequest(
+        name=MOCK_TODO_STATUS_NAME, color=MOCK_TODO_STATUS_COLOUR
+    )
 
     result = await add_todo_status(MOCK_PROJECT_ID, add_todo_status_request, db=mock_db)
 
