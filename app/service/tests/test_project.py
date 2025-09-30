@@ -32,6 +32,7 @@ from app.test_shared.constants import (
     MOCK_TODO_ID,
     MOCK_TODO_NAME,
     MOCK_TODO_STATUS_2_NAME,
+    MOCK_TODO_STATUS_COLOUR,
     MOCK_TODO_STATUS_NAME,
     MOCK_USER_ID,
 )
@@ -166,7 +167,9 @@ async def test_add_todo_status_service_success(
     mock_db_get_project, mock_db_add_todo_status
 ):
     mock_db = AsyncMock()
-    status_req = AddTodoStatusRequest(name=MOCK_TODO_NAME)
+    status_req = AddTodoStatusRequest(
+        name=MOCK_TODO_NAME, color=MOCK_TODO_STATUS_COLOUR
+    )
     mock_db_get_project.return_value = {
         "_id": MOCK_PROJECT_ID,
     }

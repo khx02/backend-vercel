@@ -6,6 +6,7 @@ from typing import List
 class TodoStatus(BaseModel):
     id: str
     name: str
+    color: str
 
 
 class Todo(BaseModel):
@@ -92,7 +93,7 @@ class ReorderTodoItemsResponse(BaseModel):
 # Will add the todo status as the last status
 class AddTodoStatusRequest(BaseModel):
     name: str
-
+    color: str
 
 class AddTodoStatusResponse(BaseModel):
     pass
@@ -114,6 +115,16 @@ class ReorderTodoStatusesRequest(BaseModel):
 
 
 class ReorderTodoStatusesResponse(BaseModel):
+    pass
+
+
+class UpdateTodoStatusRequest(BaseModel):
+    status_id: str
+    name: str
+    color: str
+
+
+class UpdateTodoStatusResponse(BaseModel):
     pass
 
 

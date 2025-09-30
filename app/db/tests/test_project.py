@@ -28,6 +28,7 @@ from app.test_shared.constants import (
     MOCK_TODO_ID,
     MOCK_TODO_NAME,
     MOCK_TODO_STATUS_2_NAME,
+    MOCK_TODO_STATUS_COLOUR,
     MOCK_TODO_STATUS_NAME,
     MOCK_USER_ID,
 )
@@ -160,13 +161,14 @@ async def test_db_get_todo_items_success():
 
 @pytest.mark.asyncio
 async def test_db_add_todo_status_success():
-    name = MOCK_TODO_STATUS_NAME
     mock_projects_collection = AsyncMock()
     mock_projects_collection.update_one.return_value = None
     mock_db = AsyncMock()
     mock_db.__getitem__.return_value = mock_projects_collection
 
-    await db_add_todo_status(MOCK_PROJECT_ID, name, mock_db)
+    await db_add_todo_status(
+        MOCK_PROJECT_ID, MOCK_TODO_STATUS_NAME, MOCK_TODO_STATUS_COLOUR, mock_db
+    )
 
     mock_projects_collection.update_one.assert_called_once()
 
