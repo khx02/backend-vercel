@@ -61,10 +61,15 @@ def clear_auth_cookies(response: Response) -> None:
 # ---------- shared deps ----------
 # This basically runs both the token and the cookie one, prioritising the cookie one
 async def get_current_user_info(
+    request: Request,
     db: AsyncDatabase = Depends(get_db),
     cookie: Annotated[Optional[str], Cookie(alias="access_token")] = None,
     access_token: Annotated[Optional[str], Depends(oauth2_scheme)] = None,
 ) -> UserModel:
+    origin = request.headers.get("origin", "")
+    has_auth_header = bool(request.headers.get("authorization"))
+    has_cookie = cookie is not None
+
     try:
         cookie_user = await get_current_user_info_from_cookie(cookie, db)
         return cookie_user
@@ -75,7 +80,11 @@ async def get_current_user_info(
         except Exception as token_e:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"Cookie: {cookie_e}, Token: {token_e}",
+                detail=(
+                    "Authentication failed. "
+                    f"origin='{origin}', cookie_present={has_cookie}, auth_header_present={has_auth_header}. "
+                    f"CookieError='{cookie_e}', TokenError='{token_e}'"
+                ),
             )
 
 
