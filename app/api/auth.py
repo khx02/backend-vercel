@@ -8,6 +8,7 @@ from fastapi import (
     Depends,
     HTTPException,
     Response,
+    Request,
     status,
 )
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -151,15 +152,51 @@ async def authenticate_user(db: AsyncDatabase, email: str, password: str) -> Use
 # ---------- endpoints ----------
 @router.post("/set-token", response_model=TokenRes)
 async def login_for_token_access(
-    response: Response,  # <-- add response
+    response: Response,
+    request: Request,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: AsyncDatabase = Depends(get_db),
 ) -> TokenRes:
-    user = await authenticate_user(db, form_data.username, form_data.password)
-    token_pair = create_token_pair(data={"sub": user.email})
+    # Debug: ensure correct content type for OAuth2PasswordRequestForm
+    try:
+        content_type = request.headers.get("content-type", "")
+        origin = request.headers.get("origin", "")
+        if "application/x-www-form-urlencoded" not in content_type:
+            raise HTTPException(
+                status_code=415,
+                detail=f"Unsupported Content-Type for OAuth2PasswordRequestForm: '{content_type}'. Expected 'application/x-www-form-urlencoded'. Origin='{origin}'",
+            )
+    except HTTPException:
+        raise
+    except Exception:
+        # non-fatal; continue
+        pass
 
-    # set cookies for browser session
-    set_auth_cookies(response, token_pair.access_token, token_pair.refresh_token)
+    if not form_data.username or not form_data.password:
+        raise HTTPException(
+            status_code=400,
+            detail="Missing form fields 'username' and/or 'password'. Ensure body is URL-encoded form data.",
+        )
+
+    try:
+        user = await authenticate_user(db, form_data.username, form_data.password)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"authenticate_user failed: {e.__class__.__name__}: {str(e)}",
+        )
+
+    try:
+        token_pair = create_token_pair(data={"sub": user.email})
+        # set cookies for browser session
+        set_auth_cookies(response, token_pair.access_token, token_pair.refresh_token)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"set_auth_cookies failed: {e.__class__.__name__}: {str(e)}",
+        )
 
     # still return body (handy for non-browser clients / testing)
     return TokenRes(
