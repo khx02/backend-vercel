@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import os
+from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI, Request, HTTPException, status
 from fastapi.concurrency import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,8 +50,10 @@ app = FastAPI(lifespan=lifespan)
 # Middleware for timing out requests which take too long
 app.add_middleware(TimeoutMiddleware, timeout=10.0)
 
-# Middleware for handling CORS
-origins = ["http://localhost:5173"]
+load_dotenv()
+
+cors_env = os.getenv("CORS_ORIGINS", "http://localhost:5173")
+origins = [o.strip() for o in cors_env.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
