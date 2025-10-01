@@ -7,7 +7,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 load_dotenv()
 
-MONGODB_URL = os.environ["MONGODB_URL"]
+MONGODB_URL = os.environ["MONGODB_URI"]
 DB_NAME = os.getenv("MONGODB_DB", "prod")
 SERVER_SELECTION_TIMEOUT_MS = int(
     os.getenv("MONGODB_SERVER_SELECTION_TIMEOUT_MS", "50000")
