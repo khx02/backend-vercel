@@ -1,4 +1,3 @@
-# app/api/auth.py
 from typing import Annotated, Optional
 
 import jwt
@@ -26,9 +25,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL, auto_error=False)
 router = APIRouter()
 
 
-# ---------- helpers ----------
 def set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
-    # NOTE: For local dev, secure=False is fine. In prod use secure=True and SameSite="none".
     response.set_cookie(
         key="access_token",
         value=access_token,
@@ -49,7 +46,7 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
     )
 
 
-def clear_auth_cookies(response: Response) -> None:    
+def clear_auth_cookies(response: Response) -> None:
     response.delete_cookie(
         "access_token", path="/", httponly=True, samesite="none", secure=True
     )
@@ -58,8 +55,6 @@ def clear_auth_cookies(response: Response) -> None:
     )
 
 
-# ---------- shared deps ----------
-# This basically runs both the token and the cookie one, prioritising the cookie one
 async def get_current_user_info(
     request: Request,
     db: AsyncDatabase = Depends(get_db),
@@ -88,7 +83,6 @@ async def get_current_user_info(
             )
 
 
-# Cookie-based dependency for /me
 async def get_current_user_info_from_cookie(
     cookie: Annotated[Optional[str], Cookie(alias="access_token")] = None,
     db: AsyncDatabase = Depends(get_db),
@@ -158,7 +152,6 @@ async def authenticate_user(db: AsyncDatabase, email: str, password: str) -> Use
     return user
 
 
-# ---------- endpoints ----------
 @router.post("/set-token", response_model=TokenRes)
 async def login_for_token_access(
     response: Response,
@@ -220,7 +213,6 @@ async def refresh_token(
     refresh_token_cookie: Optional[str] = Cookie(alias="refresh_token"),
     db: AsyncDatabase = Depends(get_db),
 ) -> TokenRes:
-
     if not refresh_token_cookie:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token"
