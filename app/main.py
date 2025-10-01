@@ -53,11 +53,19 @@ app.add_middleware(TimeoutMiddleware, timeout=10.0)
 load_dotenv()
 
 cors_env = os.getenv("CORS_ORIGINS", "http://localhost:5173")
+origin_regex = os.getenv("CORS_ORIGIN_REGEX")  # e.g., "https://.*\\.vercel\\.app"
 origins = [o.strip() for o in cors_env.split(",") if o.strip()]
+
+logger.info(
+    "Configuring CORS | origins=%s | origin_regex=%s | allow_credentials=True",
+    origins,
+    origin_regex,
+)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=origin_regex if origin_regex else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
