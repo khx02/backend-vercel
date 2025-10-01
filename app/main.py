@@ -13,6 +13,7 @@ from app.api.team import router as team_router
 from app.api.user import router as user_router
 from app.api.project import router as project_router
 from app.api.event import router as event_router
+from app.api.health import router as health_router
 from app.core.scheduler import scheduler
 
 
@@ -102,5 +103,6 @@ api_router.include_router(auth_router, prefix="/auth")
 api_router.include_router(team_router, prefix="/teams")
 api_router.include_router(project_router, prefix="/projects")
 api_router.include_router(event_router, prefix="/events")
+api_router.include_router(health_router)
 
 app.include_router(api_router)
